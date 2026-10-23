@@ -93,7 +93,7 @@ def salvar_dados_usuario(nome_usuario, dados):
 
 def salvar_tudo():
     usuario = st.session_state.get("usuario_atual")
-    if not usuario:
+    if not usuario or usuario == "Visitante":
         return
     dados = {}
     for campo in CAMPOS:
@@ -261,10 +261,10 @@ doc.body.appendChild(caixa);
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("## 🥋 Identificação")
-    st.session_state.setdefault("input_usuario", "Henry Cesar")
+    st.session_state.setdefault("input_usuario", "")
     usuario_input = st.text_input(
         "Digite seu Nome e Sobrenome:",
-        placeholder="Ex: Rosana",
+        placeholder="Ex: Henry Cesar",
         key="input_usuario",
     ).strip() or "Visitante"
 
@@ -284,7 +284,7 @@ with st.sidebar:
     st.button("➕ Adicionar mais nova conversa", on_click=iniciar_nova_conversa, key="btn_nova_conversa",
               use_container_width=True)
 
-    busca = st.text_input("🔍 Pesquisar histórico", placeholder="Ex.: Rosana", key="busca_conversas").strip().lower()
+    busca = st.text_input("🔍 Pesquisar histórico", placeholder="Ex.: Armlock", key="busca_conversas").strip().lower()
     st.divider()
 
     conversas = st.session_state.get("conversas", {})
@@ -337,17 +337,17 @@ with col_dir:
 
 st.divider()
 
-# DEFINIÇÃO DAS 16 ABAS
+# DEFINIÇÃO DAS 15 ABAS (SEM DEFESA PESSOAL)
 (
     aba_modo_luta, aba_historico_lutas, aba_nutricao, aba_camp, 
     aba_cursos, aba_kids, aba_drills, aba_pressao, aba_grad, 
     aba_kimono, aba_card, aba_caderneta, aba_chaves, aba_cronograma, 
-    aba_recuperacao, aba_defesa
+    aba_recuperacao
 ) = st.tabs([
     "🤼 Luta", "📜 Histórico", "🥗 Nutrição", "🏆 Camp", 
     "📚 Cursos", "👶 Kids", "⏱️ Drills", "🧠 Pressão", "🥇 Graduação", 
     "🥋 Kimono", "📸 Card", "📇 Alunos", "⏱️ Chaves", "📋 Cronograma", 
-    "🧘 Recuperação", "🛡️ Defesa Pessoal"
+    "🧘 Recuperação"
 ])
 
 # ===========================================================================
@@ -458,7 +458,7 @@ with aba_nutricao:
     """)
 
 # ===========================================================================
-# ABA 4: ESTRATÉGIA DE CAMPEONATO (ATUALIZADA)
+# ABA 4: ESTRATÉGIA DE CAMPEONATO
 # ===========================================================================
 with aba_camp:
     st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>🏆 ESTRATÉGIA DE CAMPEONATO</h2>", unsafe_allow_html=True)
@@ -766,7 +766,7 @@ with aba_cronograma:
             """)
 
 # ===========================================================================
-# ABA 15: RECUPERAÇÃO & PRONTUÁRIO (ATUALIZADA)
+# ABA 15: RECUPERAÇÃO & PRONTUÁRIO
 # ===========================================================================
 with aba_recuperacao:
     st.markdown("<h2 style='text-align: center; color: #a855f7;'>🧘 RECUPERAÇÃO & PRONTUÁRIO RÁPIDO</h2>", unsafe_allow_html=True)
@@ -793,19 +793,3 @@ with aba_recuperacao:
             <p>⚠️ <b>Aviso Importante:</b> Se houver dor severa, deformidade visível ou incapacidade de se mover, procure um médico imediatamente!</p>
         </div>
         """)
-
-# ===========================================================================
-# ABA 16: CRONOGRAMA DE RECUPERAÇÃO & PREVENÇÃO
-# ===========================================================================
-with aba_defesa:
-    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>🛡️ PREVENÇÃO & FORTALECIMENTO</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Exercícios recomendados de fortalecimento para evitar lesões recorrentes.</p>", unsafe_allow_html=True)
-
-    mostrar_html("""
-    <div class='camp-box'>
-        <h3 style='color: #fbbf24;'>🛑 Guia de Prevenção de Lesões:</h3>
-        <p>1. <b>Ombros e Manguito:</b> Faça rotação interna e externa com elástico leve antes do treino.</p>
-        <p>2. <b>Joelhos e Tornozelos:</b> Fortaleça os quadríceps e panturrilhas com agachamentos controlados.</p>
-        <p>3. <b>Lombar e Core:</b> Pratique pranchas isométricas de 30 a 45 segundos para estabilizar a coluna.</p>
-    </div>
-    """)
