@@ -48,7 +48,7 @@ def gerar_audio_local(texto):
 
 
 # ---------------------------------------------------------------------------
-# Sistema de Autenticação e Dados por Usuário
+# Sistema de Autenticação e Perfis por Usuário
 # ---------------------------------------------------------------------------
 PASTA_DADOS = os.path.dirname(os.path.abspath(__file__))
 ARQUIVO_BANCO_USUARIOS = os.path.join(PASTA_DADOS, "banco_usuarios.json")
@@ -56,7 +56,8 @@ ARQUIVO_BANCO_USUARIOS = os.path.join(PASTA_DADOS, "banco_usuarios.json")
 CAMPOS = [
     "conversas", "historico_lutas", "dinamic_kids_custom", "flashcards_pressao",
     "alunos_graduacao", "cards_vitoria", "cursos_interativos",
-    "lista_alunos_academia", "notas_kimono", "cronogramas_aulas", "foco_recuperacao"
+    "lista_alunos_academia", "notas_kimono", "cronogramas_aulas", "foco_recuperacao",
+    "perfil_faixa", "perfil_academia"
 ]
 
 
@@ -81,7 +82,21 @@ def salvar_banco_usuarios(usuarios):
 
 
 def dados_vazios():
-    return {campo: ({} if campo == "conversas" else []) for campo in CAMPOS}
+    return {
+        "conversas": {},
+        "historico_lutas": [],
+        "dinamic_kids_custom": [],
+        "flashcards_pressao": [],
+        "alunos_graduacao": [],
+        "cards_vitoria": [],
+        "cursos_interativos": [],
+        "lista_alunos_academia": [],
+        "notas_kimono": [],
+        "cronogramas_aulas": [],
+        "foco_recuperacao": [],
+        "perfil_faixa": "Branca",
+        "perfil_academia": "Academia BJJ"
+    }
 
 
 def obter_caminho_usuario(email_usuario):
@@ -118,7 +133,7 @@ def salvar_tudo():
         return
     dados = {}
     for campo in CAMPOS:
-        dados[campo] = st.session_state.get(campo, [] if campo != "conversas" else {})
+        dados[campo] = st.session_state.get(campo, {} if campo == "conversas" else ([] if campo not in ["perfil_faixa", "perfil_academia"] else "Branca"))
     salvar_dados_usuario(usuario, dados)
 
 
@@ -149,7 +164,7 @@ def carregar_usuario(email):
     st.session_state.usuario_email = email
     st.session_state.usuario_atual = email.split("@")[0]
     for campo in CAMPOS:
-        st.session_state[campo] = dados.get(campo, [] if campo != "conversas" else {})
+        st.session_state[campo] = dados.get(campo, dados_vazios()[campo])
     if st.session_state.conversas:
         ultimo_id = max(st.session_state.conversas,
                         key=lambda c: st.session_state.conversas[c].get("atualizada", ""))
@@ -201,12 +216,14 @@ div[data-baseweb="select"] svg { fill: #ffffff !important; }
 .camp-box { background-color: #1e1b4b; border: 2px solid #ff4d4d; }
 .curso-box { background-color: #0f172a; border: 2px solid #38bdf8; }
 .kids-box { background-color: #451a03; border: 2px solid #fbbf24; }
+.badge-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+.badge { background-color: #1e1e1e; border: 1px solid #ff4d4d; color: #ff4d4d; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; }
 """
 css_compacto = " ".join(CSS.split())
 st.markdown(f"<style>{css_compacto}</style>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# BLOQUEIO POR TELA DE LOGIN COM E-MAIL E SENHA
+# TELA DE LOGIN PROFISSIONAL (LANDING PAGE DE IMPACTO + RECUPERAÇÃO)
 # ---------------------------------------------------------------------------
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
@@ -214,13 +231,21 @@ if "usuario_email" not in st.session_state:
     st.session_state.usuario_email = ""
 
 if not st.session_state.autenticado:
-    st.markdown("<h1 style='text-align: center; color: #ff4d4d;'>🥋 OssBot App</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; color: #aaaaaa;'>Área de Acesso Restrito</h3>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #ff4d4d;'>🥋 OssBot Pro</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #aaaaaa;'>O Assistente Definitivo para Atletas e Professores de Jiu-Jitsu</h3>", unsafe_allow_html=True)
+    
+    mostrar_html("""
+    <div class='badge-container'>
+        <span class='badge'>🛡️ 100% Offline & Seguro</span>
+        <span class='badge'>⏱️ Placar & Cronômetro</span>
+        <span class='badge'>🏆 Estratégias de Competição</span>
+    </div>
+    """)
     st.divider()
 
-    col_login_a, col_login_b, col_login_c = st.columns([1, 2, 1])
-    with col_login_b:
-        aba_entrar, aba_cadastrar = st.tabs(["🔑 Entrar", "📝 Criar Conta"])
+    col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
+    with col_l2:
+        aba_entrar, aba_cadastrar, aba_recuperar = st.tabs(["🔑 Entrar", "📝 Criar Conta", "🔄 Recuperar Senha"])
 
         with aba_entrar:
             email_log = st.text_input("Seu E-mail:", key="login_email").strip().lower()
@@ -238,11 +263,13 @@ if not st.session_state.autenticado:
 
         with aba_cadastrar:
             email_novo = st.text_input("Digite seu E-mail:", key="cad_email").strip().lower()
-            senha_nova = st.text_input("Crie uma Senha:", type="password", key="cad_senha")
+            senha_nova = st.text_input("Crie uma Senha (mín. 6 caracteres):", type="password", key="cad_senha")
             
             if st.button("➕ Criar Minha Conta", use_container_width=True, key="btn_cadastrar"):
                 if not email_novo or not senha_nova:
                     st.warning("Preencha o e-mail e a senha!")
+                elif len(senha_nova) < 6:
+                    st.warning("⚠️ A senha precisa ter no mínimo 6 caracteres para sua segurança.")
                 elif "@" not in email_novo or "." not in email_novo:
                     st.warning("Digite um e-mail válido!")
                 else:
@@ -260,10 +287,26 @@ if not st.session_state.autenticado:
                         st.success("🎉 Conta criada com sucesso! Acessando...")
                         st.rerun()
 
+        with aba_recuperar:
+            email_rec = st.text_input("E-mail Cadastrado:", key="rec_email").strip().lower()
+            nova_senha_rec = st.text_input("Nova Senha:", type="password", key="rec_senha")
+            
+            if st.button("🔄 Redefinir Senha", use_container_width=True, key="btn_redefinir"):
+                banco = carregar_banco_usuarios()
+                if email_rec in banco:
+                    if len(nova_senha_rec) < 6:
+                        st.warning("⚠️ A nova senha precisa ter no mínimo 6 caracteres.")
+                    else:
+                        banco[email_rec]["senha"] = nova_senha_rec
+                        salvar_banco_usuarios(banco)
+                        st.success("✅ Senha redefinida com sucesso! Vá em 'Entrar'.")
+                else:
+                    st.error("❌ E-mail não encontrado no sistema.")
+
     st.stop()
 
 # ---------------------------------------------------------------------------
-# Botões flutuantes para subir e descer a página (Apenas quando autenticado)
+# Botões flutuantes para subir e descer a página
 # ---------------------------------------------------------------------------
 components.html("""
 <script>
@@ -315,12 +358,40 @@ doc.body.appendChild(caixa);
 """, height=0)
 
 # ---------------------------------------------------------------------------
-# Barra lateral (Perfil do Usuário, Pesquisa, Modo Offline e Histórico)
+# Barra lateral (Perfil Completo do Atleta, Backup, Pesquisa, Modo Offline)
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown("## 🥋 Perfil Conectado")
+    st.markdown("## 🥋 Meu Perfil")
     st.caption(f"📧 **{st.session_state.get('usuario_email')}**")
     
+    # PERFIL DO ATLETA (FAIXA E ACADEMIA)
+    st.session_state.perfil_faixa = st.selectbox(
+        "Sua Faixa:", 
+        ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta"],
+        index=["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta"].index(st.session_state.get("perfil_faixa", "Branca")),
+        key="select_perfil_faixa"
+    )
+    st.session_state.perfil_academia = st.text_input(
+        "Sua Academia / Equipe:", 
+        value=st.session_state.get("perfil_academia", "Academia BJJ"),
+        key="input_perfil_academia"
+    )
+    salvar_tudo()
+
+    # BACKUP DOS DADOS
+    dados_usuario_atual = {}
+    for c in CAMPOS:
+        dados_usuario_atual[c] = st.session_state.get(c, {})
+    
+    st.download_button(
+        "📥 Baixar Backup dos Dados",
+        data=json.dumps(dados_usuario_atual, ensure_ascii=False, indent=2),
+        file_name=f"ossbot_backup_{st.session_state.get('usuario_email', 'atleta')}.json",
+        mime="application/json",
+        use_container_width=True,
+        help="Baixe um arquivo com todas as suas anotações e históricos salvos."
+    )
+
     if st.button("🚪 Sair da Conta (Logout)", use_container_width=True, key="btn_logout"):
         fazer_logout()
 
@@ -412,15 +483,15 @@ with col_esq:
              caption="Técnica e Combate", use_container_width=True)
 with col_centro:
     st.markdown("<h1 style='text-align: center; color: #ff4d4d;'>🥋 OssBot App</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h4 style='text-align: center; color: #00ffcc;'>Usuário: {esc(st.session_state.usuario_atual)}</h4>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; color: #aaaaaa;'>O seu Assistente de Jiu-Jitsu (PWA)</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='text-align: center; color: #00ffcc;'>Atleta: {esc(st.session_state.usuario_atual)} | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))}</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h5 style='text-align: center; color: #aaaaaa;'>{esc(st.session_state.get('perfil_academia', 'Academia BJJ'))}</h5>", unsafe_allow_html=True)
 with col_dir:
     st.image("https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=600&auto=format&fit=crop",
              caption="Faixa Preta — Tradição", use_container_width=True)
 
 st.divider()
 
-# DEFINIÇÃO DAS 15 ABAS (SEM DEFESA PESSOAL)
+# DEFINIÇÃO DAS 15 ABAS
 (
     aba_modo_luta, aba_historico_lutas, aba_nutricao, aba_camp, 
     aba_cursos, aba_kids, aba_drills, aba_pressao, aba_grad, 
