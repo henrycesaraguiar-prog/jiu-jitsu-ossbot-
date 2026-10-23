@@ -641,12 +641,7 @@ with aba_card:
         foto_final = foto_card_cam or foto_card_up
         if foto_final is not None:
             st.image(foto_final, use_container_width=True)
-        mostrar_html(f"""
-        <div class='placar-box' style='border: 2px solid #a855f7;'>
-            <h3 style='color: #a855f7;'>🏆 CARD OFICIAL OSSBOT</h3>
-            <p style='font-size: 18px; font-weight: bold;'>{esc(legenda_card)}</p>
-        </div>
-        """)
+        mostrar_html(f"<div class='placar-box' style='border: 2px solid #a855f7;'><h3 style='color: #a855f7;'>🏆 CARD OFICIAL OSSBOT</h3><p style='font-size: 18px; font-weight: bold;'>{esc(legenda_card)}</p></div>")
 
 # ===========================================================================
 # ABA 12: CADERNETA DE ALUNOS
@@ -669,5 +664,103 @@ with aba_caderneta:
             with col_al1:
                 st.write(f"🥋 {aluno}")
             with col_al2:
+                if st.button("Presença ✔️", key=f"pres_{idx}"):
+                    st.toast(f"✅ Presença confirmada para {aluno}!")
+
+# ===========================================================================
+# ABA 13: CHAVES DE TORNEIO
+# ===========================================================================
+with aba_chaves:
+    st.markdown("<h2 style='text-align: center; color: #f43f5e;'>⏱️ ORGANIZADOR DE CHAVES DE LUTA</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Organize os confrontos dos atletas de forma limpa e visível.</p>", unsafe_allow_html=True)
+
+    nomes_atletas_txt = st.text_area("Digite os nomes dos atletas (um por linha):",
+                                     placeholder="Atleta 1\nAtleta 2\nAtleta 3\nAtleta 4",
+                                     key="txt_atletas_chave")
+
+    if st.button("⚔️ Gerar Chaves de Luta", use_container_width=True, key="btn_gerar_chave"):
+        atletas = [a.strip() for a in nomes_atletas_txt.split("\n") if a.strip()]
+        if len(atletas) < 2:
+            st.warning("Digite pelo menos 2 atletas para gerar os confrontos!")
+        else:
+            mostrar_html("<div class='placar-box'><h3 style='color: #00ffcc;'>⚔️ CONFRONTOS GERADOS</h3></div>")
+            for i in range(0, len(atletas) - 1, 2):
+                mostrar_html(
+                    f"<div style='background-color: #1e1e1e; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ff4d4d;'>"
+                    f"<h4 style='color: #ffffff; margin:0;'>🥊 Luta: <span style='color: #00ffcc;'>{esc(atletas[i])}</span> "
+                    f"vs <span style='color: #ff4d4d;'>{esc(atletas[i + 1])}</span></h4></div>"
+                )
+            if len(atletas) % 2 != 0:
+                st.info(f"✨ Atleta aguardando vencedores (Bye): {atletas[-1]}")
+
+# ===========================================================================
+# ABA 14: CRONOGRAMA DE AULAS
+# ===========================================================================
+with aba_cronograma:
+    st.markdown("<h2 style='text-align: center; color: #38bdf8;'>📋 CRONOGRAMA DE AULAS DA SEMANA</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Planeje os temas técnicos das suas aulas para a semana toda.</p>", unsafe_allow_html=True)
+
+    with st.form(key="form_cronograma"):
+        dia_semana = st.selectbox("Dia da Semana:", ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"])
+        tema_aula = st.text_input("Tema da Aula (Ex: Passagem de Guarda Emborcando):")
+        detalhes_aula = st.text_area("Técnicas / Exercícios Específicos:")
+        btn_crono = st.form_submit_button("💾 Salvar Cronograma")
+
+        if btn_crono:
+            if tema_aula.strip():
+                st.session_state.cronogramas_aulas.append({
+                    "dia": dia_semana,
+                    "tema": tema_aula.strip(),
+                    "detalhes": detalhes_aula.strip()
+                })
+                salvar_tudo()
+                st.success(f"✅ Aula de {dia_semana} planejada com sucesso!")
+            else:
+                st.warning("Preencha o tema da aula!")
+
+    st.divider()
+    if st.session_state.cronogramas_aulas:
+        st.markdown("### 🗓️ Aulas Agendadas:")
+        for cr in st.session_state.cronogramas_aulas:
+            mostrar_html(f"""
+            <div class='curso-box'>
+                <h3 style='color: #00ffcc;'>📅 {esc(cr['dia'])}: {esc(cr['tema'])}</h3>
+                <p>{esc(cr['detalhes'])}</p>
+            </div>
+            """)
+
+# ===========================================================================
+# ABA 15: RECUPERAÇÃO & MOBILIDADE
+# ===========================================================================
+with aba_recuperacao:
+    st.markdown("<h2 style='text-align: center; color: #a855f7;'>🧘 RECUPERAÇÃO & MOBILIDADE</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Cuidado pós-treino para manter as articulações fortes e evitar lesões.</p>", unsafe_allow_html=True)
+
+    mostrar_html("""
+    <div class='nutri-box' style='border: 2px solid #a855f7;'>
+        <h3>🧘 Rotina Diária de Alongamento Pós-Treino (5 min):</h3>
+        <p>1. <b>Mobilidade de Quadril:</b> 1 min em posição de borboleta liberando os adutores.</p>
+        <p>2. <b>Descompressão Lombar:</b> 1 min na posição de 'Criança' (Child's Pose).</p>
+        <p>3. <b>Rotação de Ombros e Punhos:</b> 1 min girando suavemente para aliviar a pegada do kimono.</p>
+        <p>4. <b>Pescoço:</b> Alongamento lateral suave de 30s para cada lado.</p>
+    </div>
+    """)
+
+# ===========================================================================
+# ABA 16: DEFESA PESSOAL
+# ===========================================================================
+with aba_defesa:
+    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>🛡️ DEFESA PESSOAL BJJ</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Conceitos fundamentais de preservação e distância segura da arte suave.</p>", unsafe_allow_html=True)
+
+    mostrar_html("""
+    <div class='camp-box'>
+        <h3 style='color: #fbbf24;'>🛑 Os 3 Pilares da Defesa Pessoal:</h3>
+        <p>1. <b>Gestão de Distância:</b> Ou você está totalmente fora do alcance de golpes ou colado no corpo do agressor travando as pegadas.</p>
+        <p>2. <b>Proteção da Cabeça:</b> Mantenha a guarda alta e feche os cotovelos junto às costelas ao encurtar a distância.</p>
+        <p>3. <b>Uso de Alavancas:</b> Utilize o peso do corpo e o quadril para projetar ou desequilibrar, sem dependência de força bruta.</p>
+    </div>
+    """)
+
                 if st.button("Presença ✔️", key=f"pres_{idx}"):
                     st.toast
