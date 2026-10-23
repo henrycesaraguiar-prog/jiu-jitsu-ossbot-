@@ -23,8 +23,6 @@ try:
 except Exception:
     tem_gtts_lib = False
 
-MODELO = "llama-3.3-70b-versatile"
-
 # ---------------------------------------------------------------------------
 # Utilitários
 # ---------------------------------------------------------------------------
@@ -49,33 +47,20 @@ def gerar_audio_local(texto):
         return b""
 
 
-GROQ_API_KEY = "Gsk_iIrY2RYUqeoOw6Hz6oO4WGdyb3FYOHQJ3BY0pvsUDUlYOZfeiFfb"
-
-
-def obter_chave_groq():
-    return GROQ_API_KEY
-
-
-@st.cache_resource
-def criar_cliente_groq(chave):
-    from groq import Groq
-    return Groq(api_key=chave)
-
-
 # ---------------------------------------------------------------------------
 # Dados por usuário
 # ---------------------------------------------------------------------------
 PASTA_DADOS = os.path.dirname(os.path.abspath(__file__))
 
 CAMPOS = [
-    "conversas", "historico_lutas", "dinamic_kids_custom", "flashcards_pressao",
+    "historico_lutas", "dinamic_kids_custom", "flashcards_pressao",
     "alunos_graduacao", "cards_vitoria", "cursos_interativos",
     "lista_alunos_academia", "notas_kimono", "cronogramas_aulas", "foco_recuperacao"
 ]
 
 
 def dados_vazios():
-    return {campo: ({} if campo == "conversas" else []) for campo in CAMPOS}
+    return {campo: [] for campo in CAMPOS}
 
 
 def obter_caminho_usuario(nome_usuario):
@@ -112,87 +97,15 @@ def salvar_tudo():
         return
     dados = {}
     for campo in CAMPOS:
-        dados[campo] = st.session_state.get(campo, [] if campo != "conversas" else {})
+        dados[campo] = st.session_state.get(campo, [])
     salvar_dados_usuario(usuario, dados)
-
-
-SAUDACAO_PADRAO = (
-    "Olá, OSS! 🥋 Como posso te ajudar hoje? Posso criar um cronograma de aula, "
-    "montar uma dinâmica para a turma kids, tirar uma dúvida técnica ou preparar uma "
-    "estratégia para campeonato."
-)
-
-
-def iniciar_nova_conversa():
-    st.session_state.historico = [{"role": "assistant", "content": SAUDACAO_PADRAO}]
-    st.session_state.conversa_id = uuid.uuid4().hex
-    st.session_state.titulo = ""
-    st.session_state.titulo_ia = False
-
-
-def salvar_conversa_atual():
-    primeira = next((m["content"] for m in st.session_state.historico if m["role"] == "user"), None)
-    if primeira is None:
-        return
-    if not st.session_state.titulo:
-        st.session_state.titulo = primeira.strip().replace("\n", " ")[:40]
-    st.session_state.conversas[st.session_state.conversa_id] = {
-        "titulo": st.session_state.titulo or "Nova conversa",
-        "titulo_ia": st.session_state.titulo_ia,
-        "atualizada": datetime.now().isoformat(timespec="seconds"),
-        "mensagens": st.session_state.historico,
-    }
-    salvar_tudo()
-
-
-def abrir_conversa(cid):
-    conv = st.session_state.conversas.get(cid)
-    if conv:
-        st.session_state.historico = conv["mensagens"]
-        st.session_state.conversa_id = cid
-        st.session_state.titulo = conv["titulo"]
-        st.session_state.titulo_ia = conv.get("titulo_ia", True)
-
-
-def apagar_conversa(cid):
-    if cid in st.session_state.conversas:
-        del st.session_state.conversas[cid]
-        salvar_tudo()
-    if cid == st.session_state.conversa_id:
-        iniciar_nova_conversa()
 
 
 def carregar_usuario(nome):
     dados = carregar_dados_usuario(nome)
     st.session_state.usuario_atual = nome
     for campo in CAMPOS:
-        st.session_state[campo] = dados.get(campo, [] if campo != "conversas" else {})
-    if st.session_state.conversas:
-        ultimo_id = max(st.session_state.conversas,
-                        key=lambda c: st.session_state.conversas[c].get("atualizada", ""))
-        abrir_conversa(ultimo_id)
-    else:
-        iniciar_nova_conversa()
-
-
-def gerar_atalhos_inteligentes(conversas):
-    palavras_chave = {}
-    termos_comuns = {"como", "para", "qual", "uma", "com", "que", "dos", "das", "por",
-                     "sobre", "mais", "isso", "ele", "ela", "quero", "dicas"}
-    for conv in conversas.values():
-        for m in conv.get("mensagens", []):
-            if m["role"] == "user":
-                for palavra in m["content"].lower().split():
-                    p_limpa = "".join(c for c in palavra if c.isalnum())
-                    if len(p_limpa) > 3 and p_limpa not in termos_comuns:
-                        palavras_chave[p_limpa] = palavras_chave.get(p_limpa, 0) + 1
-    ordenados = sorted(palavras_chave.items(), key=lambda x: x[1], reverse=True)
-    top = [item[0].capitalize() for item in ordenados[:4]]
-    return top if top else ["Guarda", "Raspagem", "Campeonato", "Kids"]
-
-
-def definir_atalho(atalho):
-    st.session_state.atalho_clicado = f"Quero dicas sobre: {atalho}"
+        st.session_state[campo] = dados.get(campo, [])
 
 
 # ---------------------------------------------------------------------------
@@ -237,15 +150,8 @@ CSS = """
 div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="textarea"], div[data-baseweb="select"] > div { background-color: #1e1e1e !important; border-color: #ff4d4d !important; border-radius: 8px !important; }
 div[data-baseweb="input"] input, div[data-baseweb="base-input"] input, div[data-baseweb="textarea"] textarea, div[data-baseweb="base-input"] textarea, input, textarea { background-color: #1e1e1e !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; caret-color: #ffffff !important; font-weight: bold !important; }
 input::placeholder, textarea::placeholder { color: #9ca3af !important; -webkit-text-fill-color: #9ca3af !important; opacity: 1 !important; }
-input:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px #1e1e1e inset !important; -webkit-text-fill-color: #ffffff !important; }
 div[data-baseweb="select"] * { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 div[data-baseweb="select"] svg { fill: #ffffff !important; }
-
-div[data-baseweb="popover"], div[data-baseweb="popover"] > div, ul[role="listbox"], [data-baseweb="menu"] { background-color: #1e1e1e !important; }
-div[data-baseweb="popover"] li, div[data-baseweb="popover"] li *, ul[role="listbox"] li { background-color: #1e1e1e !important; color: #ffffff !important; }
-div[data-baseweb="popover"] li:hover, ul[role="listbox"] li:hover { background-color: #3a1f1f !important; }
-div[data-baseweb="calendar"], div[data-baseweb="calendar"] * { background-color: #1e1e1e !important; color: #ffffff !important; }
-div[data-baseweb="calendar"] [aria-selected="true"] { background-color: #ff4d4d !important; }
 
 [data-testid="stNumberInput"] button { background-color: #2a2a2a !important; color: #ffffff !important; border: none !important; }
 
@@ -253,15 +159,6 @@ div[data-baseweb="calendar"] [aria-selected="true"] { background-color: #ff4d4d 
 [data-testid="stFileUploader"] * { color: #ffffff !important; }
 [data-testid="stFileUploader"] svg { fill: #ffffff !important; }
 [data-testid="stFileUploader"] button { background-color: #ff4d4d !important; border: 2px solid #ffffff !important; }
-
-[data-testid="stAudioInput"], [data-testid="stCameraInput"] { background-color: #1e1e1e !important; border-radius: 10px !important; padding: 15px; border: 1px solid #444444; }
-[data-testid="stCameraInput"] button { background-color: #ff4d4d !important; color: #ffffff !important; }
-
-[data-testid="stChatInput"] { background-color: #1e1e1e !important; border-radius: 10px !important; border: 2px solid #ff4d4d !important; }
-[data-testid="stChatInput"] > div, [data-testid="stChatInput"] div[data-baseweb="textarea"] { background-color: #1e1e1e !important; border: none !important; }
-[data-testid="stChatInput"] textarea { font-size: 16px !important; }
-[data-testid="stChatInput"] button { background-color: #ff4d4d !important; color: #ffffff !important; }
-[data-testid="stChatMessage"] { background-color: #1a1a1a !important; border-radius: 10px !important; }
 
 .stButton > button, div[data-testid="stFormSubmitButton"] > button { border-radius: 10px !important; font-weight: bold !important; background-color: #ff4d4d !important; color: #ffffff !important; border: 2px solid #ffffff !important; }
 .stButton > button p, div[data-testid="stFormSubmitButton"] > button p { color: #ffffff !important; }
@@ -332,7 +229,7 @@ doc.body.appendChild(caixa);
 """, height=0)
 
 # ---------------------------------------------------------------------------
-# Barra lateral
+# Barra lateral (Com o Modo Offline integrado aqui)
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("## 🥋 Identificação")
@@ -347,41 +244,17 @@ with st.sidebar:
         carregar_usuario(usuario_input)
 
     st.divider()
-    st.markdown("## 🥋 Minhas conversas")
-    st.button("➕ Nova conversa", on_click=iniciar_nova_conversa, key="btn_nova_conversa",
-              use_container_width=True)
-
-    busca = st.text_input("🔍 Pesquisar", placeholder="Ex.: guarda", key="busca_conversas").strip().lower()
-    st.divider()
-
-    conversas = st.session_state.conversas
-    ids = sorted(conversas, key=lambda c: conversas[c].get("atualizada", ""), reverse=True)
-
-    mostradas = 0
-    for cid in ids:
-        conv = conversas[cid]
-        if busca:
-            texto_total = conv["titulo"].lower() + " " + " ".join(m["content"].lower() for m in conv["mensagens"])
-            if busca not in texto_total:
-                continue
-        mostradas += 1
-        atual = cid == st.session_state.conversa_id
-        col_a, col_b = st.columns([5, 1])
-        with col_a:
-            st.button(("▶ " if atual else "") + conv["titulo"], key=f"abrir_{cid}",
-                      on_click=abrir_conversa, args=(cid,), use_container_width=True)
-        with col_b:
-            st.button("🗑️", key=f"apagar_{cid}", on_click=apagar_conversa, args=(cid,),
-                      help="Apagar esta conversa")
-
-    if mostradas == 0:
-        st.caption("Nenhuma conversa encontrada." if busca else "Suas conversas vão aparecer aqui. 🥋")
+    st.markdown("## 📡 Conexão")
+    st.checkbox("📡 Modo Offline Ativado", value=False, key="modo_offline", 
+                help="Ative para operar sem gastar dados móveis")
+    
+    if st.session_state.get("modo_offline"):
+        st.success("Modo Offline ligado com sucesso! Pode fechar a barra lateral.")
 
 # ---------------------------------------------------------------------------
 # Estados auxiliares
 # ---------------------------------------------------------------------------
 for chave, valor in {
-    "atalho_clicado": None,
     "pts_a": 0, "vant_a": 0, "pun_a": 0,
     "pts_b": 0, "vant_b": 0, "pun_b": 0,
     "tempo_segundos": 300, "cronometro_rodando": False,
@@ -405,114 +278,21 @@ with col_dir:
 
 st.divider()
 
-# DEFINIÇÃO DAS 17 ABAS
+# DEFINIÇÃO DAS 16 ABAS (Sem o Chat IA)
 (
-    aba_chat, aba_modo_luta, aba_historico_lutas, aba_nutricao, aba_camp, 
+    aba_modo_luta, aba_historico_lutas, aba_nutricao, aba_camp, 
     aba_cursos, aba_kids, aba_drills, aba_pressao, aba_grad, 
     aba_kimono, aba_card, aba_caderneta, aba_chaves, aba_cronograma, 
     aba_recuperacao, aba_defesa
 ) = st.tabs([
-    "💬 Chat IA", "🤼 Luta", "📜 Histórico", "🥗 Nutrição", "🏆 Camp", 
+    "🤼 Luta", "📜 Histórico", "🥗 Nutrição", "🏆 Camp", 
     "📚 Cursos", "👶 Kids", "⏱️ Drills", "🧠 Pressão", "🥇 Graduação", 
     "🥋 Kimono", "📸 Card", "📇 Alunos", "⏱️ Chaves", "📋 Cronograma", 
     "🧘 Recuperação", "🛡️ Defesa Pessoal"
 ])
 
 # ===========================================================================
-# ABA 1: CHAT COM IA
-# ===========================================================================
-def mostrar_historico():
-    for i, mensagem in enumerate(st.session_state.historico):
-        with st.chat_message(mensagem["role"]):
-            st.markdown(mensagem["content"])
-            if mensagem["role"] == "assistant" and st.button("🔊 Ouvir", key=f"ouvir_{i}"):
-                ab = gerar_audio_local(mensagem["content"])
-                if ab:
-                    st.audio(ab, format="audio/mp3")
-                else:
-                    st.caption("Áudio indisponível.")
-
-
-with aba_chat:
-    st.markdown("### ⚙️ Escolha o Modo de Atendimento")
-    modo_selecionado = st.radio(
-        "Como você quer que o OssBot responda?",
-        [
-            "🥋 Aluno / Competidor (Online)",
-            "👶 Professor / Turma Kids (Online)",
-            "📡 Modo Offline (Economizar Dados Móveis / Sem Internet)",
-        ],
-        index=0, key="modo_atendimento",
-    )
-
-    if "Modo Offline" in modo_selecionado:
-        st.info("📡 Modo Offline Ativado!")
-        st.divider()
-        mostrar_historico()
-    else:
-        client = None
-        chave_groq = obter_chave_groq()
-        if chave_groq:
-            try:
-                client = criar_cliente_groq(chave_groq)
-            except Exception:
-                client = None
-
-        if "Kids" in modo_selecionado:
-            system_prompt = "Você é o OssBot, assistente especialista em BJJ para professores de turmas kids."
-        else:
-            system_prompt = "Você é o OssBot, assistente especialista em BJJ focado em atletas e professores."
-
-        st.divider()
-        st.markdown("### ⚡ Atalhos Inteligentes")
-        atalhos_personalizados = gerar_atalhos_inteligentes(st.session_state.conversas)
-        cols_atalhos = st.columns(len(atalhos_personalizados))
-        for idx, atalho in enumerate(atalhos_personalizados):
-            with cols_atalhos[idx]:
-                st.button(f"📌 {atalho}", key=f"atalho_{idx}", use_container_width=True,
-                          on_click=definir_atalho, args=(atalho,))
-
-        st.divider()
-
-        pergunta_texto = st.chat_input("Digite sua dúvida...")
-        atalho_pendente = st.session_state.pop("atalho_clicado", None)
-        texto_para_enviar = pergunta_texto or atalho_pendente
-
-        if texto_para_enviar:
-            st.session_state.historico.append({"role": "user", "content": texto_para_enviar})
-            salvar_conversa_atual()
-
-        mostrar_historico()
-
-        if texto_para_enviar:
-            if not client:
-                st.warning("⚠️ Sem rede para a IA. Mude para a opção 'Modo Offline'!")
-            else:
-                with st.chat_message("assistant"):
-                    with st.spinner("OssBot pensando... OSS! 🥋"):
-                        try:
-                            mensagens = [{"role": "system", "content": system_prompt}]
-                            for m in st.session_state.historico[-20:]:
-                                mensagens.append({"role": m["role"], "content": m["content"]})
-                            
-                            res = client.chat.completions.create(
-                                model=MODELO, 
-                                messages=mensagens, 
-                                temperature=0.7
-                            )
-                            resp = res.choices[0].message.content
-                            st.markdown(resp)
-                            st.session_state.historico.append({"role": "assistant", "content": resp})
-                            salvar_conversa_atual()
-                        except Exception as e:
-                            erro_str = str(e)
-                            if "401" in erro_str or "Invalid API Key" in erro_str:
-                                st.warning("⚠️ Chave da API da Groq inválida ou expirada (Erro 401).")
-                            else:
-                                st.warning(f"Erro na IA: {e}")
-
-# ===========================================================================
-# ABA 2: MODO LUTA
+# ABA 1: MODO LUTA
 # ===========================================================================
 def bloco_placar(lado, nome, emoji, cor):
     pts = st.session_state[f"pts_{lado}"]
@@ -589,7 +369,7 @@ with aba_modo_luta:
         st.success("✅ Luta salva na memória!")
 
 # ===========================================================================
-# ABA 3: HISTÓRICO DE LUTAS
+# ABA 2: HISTÓRICO DE LUTAS
 # ===========================================================================
 with aba_historico_lutas:
     st.markdown("### 📜 Lutas Registradas")
@@ -603,7 +383,7 @@ with aba_historico_lutas:
                 st.write(f"{txt_a} | {txt_b}")
 
 # ===========================================================================
-# ABA 4: NUTRIÇÃO & HIDRATAÇÃO
+# ABA 3: NUTRIÇÃO & HIDRATAÇÃO
 # ===========================================================================
 with aba_nutricao:
     st.markdown("<h2 style='text-align: center; color: #00ffcc;'>🥗 NUTRIÇÃO & HIDRATAÇÃO</h2>", unsafe_allow_html=True)
@@ -619,7 +399,7 @@ with aba_nutricao:
     """)
 
 # ===========================================================================
-# ABA 5: CAMPEONATO
+# ABA 4: CAMPEONATO
 # ===========================================================================
 with aba_camp:
     st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>🏆 ESTRATÉGIA DE CAMPEONATO</h2>", unsafe_allow_html=True)
@@ -636,7 +416,7 @@ with aba_camp:
         """)
 
 # ===========================================================================
-# ABA 6: CURSOS
+# ABA 5: CURSOS
 # ===========================================================================
 with aba_cursos:
     st.markdown("<h2 style='text-align: center; color: #38bdf8;'>📚 MANUAL DE REGRAS & CURSOS BJJ</h2>", unsafe_allow_html=True)
@@ -668,7 +448,7 @@ with aba_cursos:
             """)
 
 # ===========================================================================
-# ABA 7: AULAS KIDS
+# ABA 6: AULAS KIDS
 # ===========================================================================
 with aba_kids:
     st.markdown("<h2 style='text-align: center; color: #fbbf24;'>👶 AULAS & DINÂMICAS KIDS</h2>", unsafe_allow_html=True)
@@ -698,7 +478,7 @@ with aba_kids:
             """)
 
 # ===========================================================================
-# ABA 8: DRILLS
+# ABA 7: DRILLS
 # ===========================================================================
 with aba_drills:
     st.markdown("<h2 style='text-align: center; color: #34d399;'>⏱️ DRILLS & HIIT DE COMBATE</h2>", unsafe_allow_html=True)
@@ -714,12 +494,11 @@ with aba_drills:
         st.success(f"✅ Configurado: {n_rounds} rounds!")
 
 # ===========================================================================
-# ABA 9: PRESSÃO
+# ABA 8: PRESSÃO
 # ===========================================================================
 with aba_pressao:
     st.markdown("<h2 style='text-align: center; color: #f43f5e;'>🧠 PRESSÃO DE LUTA - FLASHCARDS</h2>", unsafe_allow_html=True)
-    txt_pressao_sub = "Estude posições difíceis e saídas de sufoco."
-    st.markdown(f"<p style='text-align: center;'>{txt_pressao_sub}</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Estude posições difíceis e saídas de sufoco.</p>", unsafe_allow_html=True)
 
     with st.form(key="form_pressao_flashcard"):
         pergunta_flash = st.text_input("Situação / Perigo:")
@@ -739,7 +518,7 @@ with aba_pressao:
                 mostrar_html(f"<div class='camp-box'><p><b>Saída:</b> {esc(fc['resposta'])}</p></div>")
 
 # ===========================================================================
-# ABA 10: GRADUAÇÃO
+# ABA 9: GRADUAÇÃO
 # ===========================================================================
 with aba_grad:
     st.markdown("<h2 style='text-align: center; color: #34d399;'>🥇 GRADUAÇÃO & DIÁRIO DE FAIXA</h2>", unsafe_allow_html=True)
@@ -768,7 +547,7 @@ with aba_grad:
                 st.write(f"• **Início na faixa:** {aluno['data_inicio']}")
 
 # ===========================================================================
-# ABA 11: KIMONO
+# ABA 10: KIMONO
 # ===========================================================================
 with aba_kimono:
     st.markdown("<h2 style='text-align: center; color: #fbbf24;'>🥋 GESTÃO E CUIDADOS COM O KIMONO</h2>", unsafe_allow_html=True)
@@ -786,101 +565,7 @@ with aba_kimono:
         mostrar_html(f"<div class='curso-box'><p><b>{esc(n['data'])}</b></p><p>{esc(n['nota'])}</p></div>")
 
 # ===========================================================================
-# ABA 12: CARD VITÓRIA
+# ABA 11: CARD VITÓRIA
 # ===========================================================================
 with aba_card:
-    st.markdown("<h2 style='text-align: center; color: #a855f7;'>📸 CARD DE VITÓRIA</h2>", unsafe_allow_html=True)
-
-    foto_card_up = st.file_uploader("Enviar Foto:", type=["jpg", "png", "jpeg"], key="up_card")
-    foto_card_cam = st.camera_input("Tire uma Foto:", key="cam_card")
-    legenda_card = st.text_area("Frase do Card:", value="Tatame lavado! OSS!", key="legenda_card")
-
-    if st.button("🚀 Gerar Card", use_container_width=True, key="btn_gerar_card"):
-        st.success("✅ Card gerado!")
-        foto_final = foto_card_cam or foto_card_up
-        if foto_final is not None:
-            st.image(foto_final, use_container_width=True)
-
-# ===========================================================================
-# ABA 13: CADERNETA DE ALUNOS
-# ===========================================================================
-with aba_caderneta:
-    st.markdown("<h2 style='text-align: center; color: #fbbf24;'>📇 CADERNETA DE ALUNOS</h2>", unsafe_allow_html=True)
-    novo_aluno = st.text_input("Nome do Aluno:", placeholder="Ex: Lucas Gabriel", key="input_novo_aluno")
-    if st.button("➕ Adicionar Aluno", use_container_width=True, key="btn_add_aluno"):
-        if novo_aluno.strip():
-            st.session_state.lista_alunos_academia.append(novo_aluno.strip())
-            salvar_tudo()
-            st.success("✅ Aluno adicionado!")
-
-    if st.session_state.lista_alunos_academia:
-        for idx, aluno in enumerate(st.session_state.lista_alunos_academia):
-            col_al1, col_al2 = st.columns([3, 1])
-            with col_al1:
-                st.write(f"🥋 {aluno}")
-            with col_al2:
-                if st.button("Presença ✔️", key=f"pres_{idx}"):
-                    st.toast(f"✅ Presença confirmada!")
-
-# ===========================================================================
-# ABA 14: CHAVES DE TORNEIO
-# ===========================================================================
-with aba_chaves:
-    st.markdown("<h2 style='text-align: center; color: #f43f5e;'>⏱️ ORGANIZADOR DE CHAVES</h2>", unsafe_allow_html=True)
-    nomes_atletas_txt = st.text_area("Nomes dos atletas (um por linha):", key="txt_atletas_chave")
-
-    if st.button("⚔️ Gerar Chaves", use_container_width=True, key="btn_gerar_chave"):
-        atletas = [a.strip() for a in nomes_atletas_txt.split("\n") if a.strip()]
-        if len(atletas) >= 2:
-            mostrar_html("<div class='placar-box'><h3>⚔️ CONFRONTOS</h3></div>")
-            for i in range(0, len(atletas) - 1, 2):
-                luta_txt = f"🥊 {esc(atletas[i])} vs {esc(atletas[i + 1])}"
-                mostrar_html(f"<div class='curso-box'><h4>{luta_txt}</h4></div>")
-
-# ===========================================================================
-# ABA 15: CRONOGRAMA DE AULAS
-# ===========================================================================
-with aba_cronograma:
-    st.markdown("<h2 style='text-align: center; color: #38bdf8;'>📋 CRONOGRAMA DE AULAS</h2>", unsafe_allow_html=True)
-
-    with st.form(key="form_cronograma"):
-        dia_semana = st.selectbox("Dia:", ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"])
-        tema_aula = st.text_input("Tema da Aula:")
-        detalhes_aula = st.text_area("Detalhes Técnicos:")
-        btn_crono = st.form_submit_button("💾 Salvar Cronograma")
-
-        if btn_crono:
-            if tema_aula.strip():
-                st.session_state.cronogramas_aulas.append({"dia": dia_semana, "tema": tema_aula.strip(), "detalhes": detalhes_aula.strip()})
-                salvar_tudo()
-                st.success("✅ Cronograma salvo!")
-
-    if st.session_state.cronogramas_aulas:
-        for cr in st.session_state.cronogramas_aulas:
-            mostrar_html(f"<div class='curso-box'><h3>📅 {esc(cr['dia'])}: {esc(cr['tema'])}</h3><p>{esc(cr['detalhes'])}</p></div>")
-
-# ===========================================================================
-# ABA 16: RECUPERAÇÃO
-# ===========================================================================
-with aba_recuperacao:
-    st.markdown("<h2 style='text-align: center; color: #a855f7;'>🧘 RECUPERAÇÃO & MOBILIDADE</h2>", unsafe_allow_html=True)
-    mostrar_html("""
-    <div class='nutri-box'>
-        <h3>🧘 Alongamento Pós-Treino:</h3>
-        <p>1. Quadril (1 min borboleta)</p>
-        <p>2. Lombar (1 min posição de criança)</p>
-    </div>
-    """)
-
-# ===========================================================================
-# ABA 17: DEFESA PESSOAL
-# ===========================================================================
-with aba_defesa:
-    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>🛡️ DEFESA PESSOAL BJJ</h2>", unsafe_allow_html=True)
-    mostrar_html("""
-    <div class='camp-box'>
-        <h3>🛑 Táticas Fundamentais:</h3>
-        <p>1. Gestão de Distância</p>
-        <p>2. Proteção da Cabeça e Cotovelos</p>
-    </div>
-    """)
+    st.markdown("<h2 style='text-align: center; color: #a855f7;'>📸 CARD DE
