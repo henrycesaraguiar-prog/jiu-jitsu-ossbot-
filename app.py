@@ -3,7 +3,7 @@ import io
 import json
 import uuid
 import html as html_lib
-from datetime import datetime
+from datetime import datetime, date
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -458,19 +458,55 @@ with aba_nutricao:
     """)
 
 # ===========================================================================
-# ABA 4: CAMPEONATO
+# ABA 4: ESTRATÉGIA DE CAMPEONATO (ATUALIZADA)
 # ===========================================================================
 with aba_camp:
     st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>🏆 ESTRATÉGIA DE CAMPEONATO</h2>", unsafe_allow_html=True)
-    faixa_camp = st.selectbox("Sua Faixa:", ["Branca", "Kids", "Azul", "Roxa", "Castanha", "Preta"], key="camp_faixa")
-    estilo_camp = st.text_input("Seu Golpe/Posição Favorito:", "Armlock da Guarda", key="camp_estilo")
+    
+    col_c1, col_c2 = st.columns(2)
+    with col_c1:
+        faixa_sel = st.selectbox("Sua Faixa:", ["Branca", "Azul", "Roxa", "Castanha", "Preta", "Outros / Infantil"], key="camp_faixa_sel")
+        faixa_final = faixa_sel
+        if faixa_sel == "Outros / Infantil":
+            faixa_final = st.text_input("Qual é a sua faixa exata?", placeholder="Ex: Laranja ponta preta", key="camp_faixa_custom")
+            
+        data_camp = st.date_input("Data do Campeonato:", min_value=date.today(), key="camp_data")
+        dias_restantes = (data_camp - date.today()).days
 
-    if st.button("🚀 Gerar Plano de Luta Tático", use_container_width=True, key="btn_plan_camp"):
+    with col_c2:
+        peso_atual = st.number_input("Seu Peso Atual (kg):", 30.0, 150.0, 70.0, 0.5, key="camp_peso_atual")
+        peso_categoria = st.number_input("Limite de Peso da Categoria (kg):", 30.0, 150.0, 70.0, 0.5, key="camp_peso_cat")
+        diferenca_peso = peso_atual - peso_categoria
+
+    st.divider()
+    st.markdown("### 🥋 Descreva seu Jogo e Intensidade de Treino")
+    st.caption("Você pode digitar no campo de texto e/ou gravar um áudio descrevendo sua rotina!")
+
+    jogo_texto = st.text_area("Descreva seu estilo de jogo (Ex: Sou passador, gosto de dar quedas e treino 2h por dia):", key="camp_jogo_txt")
+    jogo_audio = st.audio_input("Ou grave um áudio descrevendo seu jogo:", key="camp_jogo_aud")
+
+    if st.button("🚀 Gerar Estratégia de Campeonato", use_container_width=True, key="btn_plan_camp"):
+        texto_jogo_final = jogo_texto.strip()
+        if jogo_audio is not None:
+            texto_jogo_final += " [Áudio do jogo gravado com sucesso]"
+
+        dica_peso = ""
+        if diferenca_peso > 0:
+            dica_peso = f"⚠️ Você precisa perder **{diferenca_peso:.1f} kg** até a pesagem! Foco em hidratação e reeducação alimentar suave."
+        elif diferenca_peso < 0:
+            dica_peso = f"✅ Você está **{abs(diferenca_peso):.1f} kg** abaixo do limite! Pode manter sua alimentação atual com bons carboidratos."
+        else:
+            dica_peso = "🎯 Você está cravado no peso exato da categoria! Mantenha a estabilidade."
+
         mostrar_html(f"""
         <div class='camp-box'>
-            <h3 style='color: #00ffcc;'>🥇 GUIA TÁTICO ({esc(faixa_camp)} - {esc(estilo_camp)})</h3>
-            <p>1. Faça a pegada primeiro. Imponha o ritmo.</p>
-            <p>2. Foco na Posição {esc(estilo_camp)}.</p>
+            <h3 style='color: #00ffcc;'>🥇 GUIA TÁTICO PERSONALIZADO</h3>
+            <p><b>Faixa:</b> {esc(faixa_final or "Não informada")}</p>
+            <p><b>Tempo Restante:</b> {dias_restantes} dia(s) até a competição.</p>
+            <p><b>Estratégia de Peso:</b> {dica_peso}</p>
+            <p><b>Análise do Seu Jogo:</b> {esc(texto_jogo_final if texto_jogo_final else "Jogo padrão de combate")}</p>
+            <hr>
+            <p><b>Recomendação Tática:</b> Mantenha a intensidade alta nas próximas semanas e inicie a desaceleração (tapering) a 3 dias do campeonato. Oss!</p>
         </div>
         """)
 
@@ -730,34 +766,46 @@ with aba_cronograma:
             """)
 
 # ===========================================================================
-# ABA 15: RECUPERAÇÃO & MOBILIDADE
+# ABA 15: RECUPERAÇÃO & PRONTUÁRIO (ATUALIZADA)
 # ===========================================================================
 with aba_recuperacao:
-    st.markdown("<h2 style='text-align: center; color: #a855f7;'>🧘 RECUPERAÇÃO & MOBILIDADE</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Cuidado pós-treino para manter as articulações fortes e evitar lesões.</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #a855f7;'>🧘 RECUPERAÇÃO & PRONTUÁRIO RÁPIDO</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Descreva sua lesão ou dor para gerar um guia de primeiros socorros!</p>", unsafe_allow_html=True)
 
-    mostrar_html("""
-    <div class='nutri-box' style='border: 2px solid #a855f7;'>
-        <h3>🧘 Rotina Diária de Alongamento Pós-Treino (5 min):</h3>
-        <p>1. <b>Mobilidade de Quadril:</b> 1 min em posição de borboleta liberando os adutores.</p>
-        <p>2. <b>Descompressão Lombar:</b> 1 min na posição de 'Criança' (Child's Pose).</p>
-        <p>3. <b>Rotação de Ombros e Punhos:</b> 1 min girando suavemente para aliviar a pegada do kimono.</p>
-        <p>4. <b>Pescoço:</b> Alongamento lateral suave de 30s para cada lado.</p>
-    </div>
-    """)
+    lesao_texto = st.text_area("Descreva o que aconteceu ou onde está doendo (Ex: Torci o tornozelo caindo de mau jeito):", key="recup_txt")
+    lesao_audio = st.audio_input("Ou grave um áudio descrevendo sua lesão:", key="recup_aud")
+
+    if st.button("🩹 Gerar Prontuário de Primeiros Socorros", use_container_width=True, key="btn_gerar_prontuario"):
+        relato_final = lesao_texto.strip()
+        if lesao_audio is not None:
+            relato_final += " [Áudio gravado com o relato da dor]"
+
+        mostrar_html(f"""
+        <div class='nutri-box' style='border: 2px solid #a855f7;'>
+            <h3 style='color: #a855f7;'>📋 PRONTUÁRIO TÁTICO DE PRIMEIROS SOCORROS</h3>
+            <p><b>Seu Relato:</b> {esc(relato_final if relato_final else "Dor / Desconforto geral pós-treino")}</p>
+            <hr>
+            <h4>🚨 Orientações Imediatas (Protocolo R.I.C.E.):</h4>
+            <p>1. <b>Repouso:</b> Evite carregar peso ou forçar a articulação afetada.</p>
+            <p>2. <b>Gelo (Crio):</b> Aplique compressa de gelo por 15 a 20 minutos a cada 3 horas.</p>
+            <p>3. <b>Compressão:</b> Se houver inchaço, use uma enfaixagem elástica sem apertar demais.</p>
+            <p>4. <b>Elevação:</b> Mantenha o membro elevado acima do nível do coração quando descansar.</p>
+            <p>⚠️ <b>Aviso Importante:</b> Se houver dor severa, deformidade visível ou incapacidade de se mover, procure um médico imediatamente!</p>
+        </div>
+        """)
 
 # ===========================================================================
-# ABA 16: DEFESA PESSOAL
+# ABA 16: CRONOGRAMA DE RECUPERAÇÃO & PREVENÇÃO
 # ===========================================================================
 with aba_defesa:
-    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>🛡️ DEFESA PESSOAL BJJ</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Conceitos fundamentais de preservação e distância segura da arte suave.</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>🛡️ PREVENÇÃO & FORTALECIMENTO</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Exercícios recomendados de fortalecimento para evitar lesões recorrentes.</p>", unsafe_allow_html=True)
 
     mostrar_html("""
     <div class='camp-box'>
-        <h3 style='color: #fbbf24;'>🛑 Os 3 Pilares da Defesa Pessoal:</h3>
-        <p>1. <b>Gestão de Distância:</b> Ou você está totalmente fora do alcance de golpes ou colado no corpo do agressor travando as pegadas.</p>
-        <p>2. <b>Proteção da Cabeça:</b> Mantenha a guarda alta e feche os cotovelos junto às costelas ao encurtar a distância.</p>
-        <p>3. <b>Uso de Alavancas:</b> Utilize o peso do corpo e o quadril para projetar ou desequilibrar, sem dependência de força bruta.</p>
+        <h3 style='color: #fbbf24;'>🛑 Guia de Prevenção de Lesões:</h3>
+        <p>1. <b>Ombros e Manguito:</b> Faça rotação interna e externa com elástico leve antes do treino.</p>
+        <p>2. <b>Joelhos e Tornozelos:</b> Fortaleça os quadríceps e panturrilhas com agachamentos controlados.</p>
+        <p>3. <b>Lombar e Core:</b> Pratique pranchas isométricas de 30 a 45 segundos para estabilizar a coluna.</p>
     </div>
     """)
