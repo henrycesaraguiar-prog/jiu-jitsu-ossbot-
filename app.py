@@ -48,19 +48,19 @@ def gerar_audio_local(texto):
 
 
 # ---------------------------------------------------------------------------
-# Dados por usuário
+# Dados por utilizador
 # ---------------------------------------------------------------------------
 PASTA_DADOS = os.path.dirname(os.path.abspath(__file__))
 
 CAMPOS = [
-    "historico_lutas", "dinamic_kids_custom", "flashcards_pressao",
+    "conversas", "historico_lutas", "dinamic_kids_custom", "flashcards_pressao",
     "alunos_graduacao", "cards_vitoria", "cursos_interativos",
     "lista_alunos_academia", "notas_kimono", "cronogramas_aulas", "foco_recuperacao"
 ]
 
 
 def dados_vazios():
-    return {campo: [] for campo in CAMPOS}
+    return {campo: ({} if campo == "conversas" else []) for campo in CAMPOS}
 
 
 def obter_caminho_usuario(nome_usuario):
@@ -97,15 +97,43 @@ def salvar_tudo():
         return
     dados = {}
     for campo in CAMPOS:
-        dados[campo] = st.session_state.get(campo, [])
+        dados[campo] = st.session_state.get(campo, [] if campo != "conversas" else {})
     salvar_dados_usuario(usuario, dados)
+
+
+def iniciar_nova_conversa():
+    st.session_state.historico = []
+    st.session_state.conversa_id = uuid.uuid4().hex
+    st.session_state.titulo = ""
+
+
+def abrir_conversa(cid):
+    conv = st.session_state.conversas.get(cid)
+    if conv:
+        st.session_state.historico = conv.get("mensagens", [])
+        st.session_state.conversa_id = cid
+        st.session_state.titulo = conv.get("titulo", "")
+
+
+def apagar_conversa(cid):
+    if cid in st.session_state.conversas:
+        del st.session_state.conversas[cid]
+        salvar_tudo()
+    if cid == st.session_state.get("conversa_id"):
+        iniciar_nova_conversa()
 
 
 def carregar_usuario(nome):
     dados = carregar_dados_usuario(nome)
     st.session_state.usuario_atual = nome
     for campo in CAMPOS:
-        st.session_state[campo] = dados.get(campo, [])
+        st.session_state[campo] = dados.get(campo, [] if campo != "conversas" else {})
+    if st.session_state.conversas:
+        ultimo_id = max(st.session_state.conversas,
+                        key=lambda c: st.session_state.conversas[c].get("atualizada", ""))
+        abrir_conversa(ultimo_id)
+    else:
+        iniciar_nova_conversa()
 
 
 # ---------------------------------------------------------------------------
@@ -229,14 +257,14 @@ doc.body.appendChild(caixa);
 """, height=0)
 
 # ---------------------------------------------------------------------------
-# Barra lateral (Com o Modo Offline integrado aqui)
+# Barra lateral (Identificação, Pesquisa, Modo Offline e Histórico)
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("## 🥋 Identificação")
     st.session_state.setdefault("input_usuario", "Henry Cesar")
     usuario_input = st.text_input(
         "Digite seu Nome e Sobrenome:",
-        placeholder="Ex: Henry Cesar",
+        placeholder="Ex: Rosana",
         key="input_usuario",
     ).strip() or "Visitante"
 
@@ -247,9 +275,40 @@ with st.sidebar:
     st.markdown("## 📡 Conexão")
     st.checkbox("📡 Modo Offline Ativado", value=False, key="modo_offline", 
                 help="Ative para operar sem gastar dados móveis")
-    
+
     if st.session_state.get("modo_offline"):
-        st.success("Modo Offline ligado com sucesso! Pode fechar a barra lateral.")
+        st.success("Modo Offline ligado com sucesso!")
+
+    st.divider()
+    st.markdown("## 🥋 Minhas conversas")
+    st.button("➕ Adicionar mais nova conversa", on_click=iniciar_nova_conversa, key="btn_nova_conversa",
+              use_container_width=True)
+
+    busca = st.text_input("🔍 Pesquisar histórico", placeholder="Ex.: Rosana", key="busca_conversas").strip().lower()
+    st.divider()
+
+    conversas = st.session_state.get("conversas", {})
+    ids = sorted(conversas, key=lambda c: conversas[c].get("atualizada", ""), reverse=True)
+
+    mostradas = 0
+    for cid in ids:
+        conv = conversas[cid]
+        if busca:
+            texto_total = conv.get("titulo", "").lower() + " " + " ".join(m.get("content", "").lower() for m in conv.get("mensagens", []))
+            if busca not in texto_total:
+                continue
+        mostradas += 1
+        atual = cid == st.session_state.get("conversa_id")
+        col_a, col_b = st.columns([5, 1])
+        with col_a:
+            st.button(("▶ " if atual else "") + conv.get("titulo", "Nova conversa"), key=f"abrir_{cid}",
+                      on_click=abrir_conversa, args=(cid,), use_container_width=True)
+        with col_b:
+            st.button("🗑️", key=f"apagar_{cid}", on_click=apagar_conversa, args=(cid,),
+                      help="Apagar esta conversa")
+
+    if mostradas == 0:
+        st.caption("Nenhuma conversa encontrada." if busca else "Suas conversas salvas vão aparecer aqui. 🥋")
 
 # ---------------------------------------------------------------------------
 # Estados auxiliares
@@ -611,99 +670,4 @@ with aba_caderneta:
                 st.write(f"🥋 {aluno}")
             with col_al2:
                 if st.button("Presença ✔️", key=f"pres_{idx}"):
-                    st.toast(f"✅ Presença confirmada para {aluno}!")
-
-# ===========================================================================
-# ABA 13: CHAVES DE TORNEIO
-# ===========================================================================
-with aba_chaves:
-    st.markdown("<h2 style='text-align: center; color: #f43f5e;'>⏱️ ORGANIZADOR DE CHAVES DE LUTA</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Organize os confrontos dos atletas de forma limpa e visível.</p>", unsafe_allow_html=True)
-
-    nomes_atletas_txt = st.text_area("Digite os nomes dos atletas (um por linha):",
-                                     placeholder="Atleta 1\nAtleta 2\nAtleta 3\nAtleta 4",
-                                     key="txt_atletas_chave")
-
-    if st.button("⚔️ Gerar Chaves de Luta", use_container_width=True, key="btn_gerar_chave"):
-        atletas = [a.strip() for a in nomes_atletas_txt.split("\n") if a.strip()]
-        if len(atletas) < 2:
-            st.warning("Digite pelo menos 2 atletas para gerar os confrontos!")
-        else:
-            mostrar_html("<div class='placar-box'><h3 style='color: #00ffcc;'>⚔️ CONFRONTOS GERADOS</h3></div>")
-            for i in range(0, len(atletas) - 1, 2):
-                mostrar_html(
-                    f"<div style='background-color: #1e1e1e; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ff4d4d;'>"
-                    f"<h4 style='color: #ffffff; margin:0;'>🥊 Luta: <span style='color: #00ffcc;'>{esc(atletas[i])}</span> "
-                    f"vs <span style='color: #ff4d4d;'>{esc(atletas[i + 1])}</span></h4></div>"
-                )
-            if len(atletas) % 2 != 0:
-                st.info(f"✨ Atleta aguardando vencedores (Bye): {atletas[-1]}")
-
-# ===========================================================================
-# ABA 14: CRONOGRAMA DE AULAS
-# ===========================================================================
-with aba_cronograma:
-    st.markdown("<h2 style='text-align: center; color: #38bdf8;'>📋 CRONOGRAMA DE AULAS DA SEMANA</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Planeje os temas técnicos das suas aulas para a semana toda.</p>", unsafe_allow_html=True)
-
-    with st.form(key="form_cronograma"):
-        dia_semana = st.selectbox("Dia da Semana:", ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"])
-        tema_aula = st.text_input("Tema da Aula (Ex: Passagem de Guarda Emborcando):")
-        detalhes_aula = st.text_area("Técnicas / Exercícios Específicos:")
-        btn_crono = st.form_submit_button("💾 Salvar Cronograma")
-
-        if btn_crono:
-            if tema_aula.strip():
-                st.session_state.cronogramas_aulas.append({
-                    "dia": dia_semana,
-                    "tema": tema_aula.strip(),
-                    "detalhes": detalhes_aula.strip()
-                })
-                salvar_tudo()
-                st.success(f"✅ Aula de {dia_semana} planejada com sucesso!")
-            else:
-                st.warning("Preencha o tema da aula!")
-
-    st.divider()
-    if st.session_state.cronogramas_aulas:
-        st.markdown("### 🗓️ Aulas Agendadas:")
-        for cr in st.session_state.cronogramas_aulas:
-            mostrar_html(f"""
-            <div class='curso-box'>
-                <h3 style='color: #00ffcc;'>📅 {esc(cr['dia'])}: {esc(cr['tema'])}</h3>
-                <p>{esc(cr['detalhes'])}</p>
-            </div>
-            """)
-
-# ===========================================================================
-# ABA 15: RECUPERAÇÃO & MOBILIDADE
-# ===========================================================================
-with aba_recuperacao:
-    st.markdown("<h2 style='text-align: center; color: #a855f7;'>🧘 RECUPERAÇÃO & MOBILIDADE</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Cuidado pós-treino para manter as articulações fortes e evitar lesões.</p>", unsafe_allow_html=True)
-
-    mostrar_html("""
-    <div class='nutri-box' style='border: 2px solid #a855f7;'>
-        <h3>🧘 Rotina Diária de Alongamento Pós-Treino (5 min):</h3>
-        <p>1. <b>Mobilidade de Quadril:</b> 1 min em posição de borboleta liberando os adutores.</p>
-        <p>2. <b>Descompressão Lombar:</b> 1 min na posição de 'Criança' (Child's Pose).</p>
-        <p>3. <b>Rotação de Ombros e Punhos:</b> 1 min girando suavemente para aliviar a pegada do kimono.</p>
-        <p>4. <b>Pescoço:</b> Alongamento lateral suave de 30s para cada lado.</p>
-    </div>
-    """)
-
-# ===========================================================================
-# ABA 16: DEFESA PESSOAL
-# ===========================================================================
-with aba_defesa:
-    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>🛡️ DEFESA PESSOAL BJJ</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Conceitos fundamentais de preservação e distância segura da arte suave.</p>", unsafe_allow_html=True)
-
-    mostrar_html("""
-    <div class='camp-box'>
-        <h3 style='color: #fbbf24;'>🛑 Os 3 Pilares da Defesa Pessoal:</h3>
-        <p>1. <b>Gestão de Distância:</b> Ou você está totalmente fora do alcance de golpes ou colado no corpo do agressor travando as pegadas.</p>
-        <p>2. <b>Proteção da Cabeça:</b> Mantenha a guarda alta e feche os cotovelos junto às costelas ao encurtar a distância.</p>
-        <p>3. <b>Uso de Alavancas:</b> Utilize o peso do corpo e o quadril para projetar ou desequilibrar, sem dependência de força bruta.</p>
-    </div>
-    """)
+                    st.toast
