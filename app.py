@@ -16,16 +16,14 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Biblioteca de áudio (o nome correto do módulo é "gtts", em minúsculas)
+# Biblioteca de áudio
 try:
     from gtts import gTTS
     tem_gtts_lib = True
 except Exception:
     tem_gtts_lib = False
 
-# CORRIGIDO: Usando um modelo válido na API da Groq
 MODELO = "llama-3.3-70b-versatile"
-
 
 # ---------------------------------------------------------------------------
 # Utilitários
@@ -53,6 +51,7 @@ def gerar_audio_local(texto):
         return b""
 
 
+# Chave da API (caso expire, pode substituir por uma nova da Groq)
 GROQ_API_KEY = "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"
 
 
@@ -111,7 +110,6 @@ def salvar_dados_usuario(nome_usuario, dados):
 
 
 def salvar_tudo():
-    """Salva TODOS os dados do usuário de uma vez (nada fica de fora)."""
     usuario = st.session_state.get("usuario_atual")
     if not usuario:
         return
@@ -294,7 +292,7 @@ const janela = window.parent;
   if (antigo) antigo.remove();
 });
 
-const estilo = doc.createElement('style');
+const estilo = document.createElement('style');
 estilo.id = 'estilo-botoes-rolagem';
 estilo.innerHTML = `
   #botoes-rolagem { position: fixed; right: 20px; bottom: 110px; display: flex; flex-direction: column; gap: 12px; z-index: 999999; }
@@ -316,14 +314,14 @@ function rolar(direcao) {
   doc.body.scrollTop = (direcao === 'cima') ? 0 : doc.body.scrollHeight;
 }
 
-const caixa = doc.createElement('div');
+const caixa = document.createElement('div');
 caixa.id = 'botoes-rolagem';
 
-const subir = doc.createElement('button');
+const subir = document.createElement('button');
 subir.type = 'button'; subir.title = 'Subir'; subir.textContent = '▲';
 subir.addEventListener('click', function() { rolar('cima'); });
 
-const descer = doc.createElement('button');
+const descer = document.createElement('button');
 descer.type = 'button'; descer.title = 'Descer'; descer.textContent = '▼';
 descer.addEventListener('click', function() { rolar('baixo'); });
 
@@ -499,8 +497,11 @@ with aba_chat:
                             st.session_state.historico.append({"role": "assistant", "content": resp})
                             salvar_conversa_atual()
                         except Exception as e:
-                            # Melhorado para mostrar o erro exato caso ocorra
-                            st.warning(f"Erro na IA: {e}")
+                            erro_str = str(e)
+                            if "401" in erro_str or "Invalid API Key" in erro_str:
+                                st.warning("⚠️ Chave da API da Groq inválida ou expirada (Erro 401). Ative o 'Modo Offline' acima para usar todas as outras funções sem travar!")
+                            else:
+                                st.warning(f"Erro na IA: {e}")
 
 # ===========================================================================
 # ABA 2: MODO LUTA
@@ -859,7 +860,7 @@ with aba_card:
 # ===========================================================================
 with aba_caderneta:
     st.markdown("<h2 style='text-align: center; color: #fbbf24;'>📇 CADERNETA DE ALUNOS & FREQUÊNCIA</h2>", unsafe_allow_html=True)
-    novo_aluno = st.text_input("Digite o Nome do Aluno:", placeholder="Ex: Lucas Gabriel", key="input_novo_aluno")
+    novo_aluno = st.text_input("Digite o Nome o Aluno:", placeholder="Ex: Lucas Gabriel", key="input_novo_aluno")
     if st.button("➕ Adicionar Aluno à Turma", use_container_width=True, key="btn_add_aluno"):
         if novo_aluno.strip():
             st.session_state.lista_alunos_academia.append(novo_aluno.strip())
@@ -903,4 +904,3 @@ with aba_chaves:
                 )
             if len(atletas) % 2 != 0:
                 st.info(f"✨ Atleta aguardando vencedores (Bye): {atletas[-1]}")
-
