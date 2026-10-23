@@ -23,7 +23,8 @@ try:
 except Exception:
     tem_gtts_lib = False
 
-MODELO = "openai/gpt-oss-120b"
+# CORRIGIDO: Usando um modelo válido na API da Groq
+MODELO = "llama-3.3-70b-versatile"
 
 
 # ---------------------------------------------------------------------------
@@ -197,7 +198,7 @@ def definir_atalho(atalho):
 
 
 # ---------------------------------------------------------------------------
-# Funções do Modo Luta (callbacks: o placar atualiza no mesmo clique)
+# Funções do Modo Luta
 # ---------------------------------------------------------------------------
 def somar(lado, campo, valor):
     st.session_state[f"{campo}_{lado}"] += valor
@@ -227,7 +228,7 @@ def zerar_luta():
 
 
 # ---------------------------------------------------------------------------
-# CSS (sem linhas em branco: compactado em uma linha para nunca "vazar")
+# CSS
 # ---------------------------------------------------------------------------
 CSS = """
 .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { background-color: #121212 !important; }
@@ -475,7 +476,6 @@ with aba_chat:
         atalho_pendente = st.session_state.pop("atalho_clicado", None)
         texto_para_enviar = pergunta_texto or atalho_pendente
 
-        # A mensagem do usuário entra no histórico ANTES de desenhar a conversa
         if texto_para_enviar:
             st.session_state.historico.append({"role": "user", "content": texto_para_enviar})
             salvar_conversa_atual()
@@ -498,8 +498,9 @@ with aba_chat:
                             st.markdown(resp)
                             st.session_state.historico.append({"role": "assistant", "content": resp})
                             salvar_conversa_atual()
-                        except Exception:
-                            st.warning("Erro de rede com a IA.")
+                        except Exception as e:
+                            # Melhorado para mostrar o erro exato caso ocorra
+                            st.warning(f"Erro na IA: {e}")
 
 # ===========================================================================
 # ABA 2: MODO LUTA
@@ -538,7 +539,6 @@ with aba_modo_luta:
         st.selectbox("Tempo do Rola:", list(range(1, 11)), index=4, key="select_tempo",
                      format_func=lambda m: f"{m} min", on_change=definir_tempo)
 
-        # Fragmento que se atualiza sozinho a cada 1s enquanto o cronômetro roda
         @st.fragment(run_every=1 if st.session_state.cronometro_rodando else None)
         def painel_cronometro():
             if st.session_state.cronometro_rodando:
@@ -903,3 +903,4 @@ with aba_chaves:
                 )
             if len(atletas) % 2 != 0:
                 st.info(f"✨ Atleta aguardando vencedores (Bye): {atletas[-1]}")
+
