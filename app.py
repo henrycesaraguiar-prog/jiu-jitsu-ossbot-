@@ -51,7 +51,7 @@ def gerar_audio_local(texto):
         return b""
 
 
-# Sua nova chave de API da Groq configurada com sucesso!
+# Sua chave de API da Groq atualizada
 GROQ_API_KEY = "Gsk_iIrY2RYUqeoOw6Hz6oO4WGdyb3FYOHQJ3BY0pvsUDUlYOZfeiFfb"
 
 
@@ -391,4 +391,105 @@ for chave, valor in {
 # ---------------------------------------------------------------------------
 # Cabeçalho
 # ---------------------------------------------------------------------------
-col
+col_esq, col_centro, col_dir = st.columns([1.2, 2.6, 1.2])
+with col_esq:
+    st.image("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop",
+             caption="Técnica e Combate", use_container_width=True)
+with col_centro:
+    st.markdown("<h1 style='text-align: center; color: #ff4d4d;'>🥋 OssBot App</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='text-align: center; color: #00ffcc;'>Usuário: {esc(st.session_state.usuario_atual)}</h4>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #aaaaaa;'>O seu Assistente de Jiu-Jitsu (PWA)</h3>", unsafe_allow_html=True)
+with col_dir:
+    st.image("https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=600&auto=format&fit=crop",
+             caption="Faixa Preta — Tradição", use_container_width=True)
+
+st.divider()
+
+# Exatamente as 17 abas solicitadas!
+(aba_chat, aba_modo_luta, aba_historico_lutas, aba_nutricao, aba_camp, aba_cursos, aba_kids,
+ aba_drills, aba_pressao, aba_grad, aba_kimono, aba_card, aba_caderneta, aba_chaves,
+ aba_parcerias, aba_metas, aba_ajustes) = st.tabs([
+    "💬 Chat IA", "🤼 Luta", "📜 Histórico", "🥗 Nutrição", "🏆 Camp", "📚 Cursos", "👶 Kids",
+    "⏱️ Drills", "🧠 Pressão", "🥇 Graduação", "🥋 Kimono", "📸 Card", "📇 Alunos", "⏱️ Chaves",
+    "🤝 Parcerias", "🎯 Metas", "⚙️ Ajustes",
+])
+
+# ===========================================================================
+# ABA 1: CHAT COM IA
+# ===========================================================================
+def mostrar_historico():
+    for i, mensagem in enumerate(st.session_state.historico):
+        with st.chat_message(mensagem["role"]):
+            st.markdown(mensagem["content"])
+            if mensagem["role"] == "assistant" and st.button("🔊 Ouvir", key=f"ouvir_{i}"):
+                ab = gerar_audio_local(mensagem["content"])
+                if ab:
+                    st.audio(ab, format="audio/mp3")
+                else:
+                    st.caption("Áudio indisponível (instale a biblioteca gTTS e verifique a internet).")
+
+
+with aba_chat:
+    st.markdown("### ⚙️ Escolha o Modo de Atendimento")
+    modo_selecionado = st.radio(
+        "Como você quer que o OssBot responda?",
+        [
+            "🥋 Aluno / Competidor (Online)",
+            "👶 Professor / Turma Kids (Online)",
+            "📡 Modo Offline (Economizar Dados Móveis / Sem Internet)",
+        ],
+        index=0, key="modo_atendimento",
+    )
+
+    if "Modo Offline" in modo_selecionado:
+        st.info("📡 **Modo Offline Ativado!** Nenhuma requisição externa será feita nesta aba. "
+                "Você pode usar 100% das outras abas sem gastar nada da sua rede!")
+        st.divider()
+        mostrar_historico()
+    else:
+        client = None
+        chave_groq = obter_chave_groq()
+        if chave_groq:
+            try:
+                client = criar_cliente_groq(chave_groq)
+            except Exception:
+                client = None
+
+        if "Kids" in modo_selecionado:
+            system_prompt = ("Você é o OssBot, assistente especialista em BJJ para professores de turmas kids. "
+                             "Sugira dinâmicas lúdicas, seguras e divertidas. Use termos como OSS, guarda, raspagem.")
+        else:
+            system_prompt = ("Você é o OssBot, assistente especialista em BJJ focado em atletas e professores. "
+                             "Use termos como OSS, guarda, raspagem.")
+
+        st.divider()
+        st.markdown("### ⚡ Atalhos Inteligentes")
+        atalhos_personalizados = gerar_atalhos_inteligentes(st.session_state.conversas)
+        cols_atalhos = st.columns(len(atalhos_personalizados))
+        for idx, atalho in enumerate(atalhos_personalizados):
+            with cols_atalhos[idx]:
+                st.button(f"📌 {atalho}", key=f"atalho_{idx}", use_container_width=True,
+                          on_click=definir_atalho, args=(atalho,))
+
+        st.divider()
+
+        pergunta_texto = st.chat_input("Digite sua dúvida...")
+        atalho_pendente = st.session_state.pop("atalho_clicado", None)
+        texto_para_enviar = pergunta_texto or atalho_pendente
+
+        if texto_para_enviar:
+            st.session_state.historico.append({"role": "user", "content": texto_para_enviar})
+            salvar_conversa_atual()
+
+        mostrar_historico()
+
+        if texto_para_enviar:
+            if not client:
+                st.warning("⚠️ Sem rede para a IA. Mude para a opção 'Modo Offline'!")
+            else:
+                with st.chat_message("assistant"):
+                    with st.spinner("OssBot pensando... OSS! 🥋"):
+                        try:
+                            mensagens = [{"role": "system", "content": system_prompt}] + [
+                                {"role": m["role"], "content": m["content"]}
+                                for m in st.session_state.
