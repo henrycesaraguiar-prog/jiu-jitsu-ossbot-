@@ -48,9 +48,10 @@ def gerar_audio_local(texto):
 
 
 # ---------------------------------------------------------------------------
-# Dados por usuário
+# Sistema de Autenticação e Dados por Usuário
 # ---------------------------------------------------------------------------
 PASTA_DADOS = os.path.dirname(os.path.abspath(__file__))
+ARQUIVO_BANCO_USUARIOS = os.path.join(PASTA_DADOS, "banco_usuarios.json")
 
 CAMPOS = [
     "conversas", "historico_lutas", "dinamic_kids_custom", "flashcards_pressao",
@@ -59,18 +60,38 @@ CAMPOS = [
 ]
 
 
+def carregar_banco_usuarios():
+    if os.path.exists(ARQUIVO_BANCO_USUARIOS):
+        try:
+            with open(ARQUIVO_BANCO_USUARIOS, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def salvar_banco_usuarios(usuarios):
+    try:
+        tmp = ARQUIVO_BANCO_USUARIOS + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(usuarios, f, ensure_ascii=False, indent=2)
+        os.replace(tmp, ARQUIVO_BANCO_USUARIOS)
+    except Exception:
+        pass
+
+
 def dados_vazios():
     return {campo: ({} if campo == "conversas" else []) for campo in CAMPOS}
 
 
-def obter_caminho_usuario(nome_usuario):
-    nome_limpo = "".join(c if c.isalnum() else "_" for c in nome_usuario.lower()).strip("_")
+def obter_caminho_usuario(email_usuario):
+    nome_limpo = "".join(c if c.isalnum() else "_" for c in email_usuario.lower()).strip("_")
     return os.path.join(PASTA_DADOS, f"usuario_{nome_limpo}.json")
 
 
-def carregar_dados_usuario(nome_usuario):
+def carregar_dados_usuario(email_usuario):
     dados = dados_vazios()
-    caminho = obter_caminho_usuario(nome_usuario)
+    caminho = obter_caminho_usuario(email_usuario)
     try:
         if os.path.exists(caminho):
             with open(caminho, "r", encoding="utf-8") as f:
@@ -80,8 +101,8 @@ def carregar_dados_usuario(nome_usuario):
     return dados
 
 
-def salvar_dados_usuario(nome_usuario, dados):
-    caminho = obter_caminho_usuario(nome_usuario)
+def salvar_dados_usuario(email_usuario, dados):
+    caminho = obter_caminho_usuario(email_usuario)
     try:
         tmp = caminho + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
@@ -92,8 +113,8 @@ def salvar_dados_usuario(nome_usuario, dados):
 
 
 def salvar_tudo():
-    usuario = st.session_state.get("usuario_atual")
-    if not usuario or usuario == "Visitante":
+    usuario = st.session_state.get("usuario_email")
+    if not usuario:
         return
     dados = {}
     for campo in CAMPOS:
@@ -123,9 +144,10 @@ def apagar_conversa(cid):
         iniciar_nova_conversa()
 
 
-def carregar_usuario(nome):
-    dados = carregar_dados_usuario(nome)
-    st.session_state.usuario_atual = nome
+def carregar_usuario(email):
+    dados = carregar_dados_usuario(email)
+    st.session_state.usuario_email = email
+    st.session_state.usuario_atual = email.split("@")[0]
     for campo in CAMPOS:
         st.session_state[campo] = dados.get(campo, [] if campo != "conversas" else {})
     if st.session_state.conversas:
@@ -136,34 +158,11 @@ def carregar_usuario(nome):
         iniciar_nova_conversa()
 
 
-# ---------------------------------------------------------------------------
-# Funções do Modo Luta
-# ---------------------------------------------------------------------------
-def somar(lado, campo, valor):
-    st.session_state[f"{campo}_{lado}"] += valor
-
-
-def definir_tempo():
-    st.session_state.tempo_segundos = st.session_state.select_tempo * 60
-    st.session_state.cronometro_rodando = False
-
-
-def iniciar_cronometro():
-    if st.session_state.tempo_segundos > 0:
-        st.session_state.cronometro_rodando = True
-
-
-def pausar_cronometro():
-    st.session_state.cronometro_rodando = False
-
-
-def zerar_luta():
-    st.session_state.cronometro_rodando = False
-    st.session_state.tempo_segundos = st.session_state.select_tempo * 60
-    for lado in ("a", "b"):
-        st.session_state[f"pts_{lado}"] = 0
-        st.session_state[f"vant_{lado}"] = 0
-        st.session_state[f"pun_{lado}"] = 0
+def fazer_logout():
+    st.session_state.autenticado = False
+    st.session_state.usuario_email = ""
+    st.session_state.usuario_atual = ""
+    st.rerun()
 
 
 # ---------------------------------------------------------------------------
@@ -206,7 +205,66 @@ div[data-baseweb="select"] svg { fill: #ffffff !important; }
 css_compacto = " ".join(CSS.split())
 st.markdown(f"<style>{css_compacto}</style>", unsafe_allow_html=True)
 
-# Botões flutuantes para subir e descer a página
+# ---------------------------------------------------------------------------
+# BLOQUEIO POR TELA DE LOGIN COM E-MAIL E SENHA
+# ---------------------------------------------------------------------------
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
+if "usuario_email" not in st.session_state:
+    st.session_state.usuario_email = ""
+
+if not st.session_state.autenticado:
+    st.markdown("<h1 style='text-align: center; color: #ff4d4d;'>🥋 OssBot App</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #aaaaaa;'>Área de Acesso Restrito</h3>", unsafe_allow_html=True)
+    st.divider()
+
+    col_login_a, col_login_b, col_login_c = st.columns([1, 2, 1])
+    with col_login_b:
+        aba_entrar, aba_cadastrar = st.tabs(["🔑 Entrar", "📝 Criar Conta"])
+
+        with aba_entrar:
+            email_log = st.text_input("Seu E-mail:", key="login_email").strip().lower()
+            senha_log = st.text_input("Sua Senha:", type="password", key="login_senha")
+            
+            if st.button("🚀 Entrar no OssBot", use_container_width=True, key="btn_entrar"):
+                banco = carregar_banco_usuarios()
+                if email_log in banco and banco[email_log]["senha"] == senha_log:
+                    st.session_state.autenticado = True
+                    carregar_usuario(email_log)
+                    st.success("✅ Login realizado com sucesso!")
+                    st.rerun()
+                else:
+                    st.error("❌ E-mail ou senha incorretos.")
+
+        with aba_cadastrar:
+            email_novo = st.text_input("Digite seu E-mail:", key="cad_email").strip().lower()
+            senha_nova = st.text_input("Crie uma Senha:", type="password", key="cad_senha")
+            
+            if st.button("➕ Criar Minha Conta", use_container_width=True, key="btn_cadastrar"):
+                if not email_novo or not senha_nova:
+                    st.warning("Preencha o e-mail e a senha!")
+                elif "@" not in email_novo or "." not in email_novo:
+                    st.warning("Digite um e-mail válido!")
+                else:
+                    banco = carregar_banco_usuarios()
+                    if email_novo in banco:
+                        st.warning("⚠️ Este e-mail já possui cadastro. Use a aba 'Entrar'.")
+                    else:
+                        banco[email_novo] = {
+                            "senha": senha_nova,
+                            "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
+                        }
+                        salvar_banco_usuarios(banco)
+                        st.session_state.autenticado = True
+                        carregar_usuario(email_novo)
+                        st.success("🎉 Conta criada com sucesso! Acessando...")
+                        st.rerun()
+
+    st.stop()
+
+# ---------------------------------------------------------------------------
+# Botões flutuantes para subir e descer a página (Apenas quando autenticado)
+# ---------------------------------------------------------------------------
 components.html("""
 <script>
 const doc = window.parent.document;
@@ -257,19 +315,14 @@ doc.body.appendChild(caixa);
 """, height=0)
 
 # ---------------------------------------------------------------------------
-# Barra lateral (Identificação, Pesquisa, Modo Offline e Histórico)
+# Barra lateral (Perfil do Usuário, Pesquisa, Modo Offline e Histórico)
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown("## 🥋 Identificação")
-    st.session_state.setdefault("input_usuario", "")
-    usuario_input = st.text_input(
-        "Digite seu Nome e Sobrenome:",
-        placeholder="Ex: Henry Cesar",
-        key="input_usuario",
-    ).strip() or "Visitante"
-
-    if st.session_state.get("usuario_atual") != usuario_input:
-        carregar_usuario(usuario_input)
+    st.markdown("## 🥋 Perfil Conectado")
+    st.caption(f"📧 **{st.session_state.get('usuario_email')}**")
+    
+    if st.button("🚪 Sair da Conta (Logout)", use_container_width=True, key="btn_logout"):
+        fazer_logout()
 
     st.divider()
     st.markdown("## 📡 Conexão")
@@ -319,6 +372,36 @@ for chave, valor in {
     "tempo_segundos": 300, "cronometro_rodando": False,
 }.items():
     st.session_state.setdefault(chave, valor)
+
+# ---------------------------------------------------------------------------
+# Funções do Modo Luta
+# ---------------------------------------------------------------------------
+def somar(lado, campo, valor):
+    st.session_state[f"{campo}_{lado}"] += valor
+
+
+def definir_tempo():
+    st.session_state.tempo_segundos = st.session_state.select_tempo * 60
+    st.session_state.cronometro_rodando = False
+
+
+def iniciar_cronometro():
+    if st.session_state.tempo_segundos > 0:
+        st.session_state.cronometro_rodando = True
+
+
+def pausar_cronometro():
+    st.session_state.cronometro_rodando = False
+
+
+def zerar_luta():
+    st.session_state.cronometro_rodando = False
+    st.session_state.tempo_segundos = st.session_state.select_tempo * 60
+    for lado in ("a", "b"):
+        st.session_state[f"pts_{lado}"] = 0
+        st.session_state[f"vant_{lado}"] = 0
+        st.session_state[f"pun_{lado}"] = 0
+
 
 # ---------------------------------------------------------------------------
 # Cabeçalho
