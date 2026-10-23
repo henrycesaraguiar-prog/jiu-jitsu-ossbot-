@@ -48,7 +48,7 @@ def gerar_audio_local(texto):
 
 
 # ---------------------------------------------------------------------------
-# Dados por utilizador
+# Dados por usuário
 # ---------------------------------------------------------------------------
 PASTA_DADOS = os.path.dirname(os.path.abspath(__file__))
 
@@ -761,6 +761,3 @@ with aba_defesa:
         <p>3. <b>Uso de Alavancas:</b> Utilize o peso do corpo e o quadril para projetar ou desequilibrar, sem dependência de força bruta.</p>
     </div>
     """)
-
-                if st.button("Presença ✔️", key=f"pres_{idx}"):
-                    st.toast
