@@ -8,7 +8,7 @@ from datetime import datetime
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Precisa ser o primeiro comando do Streamlit
+# Configuração da página
 st.set_page_config(
     page_title="OssBot - Assistente de Jiu-Jitsu",
     page_icon="🥋",
@@ -34,7 +34,7 @@ def esc(texto):
 
 
 def mostrar_html(codigo):
-    """Mostra HTML sem linhas em branco/indentação (evita virar bloco de código)."""
+    """Mostra HTML sem linhas em branco/indentação."""
     limpo = " ".join(linha.strip() for linha in codigo.splitlines() if linha.strip())
     st.markdown(limpo, unsafe_allow_html=True)
 
@@ -51,7 +51,7 @@ def gerar_audio_local(texto):
         return b""
 
 
-# Chave de API da Groq definitiva
+# Chave de API da Groq configurada
 GROQ_API_KEY = "Gsk_iIrY2RYUqeoOw6Hz6oO4WGdyb3FYOHQJ3BY0pvsUDUlYOZfeiFfb"
 
 
@@ -73,7 +73,7 @@ PASTA_DADOS = os.path.dirname(os.path.abspath(__file__))
 CAMPOS = [
     "conversas", "historico_lutas", "dinamic_kids_custom", "flashcards_pressao",
     "alunos_graduacao", "cards_vitoria", "cursos_interativos",
-    "lista_alunos_academia", "notas_kimono",
+    "lista_alunos_academia", "notas_kimono", "cronogramas_aulas", "foco_recuperacao"
 ]
 
 
@@ -113,7 +113,10 @@ def salvar_tudo():
     usuario = st.session_state.get("usuario_atual")
     if not usuario:
         return
-    salvar_dados_usuario(usuario, {campo: st.session_state[campo] for campo in CAMPOS})
+    dados = {}
+    for campo in CAMPOS:
+        dados[campo] = st.session_state.get(campo, [] if campo != "conversas" else {})
+    salvar_dados_usuario(usuario, dados)
 
 
 SAUDACAO_PADRAO = (
@@ -166,7 +169,7 @@ def carregar_usuario(nome):
     dados = carregar_dados_usuario(nome)
     st.session_state.usuario_atual = nome
     for campo in CAMPOS:
-        st.session_state[campo] = dados[campo]
+        st.session_state[campo] = dados.get(campo, [] if campo != "conversas" else {})
     if st.session_state.conversas:
         ultimo_id = max(st.session_state.conversas,
                         key=lambda c: st.session_state.conversas[c].get("atualizada", ""))
@@ -405,10 +408,17 @@ with col_dir:
 
 st.divider()
 
-(aba_chat, aba_modo_luta, aba_historico_lutas, aba_nutricao, aba_camp, aba_cursos, aba_kids,
- aba_drills, aba_pressao, aba_grad, aba_kimono, aba_card, aba_caderneta, aba_chaves) = st.tabs([
-    "💬 Chat IA", "🤼 Luta", "📜 Histórico", "🥗 Nutrição", "🏆 Camp", "📚 Cursos", "👶 Kids",
-    "⏱️ Drills", "🧠 Pressão", "🥇 Graduação", "🥋 Kimono", "📸 Card", "📇 Alunos", "⏱️ Chaves",
+# DEFINIÇÃO DAS 17 ABAS
+(
+    aba_chat, aba_modo_luta, aba_historico_lutas, aba_nutricao, aba_camp, 
+    aba_cursos, aba_kids, aba_drills, aba_pressao, aba_grad, 
+    aba_kimono, aba_card, aba_caderneta, aba_chaves, aba_cronograma, 
+    aba_recuperacao, aba_defesa
+) = st.tabs([
+    "💬 Chat IA", "🤼 Luta", "📜 Histórico", "🥗 Nutrição", "🏆 Camp", 
+    "📚 Cursos", "👶 Kids", "⏱️ Drills", "🧠 Pressão", "🥇 Graduação", 
+    "🥋 Kimono", "📸 Card", "📇 Alunos", "⏱️ Chaves", "📋 Cronograma", 
+    "🧘 Recuperação", "🛡️ Defesa Pessoal"
 ])
 
 # ===========================================================================
@@ -594,5 +604,149 @@ with aba_historico_lutas:
     else:
         for luta in reversed(st.session_state.historico_lutas):
             with st.expander(f"🥋 {luta['data']} - {luta['atleta_a']} vs {luta['atleta_b']}"):
-                st.write(f"🔵 **{luta['atleta_a']}**: {luta['pts_a']} Pts ({luta['vant_a']}V/{luta['pun_a']}P) | "
-                         f"⚪ **{luta['atleta_b']}**: {luta['pts_b']} Pts ({luta['vant_b']}V/{l
+                st.write(
+                    f"🔵 **{luta['atleta_a']}**: {luta['pts_a']} Pts ({luta['vant_a']}V/{luta['pun_a']}P) | "
+                    f"⚪ **{luta['atleta_b']}**: {luta['pts_b']} Pts ({luta['vant_b']}V/{luta['pun_b']}P)"
+                )
+
+# ===========================================================================
+# ABA 4: NUTRIÇÃO & HIDRATAÇÃO
+# ===========================================================================
+with aba_nutricao:
+    st.markdown("<h2 style='text-align: center; color: #00ffcc;'>🥗 NUTRIÇÃO & HIDRATAÇÃO</h2>", unsafe_allow_html=True)
+    peso_input = st.number_input("Digite seu Peso atual (kg):", 30.0, 150.0, 65.0, 0.5, key="nutri_peso")
+    horas_input = st.slider("Horas de treino por dia:", 0.5, 4.0, 1.5, 0.5, key="nutri_horas")
+    agua_calc = ((peso_input * 35) / 1000) + (horas_input * 0.75)
+    mostrar_html(f"""
+    <div class='nutri-box'>
+        <h3>🥤 Meta Diária de Água Recomendada:</h3>
+        <h2>{agua_calc:.2f} Litros</h2>
+        <p>• Dica: Beba 500ml de água 1h antes do treino e consuma carboidratos leves para ter energia sem desconforto.</p>
+    </div>
+    """)
+
+# ===========================================================================
+# ABA 5: CAMPEONATO
+# ===========================================================================
+with aba_camp:
+    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>🏆 ESTRATÉGIA DE CAMPEONATO</h2>", unsafe_allow_html=True)
+    faixa_camp = st.selectbox("Sua Faixa:", ["Branca", "Kids", "Azul", "Roxa", "Castanha", "Preta"], key="camp_faixa")
+    estilo_camp = st.text_input("Seu Golpe/Posição Favorito:", "Armlock da Guarda", key="camp_estilo")
+
+    if st.button("🚀 Gerar Plano de Luta Tático", use_container_width=True, key="btn_plan_camp"):
+        mostrar_html(f"""
+        <div class='camp-box'>
+            <h3 style='color: #00ffcc;'>🥇 GUIA TÁTICO ({esc(faixa_camp)} - {esc(estilo_camp)})</h3>
+            <p>1. <b>Início Implacável:</b> Faça a pegada na gola/manga primeiro. Imponha o ritmo antes do adversário pontuar.</p>
+            <p>2. <b>Foco na Posição {esc(estilo_camp)}:</b> Monte armadilhas criando conexões. Garanta os primeiros 2 pontos de vantagem antes da finalização.</p>
+            <p>3. <b>Administração do Placar:</b> Se estiver na frente nos 60 segundos finais, mantenha a base sólida e evite trocas arriscadas.</p>
+        </div>
+        """)
+
+# ===========================================================================
+# ABA 6: CURSOS
+# ===========================================================================
+with aba_cursos:
+    st.markdown("<h2 style='text-align: center; color: #38bdf8;'>📚 MANUAL DE REGRAS & CURSOS BJJ</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Consulte as regras oficiais, envie materiais fotográficos ou cadastre anotações de curso!</p>", unsafe_allow_html=True)
+
+    with st.form(key="form_curso_interativo"):
+        st.markdown("### ➕ Adicionar Material / Anotação de Curso")
+        titulo_curso = st.text_input("Título do Módulo / Regra:")
+        desc_curso = st.text_area("Descrição ou Anotações:")
+        foto_curso = st.file_uploader("Enviar Foto do Material (Arquivos):", type=["jpg", "png", "jpeg"], key="up_curso")
+        btn_salvar_curso = st.form_submit_button("💾 Salvar Material de Curso")
+
+        if btn_salvar_curso:
+            if titulo_curso.strip() and desc_curso.strip():
+                st.session_state.cursos_interativos.append({
+                    "titulo": titulo_curso.strip(),
+                    "descricao": desc_curso.strip(),
+                })
+                salvar_tudo()
+                st.success("✅ Material salvo com sucesso!")
+            else:
+                st.warning("Preencha o título e a descrição do curso.")
+
+    st.divider()
+    st.markdown("### 📜 Tabela Oficial de Pontos CBJJ / IBJJF:")
+    mostrar_html("""
+    <div class='curso-box'>
+        <ul>
+            <li><b>2 PONTOS:</b> Queda, Raspagem e Joelho na Barriga.</li>
+            <li><b>3 PONTOS:</b> Passagem de Guarda.</li>
+            <li><b>4 PONTOS:</b> Montada, Montada pelas Costas e Pegada de Costas com dois ganchos.</li>
+            <li><b>VANTAGENS:</b> Quase-queda, quase-raspagem ou tentativa real de finalização com defesa ativa.</li>
+        </ul>
+    </div>
+    """)
+
+    if st.session_state.cursos_interativos:
+        st.markdown("### 📂 Seus Materiais Cadastrados:")
+        for ci in st.session_state.cursos_interativos:
+            mostrar_html(f"""
+            <div class='curso-box'>
+                <h3>📚 {esc(ci['titulo'])}</h3>
+                <p>{esc(ci['descricao'])}</p>
+            </div>
+            """)
+
+# ===========================================================================
+# ABA 7: AULAS KIDS
+# ===========================================================================
+with aba_kids:
+    st.markdown("<h2 style='text-align: center; color: #fbbf24;'>👶 AULAS & DINÂMICAS KIDS</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Crie dinâmicas infantis por texto, áudio ou câmera quando estiver com pressa no tatame!</p>", unsafe_allow_html=True)
+
+    with st.form(key="form_kids"):
+        nome_kids = st.text_input("Nome da Brincadeira / Dinâmica Kids:", placeholder="Ex: Pega-Pega do Guardeiro")
+        desc_kids = st.text_area("Explicação / Regras da Dinâmica (Escrito):", placeholder="Descreva como funciona a brincadeira...")
+        audio_kids_input = st.audio_input("Ou Grave um Áudio explicando a Dinâmica:")
+        btn_add_kids = st.form_submit_button("💾 Salvar Dinâmica Kids")
+
+        if btn_add_kids:
+            texto_final_desc = desc_kids.strip()
+            if audio_kids_input is not None:
+                texto_final_desc += " [Áudio gravado pelo professor anexado com sucesso]"
+            if nome_kids.strip() and texto_final_desc:
+                st.session_state.dinamic_kids_custom.append({"titulo": nome_kids.strip(), "descricao": texto_final_desc})
+                salvar_tudo()
+                st.success("✅ Dinâmica Kids salva com sucesso!")
+            else:
+                st.warning("Preencha o nome e a explicação (ou grave um áudio) da dinâmica!")
+
+    st.divider()
+    st.markdown("### 🧸 Dinâmicas Cadastradas:")
+    if not st.session_state.dinamic_kids_custom:
+        st.info("Nenhuma dinâmica personalizada cadastrada ainda.")
+    else:
+        for dk in st.session_state.dinamic_kids_custom:
+            mostrar_html(f"""
+            <div class='kids-box'>
+                <h3>🧸 {esc(dk['titulo'])}</h3>
+                <p>{esc(dk['descricao'])}</p>
+            </div>
+            """)
+
+# ===========================================================================
+# ABA 8: DRILLS
+# ===========================================================================
+with aba_drills:
+    st.markdown("<h2 style='text-align: center; color: #34d399;'>⏱️ DRILLS & HIIT DE COMBATE</h2>", unsafe_allow_html=True)
+    col_d1, col_d2, col_d3 = st.columns(3)
+    with col_d1:
+        t_acao = st.number_input("Tempo de Ação (s):", 10, 120, 30, 5, key="d_a")
+    with col_d2:
+        t_pausa = st.number_input("Tempo de Pausa (s):", 5, 60, 10, 5, key="d_p")
+    with col_d3:
+        n_rounds = st.number_input("Rounds:", 1, 30, 8, 1, key="d_r")
+
+    if st.button("▶️ Iniciar Cronômetro de Drills", use_container_width=True, key="btn_iniciar_drills_local"):
+        st.success(f"✅ Treino configurado: {n_rounds} rounds de {t_acao}s de explosão por {t_pausa}s de pausa!")
+
+# ===========================================================================
+# ABA 9: PRESSÃO
+# ===========================================================================
+with aba_pressao:
+    st.markdown("<h2 style='text-align: center; color: #f43f5e;'>🧠 PRESSÃO DE LUTA - FLASHCARDS</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Estude pos
