@@ -165,52 +165,51 @@ def fazer_logout():
 
 
 # ---------------------------------------------------------------------------
-# CSS - PALETA PRETO, PRATA & DOURADO (BLACK GOLD & SILVER)
+# CSS - PALETA PRETO & VERMELHO (BLACK & RED COMBAT)
 # ---------------------------------------------------------------------------
 CSS = """
 .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { background-color: #0a0a0a !important; }
-[data-testid="stSidebar"], [data-testid="stSidebar"] > div { background-color: #121212 !important; border-right: 1px solid #d4af37 !important; }
+[data-testid="stSidebar"], [data-testid="stSidebar"] > div { background-color: #121212 !important; border-right: 1px solid #ff1e27 !important; }
 .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp p, .stApp li, .stApp label, .stApp summary { color: #ffffff; }
-[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * { color: #d4af37 !important; }
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * { color: #ff1e27 !important; }
 
-div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="textarea"], div[data-baseweb="select"] > div { background-color: #1a1a1a !important; border-color: #d4af37 !important; border-radius: 8px !important; }
+div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="textarea"], div[data-baseweb="select"] > div { background-color: #1a1a1a !important; border-color: #ff1e27 !important; border-radius: 8px !important; }
 div[data-baseweb="input"] input, div[data-baseweb="base-input"] input, div[data-baseweb="textarea"] textarea, div[data-baseweb="base-input"] textarea, input, textarea { background-color: #1a1a1a !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; caret-color: #ffffff !important; font-weight: bold !important; }
-input::placeholder, textarea::placeholder { color: #aaaaaa !important; -webkit-text-fill-color: #aaaaaa !important; opacity: 1 !important; }
+input::placeholder, textarea::placeholder { color: #888888 !important; -webkit-text-fill-color: #888888 !important; opacity: 1 !important; }
 div[data-baseweb="select"] * { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
-div[data-baseweb="select"] svg { fill: #d4af37 !important; }
+div[data-baseweb="select"] svg { fill: #ff1e27 !important; }
 
 [data-testid="stNumberInput"] button { background-color: #222222 !important; color: #ffffff !important; border: none !important; }
 
-[data-testid="stFileUploaderDropzone"], [data-testid="stFileUploader"] section { background-color: #1a1a1a !important; border: 2px dashed #d4af37 !important; border-radius: 10px !important; }
+[data-testid="stFileUploaderDropzone"], [data-testid="stFileUploader"] section { background-color: #1a1a1a !important; border: 2px dashed #ff1e27 !important; border-radius: 10px !important; }
 [data-testid="stFileUploader"] * { color: #ffffff !important; }
-[data-testid="stFileUploader"] svg { fill: #d4af37 !important; }
-[data-testid="stFileUploader"] button { background-color: #2b2b2b !important; border: 2px solid #d4af37 !important; }
+[data-testid="stFileUploader"] svg { fill: #ff1e27 !important; }
+[data-testid="stFileUploader"] button { background-color: #2b2b2b !important; border: 2px solid #ff1e27 !important; }
 
-.stButton > button, div[data-testid="stFormSubmitButton"] > button { border-radius: 10px !important; font-weight: bold !important; background-color: #1c1c1c !important; color: #d4af37 !important; border: 2px solid #d4af37 !important; }
-.stButton > button p, div[data-testid="stFormSubmitButton"] > button p { color: #d4af37 !important; }
-.stButton > button:hover, div[data-testid="stFormSubmitButton"] > button:hover { background-color: #d4af37 !important; border-color: #ffffff !important; color: #000000 !important; }
-.stButton > button:hover p, div[data-testid="stFormSubmitButton"] > button:hover p { color: #000000 !important; }
+.stButton > button, div[data-testid="stFormSubmitButton"] > button { border-radius: 10px !important; font-weight: bold !important; background-color: #cc0000 !important; color: #ffffff !important; border: 2px solid #ff1e27 !important; }
+.stButton > button p, div[data-testid="stFormSubmitButton"] > button p { color: #ffffff !important; }
+.stButton > button:hover, div[data-testid="stFormSubmitButton"] > button:hover { background-color: #ff1e27 !important; border-color: #ffffff !important; color: #ffffff !important; }
 
-[data-testid="stExpander"] { background-color: #141414 !important; border: 1px solid #c0c0c0 !important; border-radius: 10px !important; }
-[data-testid="stForm"] { border: 1px solid #d4af37 !important; border-radius: 12px !important; }
+[data-testid="stExpander"] { background-color: #141414 !important; border: 1px solid #ff1e27 !important; border-radius: 10px !important; }
+[data-testid="stForm"] { border: 1px solid #ff1e27 !important; border-radius: 12px !important; }
 
 .placar-box, .nutri-box, .camp-box, .curso-box, .kids-box, .admin-box { color: #ffffff; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
-.placar-box { background-color: #141414; border: 2px solid #d4af37; text-align: center; }
-.placar-numero { font-size: 50px; font-weight: bold; color: #d4af37; }
-.nutri-box { background-color: #161616; border: 2px solid #c0c0c0; }
-.camp-box { background-color: #121212; border: 2px solid #d4af37; }
-.curso-box { background-color: #161616; border: 2px solid #e0e0e0; }
-.kids-box { background-color: #181818; border: 2px solid #d4af37; }
+.placar-box { background-color: #141414; border: 2px solid #ff1e27; text-align: center; }
+.placar-numero { font-size: 50px; font-weight: bold; color: #ff1e27; }
+.nutri-box { background-color: #161616; border: 2px solid #00ffcc; }
+.camp-box { background-color: #121212; border: 2px solid #ff1e27; }
+.curso-box { background-color: #161616; border: 2px solid #ff4d4d; }
+.kids-box { background-color: #181818; border: 2px solid #fbbf24; }
 .badge-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-.badge { background-color: #1a1a1a; border: 1px solid #d4af37; color: #d4af37; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; }
-.foto-bolinha { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 3px solid #d4af37; display: block; margin: 0 auto 10px auto; box-shadow: 0 0 12px rgba(212,175,55,0.4); }
-.bolinha-padrao { width: 85px; height: 85px; border-radius: 50%; background-color: #1f1f1f; border: 3px solid #d4af37; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 10px auto; }
+.badge { background-color: #1a1a1a; border: 1px solid #ff1e27; color: #ff1e27; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+.foto-bolinha { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 3px solid #ff1e27; display: block; margin: 0 auto 10px auto; box-shadow: 0 0 12px rgba(255,30,39,0.5); }
+.bolinha-padrao { width: 85px; height: 85px; border-radius: 50%; background-color: #1f1f1f; border: 3px solid #ff1e27; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 10px auto; }
 """
 css_compacto = " ".join(CSS.split())
 st.markdown(f"<style>{css_compacto}</style>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# TELA DE LOGIN PROFISSIONAL PRETO, PRATA & DOURADO
+# TELA DE LOGIN PROFISSIONAL PRETO & VERMELHO
 # ---------------------------------------------------------------------------
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
@@ -220,12 +219,12 @@ if "is_admin" not in st.session_state:
     st.session_state.is_admin = False
 
 if not st.session_state.autenticado:
-    st.markdown("<h1 style='text-align: center; color: #d4af37;'>🥋 OssBot Pro</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; color: #c0c0c0;'>Plataforma Inteligente de Gestão de BJJ & Tatame</h3>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot Pro</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #cccccc;'>Plataforma Inteligente de Gestão de BJJ & Tatame</h3>", unsafe_allow_html=True)
     
     mostrar_html("""
     <div class='badge-container'>
-        <span class='badge'>👑 Edição Preto, Prata & Gold</span>
+        <span class='badge'>🔥 Edição Preto & Vermelho</span>
         <span class='badge'>🛡️ Acesso Seguro & Multi-Usuário</span>
         <span class='badge'>⏱️ 15 Abas Especializadas</span>
     </div>
@@ -322,8 +321,8 @@ const estilo = document.createElement('style');
 estilo.id = 'estilo-botoes-rolagem';
 estilo.innerHTML = `
   #botoes-rolagem { position: fixed; right: 20px; bottom: 110px; display: flex; flex-direction: column; gap: 12px; z-index: 999999; }
-  #botoes-rolagem button { width: 64px; height: 64px; font-size: 28px; font-weight: bold; color: #d4af37; background-color: #1a1a1a; border: 2px solid #d4af37; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.9); }
-  #botoes-rolagem button:hover { background-color: #d4af37; color: #000000; }
+  #botoes-rolagem button { width: 64px; height: 64px; font-size: 28px; font-weight: bold; color: #ffffff; background-color: #cc0000; border: 2px solid #ff1e27; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.9); }
+  #botoes-rolagem button:hover { background-color: #ff1e27; }
 `;
 doc.head.appendChild(estilo);
 
@@ -492,16 +491,16 @@ def zerar_luta():
 
 
 # ---------------------------------------------------------------------------
-# Cabeçalho Principal (Tema Preto, Prata & Gold)
+# Cabeçalho Principal (Tema Preto & Vermelho)
 # ---------------------------------------------------------------------------
 col_esq, col_centro, col_dir = st.columns([1.2, 2.6, 1.2])
 with col_esq:
     st.image("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop",
              caption="Técnica e Combate", use_container_width=True)
 with col_centro:
-    st.markdown("<h1 style='text-align: center; color: #d4af37;'>🥋 OssBot App</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h4 style='text-align: center; color: #c0c0c0;'>Atleta: {esc(st.session_state.get('perfil_nome', 'Atleta'))} | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</h4>", unsafe_allow_html=True)
-    st.markdown(f"<h5 style='text-align: center; color: #d4af37;'>{esc(st.session_state.get('perfil_academia', 'Academia BJJ'))} | {esc(st.session_state.get('perfil_status', 'Atleta'))}</h5>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot App</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='text-align: center; color: #ffffff;'>Atleta: {esc(st.session_state.get('perfil_nome', 'Atleta'))} | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h5 style='text-align: center; color: #ff1e27;'>{esc(st.session_state.get('perfil_academia', 'Academia BJJ'))} | {esc(st.session_state.get('perfil_status', 'Atleta'))}</h5>", unsafe_allow_html=True)
 with col_dir:
     st.image("https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=600&auto=format&fit=crop",
              caption="Faixa Preta — Tradição", use_container_width=True)
@@ -544,7 +543,7 @@ def bloco_placar(lado, nome, emoji, cor):
 
 
 with aba_modo_luta:
-    st.markdown("<h2 style='text-align: center; color: #d4af37;'>⏱️ PLACAR & CRONÔMETRO DE LUTA</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>⏱️ PLACAR & CRONÔMETRO DE LUTA</h2>", unsafe_allow_html=True)
 
     col_l1, col_l2 = st.columns(2)
     with col_l1:
@@ -568,7 +567,7 @@ with aba_modo_luta:
                     st.rerun(scope="app")
             mins, segs = divmod(st.session_state.tempo_segundos, 60)
             st.markdown(
-                f"<h1 style='text-align: center; font-size: 70px; color: #d4af37;'>{mins:02d}:{segs:02d}</h1>",
+                f"<h1 style='text-align: center; font-size: 70px; color: #ff1e27;'>{mins:02d}:{segs:02d}</h1>",
                 unsafe_allow_html=True,
             )
 
@@ -582,7 +581,7 @@ with aba_modo_luta:
     st.divider()
     col_p1, col_p2 = st.columns(2)
     with col_p1:
-        bloco_placar("a", nome_atleta_a, "🔵", "#d4af37")
+        bloco_placar("a", nome_atleta_a, "🔵", "#ff1e27")
     with col_p2:
         bloco_placar("b", nome_atleta_b, "⚪", "#ffffff")
 
@@ -616,7 +615,7 @@ with aba_historico_lutas:
 # ABA 3: NUTRIÇÃO & HIDRATAÇÃO
 # ===========================================================================
 with aba_nutricao:
-    st.markdown("<h2 style='text-align: center; color: #d4af37;'>🥗 NUTRIÇÃO & HIDRATAÇÃO</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #00ffcc;'>🥗 NUTRIÇÃO & HIDRATAÇÃO</h2>", unsafe_allow_html=True)
     peso_input = st.number_input("Digite seu Peso atual (kg):", 30.0, 150.0, 65.0, 0.5, key="nutri_peso")
     horas_input = st.slider("Horas de treino por dia:", 0.5, 4.0, 1.5, 0.5, key="nutri_horas")
     agua_calc = ((peso_input * 35) / 1000) + (horas_input * 0.75)
@@ -632,7 +631,7 @@ with aba_nutricao:
 # ABA 4: ESTRATÉGIA DE CAMPEONATO
 # ===========================================================================
 with aba_camp:
-    st.markdown("<h2 style='text-align: center; color: #d4af37;'>🏆 ESTRATÉGIA DE CAMPEONATO</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🏆 ESTRATÉGIA DE CAMPEONATO</h2>", unsafe_allow_html=True)
     
     col_c1, col_c2 = st.columns(2)
     with col_c1:
@@ -671,7 +670,7 @@ with aba_camp:
 
         mostrar_html(f"""
         <div class='camp-box'>
-            <h3 style='color: #d4af37;'>🥇 GUIA TÁTICO PERSONALIZADO</h3>
+            <h3 style='color: #ff1e27;'>🥇 GUIA TÁTICO PERSONALIZADO</h3>
             <p><b>Faixa:</b> {esc(faixa_final or "Não informada")}</p>
             <p><b>Tempo Restante:</b> {dias_restantes} dia(s) até a competição.</p>
             <p><b>Estratégia de Peso:</b> {dica_peso}</p>
@@ -685,7 +684,7 @@ with aba_camp:
 # ABA 5: CURSOS
 # ===========================================================================
 with aba_cursos:
-    st.markdown("<h2 style='text-align: center; color: #c0c0c0;'>📚 MANUAL DE REGRAS & CURSOS BJJ</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>📚 MANUAL DE REGRAS & CURSOS BJJ</h2>", unsafe_allow_html=True)
 
     with st.form(key="form_curso_interativo"):
         st.markdown("### ➕ Adicionar Material / Anotação de Curso")
@@ -717,7 +716,7 @@ with aba_cursos:
 # ABA 6: AULAS KIDS
 # ===========================================================================
 with aba_kids:
-    st.markdown("<h2 style='text-align: center; color: #d4af37;'>👶 AULAS & DINÂMICAS KIDS</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #fbbf24;'>👶 AULAS & DINÂMICAS KIDS</h2>", unsafe_allow_html=True)
 
     with st.form(key="form_kids"):
         nome_kids = st.text_input("Nome da Brincadeira:", placeholder="Ex: Pega-Pega do Guardeiro")
@@ -747,7 +746,7 @@ with aba_kids:
 # ABA 7: DRILLS
 # ===========================================================================
 with aba_drills:
-    st.markdown("<h2 style='text-align: center; color: #c0c0c0;'>⏱️ DRILLS & HIIT DE COMBATE</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>⏱️ DRILLS & HIIT DE COMBATE</h2>", unsafe_allow_html=True)
     col_d1, col_d2, col_d3 = st.columns(3)
     with col_d1:
         t_acao = st.number_input("Tempo de Ação (s):", 10, 120, 30, 5, key="d_a")
@@ -763,7 +762,7 @@ with aba_drills:
 # ABA 8: PRESSÃO
 # ===========================================================================
 with aba_pressao:
-    st.markdown("<h2 style='text-align: center; color: #d4af37;'>🧠 PRESSÃO DE LUTA - FLASHCARDS</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧠 PRESSÃO DE LUTA - FLASHCARDS</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Estude posições difíceis e saídas de sufoco.</p>", unsafe_allow_html=True)
 
     with st.form(key="form_pressao_flashcard"):
@@ -787,7 +786,7 @@ with aba_pressao:
 # ABA 9: GRADUAÇÃO
 # ===========================================================================
 with aba_grad:
-    st.markdown("<h2 style='text-align: center; color: #c0c0c0;'>🥇 GRADUAÇÃO & DIÁRIO DE FAIXA</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #34d399;'>🥇 GRADUAÇÃO & DIÁRIO DE FAIXA</h2>", unsafe_allow_html=True)
 
     with st.form(key="form_cadastra_aluno_grad"):
         nome_aluno_g = st.text_input("Nome Completo do Aluno:")
@@ -816,7 +815,7 @@ with aba_grad:
 # ABA 10: KIMONO
 # ===========================================================================
 with aba_kimono:
-    st.markdown("<h2 style='text-align: center; color: #d4af37;'>🥋 GESTÃO E CUIDADOS COM O KIMONO</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🥋 GESTÃO E CUIDADOS COM O KIMONO</h2>", unsafe_allow_html=True)
 
     nota_kimono = st.text_area("Anotações do Kimono:", placeholder="Lavar com água fria...", key="nota_kimono")
     if st.button("💾 Salvar Nota", use_container_width=True, key="btn_salvar_kimono"):
@@ -834,7 +833,7 @@ with aba_kimono:
 # ABA 11: CARD VITÓRIA
 # ===========================================================================
 with aba_card:
-    st.markdown("<h2 style='text-align: center; color: #d4af37;'>📸 CARD DE VITÓRIA</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>📸 CARD DE VITÓRIA</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Crie seu card personalizado com foto, texto e comemore suas conquistas no tatame!</p>", unsafe_allow_html=True)
 
     foto_card_up = st.file_uploader("Enviar Foto da Vitória (Arquivos):", type=["jpg", "png", "jpeg"], key="up_card")
@@ -848,13 +847,13 @@ with aba_card:
         foto_final = foto_card_cam or foto_card_up
         if foto_final is not None:
             st.image(foto_final, use_container_width=True)
-        mostrar_html(f"<div class='placar-box' style='border: 2px solid #d4af37;'><h3 style='color: #d4af37;'>🏆 CARD OFICIAL OSSBOT</h3><p style='font-size: 18px; font-weight: bold;'>{esc(legenda_card)}</p></div>")
+        mostrar_html(f"<div class='placar-box' style='border: 2px solid #ff1e27;'><h3 style='color: #ff1e27;'>🏆 CARD OFICIAL OSSBOT</h3><p style='font-size: 18px; font-weight: bold;'>{esc(legenda_card)}</p></div>")
 
 # ===========================================================================
 # ABA 12: CADERNETA DE ALUNOS
 # ===========================================================================
 with aba_caderneta:
-    st.markdown("<h2 style='text-align: center; color: #c0c0c0;'>📇 CADERNETA DE ALUNOS & FREQUÊNCIA</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #fbbf24;'>📇 CADERNETA DE ALUNOS & FREQUÊNCIA</h2>", unsafe_allow_html=True)
     novo_aluno = st.text_input("Digite o Nome do Aluno:", placeholder="Ex: Lucas Gabriel", key="input_novo_aluno")
     if st.button("➕ Adicionar Aluno à Turma", use_container_width=True, key="btn_add_aluno"):
         if novo_aluno.strip():
@@ -878,7 +877,7 @@ with aba_caderneta:
 # ABA 13: CHAVES DE TORNEIO
 # ===========================================================================
 with aba_chaves:
-    st.markdown("<h2 style='text-align: center; color: #d4af37;'>⏱️ ORGANIZADOR DE CHAVES DE LUTA</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>⏱️ ORGANIZADOR DE CHAVES DE LUTA</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Organize os confrontos dos atletas de forma limpa e visível.</p>", unsafe_allow_html=True)
 
     nomes_atletas_txt = st.text_area("Digite os nomes dos atletas (um por linha):",
@@ -890,12 +889,12 @@ with aba_chaves:
         if len(atletas) < 2:
             st.warning("Digite pelo menos 2 atletas para gerar os confrontos!")
         else:
-            mostrar_html("<div class='placar-box'><h3 style='color: #d4af37;'>⚔️ CONFRONTOS GERADOS</h3></div>")
+            mostrar_html("<div class='placar-box'><h3 style='color: #ff1e27;'>⚔️ CONFRONTOS GERADOS</h3></div>")
             for i in range(0, len(atletas) - 1, 2):
                 mostrar_html(
-                    f"<div style='background-color: #1a1a1a; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #d4af37;'>"
-                    f"<h4 style='color: #ffffff; margin:0;'>🥊 Luta: <span style='color: #d4af37;'>{esc(atletas[i])}</span> "
-                    f"vs <span style='color: #c0c0c0;'>{esc(atletas[i + 1])}</span></h4></div>"
+                    f"<div style='background-color: #1a1a1a; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ff1e27;'>"
+                    f"<h4 style='color: #ffffff; margin:0;'>🥊 Luta: <span style='color: #ff1e27;'>{esc(atletas[i])}</span> "
+                    f"vs <span style='color: #ffffff;'>{esc(atletas[i + 1])}</span></h4></div>"
                 )
             if len(atletas) % 2 != 0:
                 st.info(f"✨ Atleta aguardando vencedores (Bye): {atletas[-1]}")
@@ -904,7 +903,7 @@ with aba_chaves:
 # ABA 14: CRONOGRAMA DE AULAS
 # ===========================================================================
 with aba_cronograma:
-    st.markdown("<h2 style='text-align: center; color: #c0c0c0;'>📋 CRONOGRAMA DE AULAS DA SEMANA</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>📋 CRONOGRAMA DE AULAS DA SEMANA</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Planeje os temas técnicos das suas aulas para a semana toda.</p>", unsafe_allow_html=True)
 
     with st.form(key="form_cronograma"):
@@ -931,7 +930,7 @@ with aba_cronograma:
         for cr in st.session_state.cronogramas_aulas:
             mostrar_html(f"""
             <div class='curso-box'>
-                <h3 style='color: #d4af37;'>📅 {esc(cr['dia'])}: {esc(cr['tema'])}</h3>
+                <h3 style='color: #ff1e27;'>📅 {esc(cr['dia'])}: {esc(cr['tema'])}</h3>
                 <p>{esc(cr['detalhes'])}</p>
             </div>
             """)
@@ -940,7 +939,7 @@ with aba_cronograma:
 # ABA 15: RECUPERAÇÃO & PRONTUÁRIO
 # ===========================================================================
 with aba_recuperacao:
-    st.markdown("<h2 style='text-align: center; color: #d4af37;'>🧘 RECUPERAÇÃO & PRONTUÁRIO RÁPIDO</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧘 RECUPERAÇÃO & PRONTUÁRIO RÁPIDO</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Descreva sua lesão ou dor para gerar um guia de primeiros socorros!</p>", unsafe_allow_html=True)
 
     lesao_texto = st.text_area("Descreva o que aconteceu ou onde está doendo (Ex: Torci o tornozelo caindo de mau jeito):", key="recup_txt")
@@ -952,8 +951,8 @@ with aba_recuperacao:
             relato_final += " [Áudio gravado com o relato da dor]"
 
         mostrar_html(f"""
-        <div class='nutri-box' style='border: 2px solid #d4af37;'>
-            <h3 style='color: #d4af37;'>📋 PRONTUÁRIO TÁTICO DE PRIMEIROS SOCORROS</h3>
+        <div class='nutri-box' style='border: 2px solid #ff1e27;'>
+            <h3 style='color: #ff1e27;'>📋 PRONTUÁRIO TÁTICO DE PRIMEIROS SOCORROS</h3>
             <p><b>Seu Relato:</b> {esc(relato_final if relato_final else "Dor / Desconforto geral pós-treino")}</p>
             <hr>
             <h4>🚨 Orientações Imediatas (Protocolo R.I.C.E.):</h4>
