@@ -898,7 +898,6 @@ with aba_card:
 # ===========================================================================
 # ABA 12: ALUNOS (CADERNETA)
 # ===========================================================================
-with aba_caderta = aba_caderneta if 'aba_caderneta' in locals() else aba_card  # Fallback de segurança se renomeado
 with aba_caderneta:
     st.markdown("<h2 style='text-align: center; color: #ff1e27;'>📇 CADERNETA DE ALUNOS DA ACADEMIA</h2>", unsafe_allow_html=True)
     st.markdown("Lista rápida de contatos e informações dos parceiros de treino e alunos.")
