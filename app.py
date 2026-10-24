@@ -223,7 +223,7 @@ css_compacto = " ".join(CSS.split())
 st.markdown(f"<style>{css_compacto}</style>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# TELA DE LOGIN PROFISSIONAL (LANDING PAGE DE IMPACTO + RECUPERAÇÃO)
+# TELA DE LOGIN PROFISSIONAL COM FORMULÁRIOS (SEM TRAVAMENTO DE DIGITAÇÃO)
 # ---------------------------------------------------------------------------
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
@@ -247,61 +247,70 @@ if not st.session_state.autenticado:
     with col_l2:
         aba_entrar, aba_cadastrar, aba_recuperar = st.tabs(["🔑 Entrar", "📝 Criar Conta", "🔄 Recuperar Senha"])
 
+        # ABA DE ENTRAR
         with aba_entrar:
-            email_log = st.text_input("Seu E-mail:", key="login_email").strip().lower()
-            senha_log = st.text_input("Sua Senha:", type="password", key="login_senha")
-            
-            if st.button("🚀 Entrar no OssBot", use_container_width=True, key="btn_entrar"):
-                banco = carregar_banco_usuarios()
-                if email_log in banco and banco[email_log]["senha"] == senha_log:
-                    st.session_state.autenticado = True
-                    carregar_usuario(email_log)
-                    st.success("✅ Login realizado com sucesso!")
-                    st.rerun()
-                else:
-                    st.error("❌ E-mail ou senha incorretos.")
-
-        with aba_cadastrar:
-            email_novo = st.text_input("Digite seu E-mail:", key="cad_email").strip().lower()
-            senha_nova = st.text_input("Crie uma Senha (mín. 6 caracteres):", type="password", key="cad_senha")
-            
-            if st.button("➕ Criar Minha Conta", use_container_width=True, key="btn_cadastrar"):
-                if not email_novo or not senha_nova:
-                    st.warning("Preencha o e-mail e a senha!")
-                elif len(senha_nova) < 6:
-                    st.warning("⚠️ A senha precisa ter no mínimo 6 caracteres para sua segurança.")
-                elif "@" not in email_novo or "." not in email_novo:
-                    st.warning("Digite um e-mail válido!")
-                else:
+            with st.form("form_login"):
+                email_log = st.text_input("Seu E-mail:").strip().lower()
+                senha_log = st.text_input("Sua Senha:", type="password")
+                btn_envia_login = st.form_submit_button("🚀 Entrar no OssBot", use_container_width=True)
+                
+                if btn_envia_login:
                     banco = carregar_banco_usuarios()
-                    if email_novo in banco:
-                        st.warning("⚠️ Este e-mail já possui cadastro. Use a aba 'Entrar'.")
-                    else:
-                        banco[email_novo] = {
-                            "senha": senha_nova,
-                            "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
-                        }
-                        salvar_banco_usuarios(banco)
+                    if email_log in banco and banco[email_log]["senha"] == senha_log:
                         st.session_state.autenticado = True
-                        carregar_usuario(email_novo)
-                        st.success("🎉 Conta criada com sucesso! Acessando...")
+                        carregar_usuario(email_log)
+                        st.success("✅ Login realizado com sucesso!")
                         st.rerun()
-
-        with aba_recuperar:
-            email_rec = st.text_input("E-mail Cadastrado:", key="rec_email").strip().lower()
-            nova_senha_rec = st.text_input("Nova Senha:", type="password", key="rec_senha")
-            
-            if st.button("🔄 Redefinir Senha", use_container_width=True, key="btn_redefinir"):
-                banco = carregar_banco_usuarios()
-                if email_rec in banco:
-                    if len(nova_senha_rec) < 6:
-                        st.warning("⚠️ A nova senha precisa ter no mínimo 6 caracteres.")
                     else:
-                        banco[email_rec]["senha"] = nova_senha_rec
-                        salvar_banco_usuarios(banco)
-                        st.success("✅ Senha redefinida com sucesso! Vá em 'Entrar'.")
-                else:
-                    st.error("❌ E-mail não encontrado no sistema.")
+                        st.error("❌ E-mail ou senha incorretos.")
+
+        # ABA DE CADASTRAR
+        with aba_cadastrar:
+            with st.form("form_cadastro"):
+                email_novo = st.text_input("Digite seu E-mail:").strip().lower()
+                senha_nova = st.text_input("Crie uma Senha (mín. 6 caracteres):", type="password")
+                btn_envia_cad = st.form_submit_button("➕ Criar Minha Conta", use_container_width=True)
+                
+                if btn_envia_cad:
+                    if not email_novo or not senha_nova:
+                        st.warning("Preencha o e-mail e a senha!")
+                    elif len(senha_nova) < 6:
+                        st.warning("⚠️ A senha precisa ter no mínimo 6 caracteres para sua segurança.")
+                    elif "@" not in email_novo or "." not in email_novo:
+                        st.warning("Digite um e-mail válido!")
+                    else:
+                        banco = carregar_banco_usuarios()
+                        if email_novo in banco:
+                            st.warning("⚠️ Este e-mail já possui cadastro. Use a aba 'Entrar'.")
+                        else:
+                            banco[email_novo] = {
+                                "senha": senha_nova,
+                                "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
+                            }
+                            salvar_banco_usuarios(banco)
+                            st.session_state.autenticado = True
+                            carregar_usuario(email_novo)
+                            st.success("🎉 Conta criada com sucesso! Acessando...")
+                            st.rerun()
+
+        # ABA DE RECUPERAR SENHA
+        with aba_recuperar:
+            with st.form("form_recuperacao"):
+                email_rec = st.text_input("E-mail Cadastrado:").strip().lower()
+                nova_senha_rec = st.text_input("Nova Senha:", type="password")
+                btn_envia_rec = st.form_submit_button("🔄 Redefinir Senha", use_container_width=True)
+                
+                if btn_envia_rec:
+                    banco = carregar_banco_usuarios()
+                    if email_rec in banco:
+                        if len(nova_senha_rec) < 6:
+                            st.warning("⚠️ A nova senha precisa ter no mínimo 6 caracteres.")
+                        else:
+                            banco[email_rec]["senha"] = nova_senha_rec
+                            salvar_banco_usuarios(banco)
+                            st.success("✅ Senha redefinida com sucesso! Vá em 'Entrar'.")
+                    else:
+                        st.error("❌ E-mail não encontrado no sistema.")
 
     st.stop()
 
@@ -364,7 +373,6 @@ with st.sidebar:
     st.markdown("## 🥋 Meu Perfil")
     st.caption(f"📧 **{st.session_state.get('usuario_email')}**")
     
-    # PERFIL DO ATLETA (FAIXA E ACADEMIA)
     st.session_state.perfil_faixa = st.selectbox(
         "Sua Faixa:", 
         ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta"],
@@ -378,7 +386,6 @@ with st.sidebar:
     )
     salvar_tudo()
 
-    # BACKUP DOS DADOS
     dados_usuario_atual = {}
     for c in CAMPOS:
         dados_usuario_atual[c] = st.session_state.get(c, {})
