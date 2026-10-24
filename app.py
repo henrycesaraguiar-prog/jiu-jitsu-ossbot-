@@ -165,45 +165,45 @@ def fazer_logout():
 
 
 # ---------------------------------------------------------------------------
-# CSS - PALETA PRETO & VERMELHO (BLACK & RED COMBAT)
+# CSS - PALETA PRETO & VERMELHO PROFISSIONAL (GLOW UI)
 # ---------------------------------------------------------------------------
 CSS = """
-.stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { background-color: #0a0a0a !important; }
-[data-testid="stSidebar"], [data-testid="stSidebar"] > div { background-color: #121212 !important; border-right: 1px solid #ff1e27 !important; }
+.stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { background-color: #080808 !important; }
+[data-testid="stSidebar"], [data-testid="stSidebar"] > div { background-color: #111111 !important; border-right: 1px solid #ff1e27 !important; }
 .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp p, .stApp li, .stApp label, .stApp summary { color: #ffffff; }
 [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * { color: #ff1e27 !important; }
 
-div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="textarea"], div[data-baseweb="select"] > div { background-color: #1a1a1a !important; border-color: #ff1e27 !important; border-radius: 8px !important; }
-div[data-baseweb="input"] input, div[data-baseweb="base-input"] input, div[data-baseweb="textarea"] textarea, div[data-baseweb="base-input"] textarea, input, textarea { background-color: #1a1a1a !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; caret-color: #ffffff !important; font-weight: bold !important; }
-input::placeholder, textarea::placeholder { color: #888888 !important; -webkit-text-fill-color: #888888 !important; opacity: 1 !important; }
+div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="textarea"], div[data-baseweb="select"] > div { background-color: #161616 !important; border-color: #ff1e27 !important; border-radius: 10px !important; }
+div[data-baseweb="input"] input, div[data-baseweb="base-input"] input, div[data-baseweb="textarea"] textarea, div[data-baseweb="base-input"] textarea, input, textarea { background-color: #161616 !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; caret-color: #ffffff !important; font-weight: bold !important; }
+input::placeholder, textarea::placeholder { color: #777777 !important; -webkit-text-fill-color: #777777 !important; opacity: 1 !important; }
 div[data-baseweb="select"] * { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 div[data-baseweb="select"] svg { fill: #ff1e27 !important; }
 
 [data-testid="stNumberInput"] button { background-color: #222222 !important; color: #ffffff !important; border: none !important; }
 
-[data-testid="stFileUploaderDropzone"], [data-testid="stFileUploader"] section { background-color: #1a1a1a !important; border: 2px dashed #ff1e27 !important; border-radius: 10px !important; }
+[data-testid="stFileUploaderDropzone"], [data-testid="stFileUploader"] section { background-color: #161616 !important; border: 2px dashed #ff1e27 !important; border-radius: 12px !important; }
 [data-testid="stFileUploader"] * { color: #ffffff !important; }
 [data-testid="stFileUploader"] svg { fill: #ff1e27 !important; }
-[data-testid="stFileUploader"] button { background-color: #2b2b2b !important; border: 2px solid #ff1e27 !important; }
+[data-testid="stFileUploader"] button { background-color: #242424 !important; border: 2px solid #ff1e27 !important; }
 
-.stButton > button, div[data-testid="stFormSubmitButton"] > button { border-radius: 10px !important; font-weight: bold !important; background-color: #cc0000 !important; color: #ffffff !important; border: 2px solid #ff1e27 !important; }
+.stButton > button, div[data-testid="stFormSubmitButton"] > button { border-radius: 12px !important; font-weight: bold !important; background-color: #cc0000 !important; color: #ffffff !important; border: 2px solid #ff1e27 !important; box-shadow: 0 4px 14px rgba(204,0,0,0.4) !important; transition: all 0.3s ease; }
 .stButton > button p, div[data-testid="stFormSubmitButton"] > button p { color: #ffffff !important; }
-.stButton > button:hover, div[data-testid="stFormSubmitButton"] > button:hover { background-color: #ff1e27 !important; border-color: #ffffff !important; color: #ffffff !important; }
+.stButton > button:hover, div[data-testid="stFormSubmitButton"] > button:hover { background-color: #ff1e27 !important; border-color: #ffffff !important; color: #ffffff !important; box-shadow: 0 6px 20px rgba(255,30,39,0.7) !important; }
 
-[data-testid="stExpander"] { background-color: #141414 !important; border: 1px solid #ff1e27 !important; border-radius: 10px !important; }
-[data-testid="stForm"] { border: 1px solid #ff1e27 !important; border-radius: 12px !important; }
+[data-testid="stExpander"] { background-color: #121212 !important; border: 1px solid #ff1e27 !important; border-radius: 12px !important; box-shadow: 0 4px 16px rgba(0,0,0,0.6); }
+[data-testid="stForm"] { border: 1px solid #ff1e27 !important; border-radius: 14px !important; background-color: #121212 !important; padding: 15px; }
 
-.placar-box, .nutri-box, .camp-box, .curso-box, .kids-box, .admin-box { color: #ffffff; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
-.placar-box { background-color: #141414; border: 2px solid #ff1e27; text-align: center; }
-.placar-numero { font-size: 50px; font-weight: bold; color: #ff1e27; }
-.nutri-box { background-color: #161616; border: 2px solid #00ffcc; }
+.placar-box, .nutri-box, .camp-box, .curso-box, .kids-box, .admin-box { color: #ffffff; border-radius: 16px; padding: 22px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.8); }
+.placar-box { background-color: #121212; border: 2px solid #ff1e27; text-align: center; }
+.placar-numero { font-size: 52px; font-weight: bold; color: #ff1e27; text-shadow: 0 0 15px rgba(255,30,39,0.5); }
+.nutri-box { background-color: #141414; border: 2px solid #00ffcc; }
 .camp-box { background-color: #121212; border: 2px solid #ff1e27; }
-.curso-box { background-color: #161616; border: 2px solid #ff4d4d; }
-.kids-box { background-color: #181818; border: 2px solid #fbbf24; }
+.curso-box { background-color: #141414; border: 2px solid #ff4d4d; }
+.kids-box { background-color: #141414; border: 2px solid #fbbf24; }
 .badge-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-.badge { background-color: #1a1a1a; border: 1px solid #ff1e27; color: #ff1e27; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; }
-.foto-bolinha { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 3px solid #ff1e27; display: block; margin: 0 auto 10px auto; box-shadow: 0 0 12px rgba(255,30,39,0.5); }
-.bolinha-padrao { width: 85px; height: 85px; border-radius: 50%; background-color: #1f1f1f; border: 3px solid #ff1e27; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 10px auto; }
+.badge { background-color: #161616; border: 1px solid #ff1e27; color: #ff1e27; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; box-shadow: 0 0 10px rgba(255,30,39,0.3); }
+.foto-bolinha { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #ff1e27; display: block; margin: 0 auto 10px auto; box-shadow: 0 0 16px rgba(255,30,39,0.7); }
+.bolinha-padrao { width: 90px; height: 90px; border-radius: 50%; background-color: #1a1a1a; border: 3px solid #ff1e27; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 10px auto; box-shadow: 0 0 16px rgba(255,30,39,0.5); }
 """
 css_compacto = " ".join(CSS.split())
 st.markdown(f"<style>{css_compacto}</style>", unsafe_allow_html=True)
@@ -224,9 +224,9 @@ if not st.session_state.autenticado:
     
     mostrar_html("""
     <div class='badge-container'>
-        <span class='badge'>🔥 Edição Preto & Vermelho</span>
+        <span class='badge'>🔥 Edição Preto & Vermelho Elite</span>
         <span class='badge'>🛡️ Acesso Seguro & Multi-Usuário</span>
-        <span class='badge'>⏱️ 15 Abas Especializadas</span>
+        <span class='badge'>⚡ 15 Módulos Especializados</span>
     </div>
     """)
     st.divider()
@@ -246,7 +246,7 @@ if not st.session_state.autenticado:
                     if email_log in banco and banco[email_log]["senha"] == senha_log:
                         st.session_state.autenticado = True
                         carregar_usuario(email_log)
-                        st.success("✅ Login realizado com sucesso!")
+                        st.toast("✅ Login realizado com sucesso!", icon="🥋")
                         st.rerun()
                     else:
                         st.error("❌ E-mail ou senha incorretos.")
@@ -281,7 +281,7 @@ if not st.session_state.autenticado:
                             if academia_nova:
                                 st.session_state.perfil_academia = academia_nova
                                 salvar_tudo()
-                            st.success("🎉 Conta criada com sucesso! Acessando...")
+                            st.toast("🎉 Conta criada com sucesso!", icon="🚀")
                             st.rerun()
 
         with aba_recuperar:
@@ -298,7 +298,7 @@ if not st.session_state.autenticado:
                         else:
                             banco[email_rec]["senha"] = nova_senha_rec
                             salvar_banco_usuarios(banco)
-                            st.success("✅ Senha redefinida com sucesso! Vá em 'Entrar'.")
+                            st.toast("✅ Senha redefinida com sucesso!", icon="🔑")
                     else:
                         st.error("❌ E-mail não encontrado no sistema.")
 
@@ -321,8 +321,8 @@ const estilo = document.createElement('style');
 estilo.id = 'estilo-botoes-rolagem';
 estilo.innerHTML = `
   #botoes-rolagem { position: fixed; right: 20px; bottom: 110px; display: flex; flex-direction: column; gap: 12px; z-index: 999999; }
-  #botoes-rolagem button { width: 64px; height: 64px; font-size: 28px; font-weight: bold; color: #ffffff; background-color: #cc0000; border: 2px solid #ff1e27; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.9); }
-  #botoes-rolagem button:hover { background-color: #ff1e27; }
+  #botoes-rolagem button { width: 64px; height: 64px; font-size: 28px; font-weight: bold; color: #ffffff; background-color: #cc0000; border: 2px solid #ff1e27; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 16px rgba(255,30,39,0.6); }
+  #botoes-rolagem button:hover { background-color: #ff1e27; box-shadow: 0 6px 20px rgba(255,30,39,0.9); }
 `;
 doc.head.appendChild(estilo);
 
@@ -357,7 +357,7 @@ doc.body.appendChild(caixa);
 """, height=0)
 
 # ---------------------------------------------------------------------------
-# Barra lateral (Bolinha de Perfil, Carteirinha, Graus 0-11, Painel Master)
+# Barra lateral (Sidebar por Módulos Profissionais & Painel Master)
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("## 🥋 Meu Perfil Pro")
@@ -381,6 +381,7 @@ with st.sidebar:
                 b64_img = base64.b64encode(foto_perfil_up.getvalue()).decode("utf-8")
                 st.session_state.perfil_foto_b64 = b64_img
                 salvar_tudo()
+                st.toast("✅ Foto de perfil atualizada com sucesso!", icon="📸")
                 st.rerun()
             except Exception:
                 pass
@@ -405,7 +406,7 @@ with st.sidebar:
 
         if st.button("💾 Salvar Carteirinha", use_container_width=True, key="btn_salvar_perfil"):
             salvar_tudo()
-            st.success("✅ Perfil e carteirinha salvos com sucesso!")
+            st.toast("✅ Carteirinha salva com sucesso!", icon="💾")
             st.rerun()
 
     # PAINEL MASTER / ADMINISTRADOR COM EDIÇÃO DE LOGIN E SENHA
@@ -426,7 +427,6 @@ with st.sidebar:
                 st.markdown(f"👤 **Inscrito:** {esc(nome_usr)}")
                 st.caption(f"📧 `{usr}` | 📅 Criado: {info.get('data_criacao', 'S/D')}")
                 
-                # Funcionalidade de Edição de Login e Senha para o Admin
                 with st.expander(f"✏️ Editar Credenciais: {usr}"):
                     with st.form(f"form_edit_{usr}"):
                         novo_email_input = st.text_input("Novo E-mail (Login):", value=usr)
@@ -441,7 +441,6 @@ with st.sidebar:
                                 st.warning("⚠️ A senha deve ter no mínimo 6 caracteres.")
                             else:
                                 banco_atualizado = carregar_banco_usuarios()
-                                
                                 if novo_email_limpo != usr and novo_email_limpo in banco_atualizado:
                                     st.error("❌ Este e-mail já está em uso por outra conta.")
                                 else:
@@ -458,7 +457,7 @@ with st.sidebar:
                                         except Exception:
                                             pass
                                             
-                                    st.success("✅ Credenciais atualizadas com sucesso!")
+                                    st.toast("✅ Credenciais atualizadas com sucesso!", icon="🔑")
                                     st.rerun()
                 st.markdown("---")
 
@@ -529,14 +528,14 @@ def zerar_luta():
 
 
 # ---------------------------------------------------------------------------
-# Cabeçalho Principal (Tema Preto & Vermelho)
+# Cabeçalho Principal (Header Bar de Elite)
 # ---------------------------------------------------------------------------
 col_esq, col_centro, col_dir = st.columns([1.2, 2.6, 1.2])
 with col_esq:
     st.image("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop",
              caption="Técnica e Combate", use_container_width=True)
 with col_centro:
-    st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot App</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot App Pro</h1>", unsafe_allow_html=True)
     st.markdown(f"<h4 style='text-align: center; color: #ffffff;'>Atleta: {esc(st.session_state.get('perfil_nome', 'Atleta'))} | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</h4>", unsafe_allow_html=True)
     st.markdown(f"<h5 style='text-align: center; color: #ff1e27;'>{esc(st.session_state.get('perfil_academia', 'Academia BJJ'))} | {esc(st.session_state.get('perfil_status', 'Atleta'))}</h5>", unsafe_allow_html=True)
 with col_dir:
@@ -545,7 +544,7 @@ with col_dir:
 
 st.divider()
 
-# DEFINIÇÃO DAS 15 ABAS
+# DEFINIÇÃO DAS 15 ABAS DIVIDIDAS POR MÓDULOS PROFISSIONAIS
 (
     aba_modo_luta, aba_historico_lutas, aba_nutricao, aba_camp, 
     aba_cursos, aba_kids, aba_drills, aba_pressao, aba_grad, 
@@ -633,7 +632,7 @@ with aba_modo_luta:
             "vant_b": st.session_state.vant_b, "pun_b": st.session_state.pun_b,
         })
         salvar_tudo()
-        st.success("✅ Luta salva na memória!")
+        st.toast("✅ Luta salva na memória!", icon="🤼")
 
 # ===========================================================================
 # ABA 2: HISTÓRICO DE LUTAS
@@ -666,7 +665,7 @@ with aba_nutricao:
     """)
 
 # ===========================================================================
-# ABA 4: ESTRATÉGIA DE CAMPEONATO
+# ABA 4: ESTRATÉGIA DE CAMPEONATO (COM EXPORTAÇÃO EXECUTIVA)
 # ===========================================================================
 with aba_camp:
     st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🏆 ESTRATÉGIA DE CAMPEONATO</h2>", unsafe_allow_html=True)
@@ -706,18 +705,30 @@ with aba_camp:
         else:
             dica_peso = "🎯 Você está cravado no peso exato da categoria! Mantenha a hidratação e o foco no treino."
 
-        st.success("✅ Estratégia de campeonato gerada com sucesso!")
-        st.markdown(f"""
-        <div class='camp-box'>
-            <h3>📋 Relatório de Preparação</h3>
-            <p><b>Faixa:</b> {faixa_final} | <b>Dias Restantes:</b> {dias_restantes} dias</p>
-            <p>{dica_peso}</p>
-            <p><b>Estilo Informado:</b> {texto_jogo_final if texto_jogo_final else 'Nenhum detalhe adicional informado.'}</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.toast("✅ Estratégia de campeonato gerada com sucesso!", icon="🏆")
+        
+        relatorio_texto = f"""=== RELATÓRIO EXECUTIVO DE CAMPEONATO ===
+Atleta: {st.session_state.get('perfil_nome', 'Atleta')}
+Faixa: {faixa_final}
+Dias Restantes: {dias_restantes} dias
+Peso Atual: {peso_atual}kg | Categoria: {peso_categoria}kg
+Orientação de Peso: {dica_peso.replace('**', '')}
+Estilo Informado: {texto_jogo_final if texto_jogo_final else 'Nenhum detalhe adicional.'}
+==========================================="""
+        
+        st.session_state.ultimo_relatorio_camp = relatorio_texto
+
+    if st.session_state.get("ultimo_relatorio_camp"):
+        st.download_button(
+            "📥 Baixar Relatório Executivo de Camp (TXT)",
+            data=st.session_state.ultimo_relatorio_camp,
+            file_name=f"relatorio_camp_{datetime.now().strftime('%Y%m%d')}.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
 
 # ===========================================================================
-# ABA 5: CURSOS INTERATIVOS (ATUALIZADA: FOTOS, ARQUIVOS, TEXTO E ÁUDIO COM TRANSCRIÇÃO)
+# ABA 5: CURSOS INTERATIVOS (TEXTO, ÁUDIO, FOTOS E ARQUIVOS)
 # ===========================================================================
 with aba_cursos:
     st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>📚 CURSOS & APRENDIZAGEM DE BJJ</h2>", unsafe_allow_html=True)
@@ -744,7 +755,7 @@ with aba_cursos:
                 "data": datetime.now().strftime("%d/%m/%Y - %H:%M")
             })
             salvar_tudo()
-            st.success("✅ Material de estudo salvo com sucesso!")
+            st.toast("✅ Material de estudo salvo com sucesso!", icon="📚")
             st.rerun()
 
     if st.session_state.get("cursos_interativos"):
@@ -755,7 +766,7 @@ with aba_cursos:
                 st.write(c["texto"])
 
 # ===========================================================================
-# ABA 6: KIDS (ATUALIZADA: TEMA + TEXTO/ÁUDIO COM TRANSCRIÇÃO)
+# ABA 6: KIDS (TEMA + TEXTO / ÁUDIO COM TRANSCRIÇÃO)
 # ===========================================================================
 with aba_kids:
     st.markdown("<h2 style='text-align: center; color: #fbbf24;'>👶 OSSBOT KIDS (TREINOS E DINÂMICAS)</h2>", unsafe_allow_html=True)
@@ -781,7 +792,7 @@ with aba_kids:
         }
         st.session_state.dinamic_kids_custom.append(nova_dinamica)
         salvar_tudo()
-        st.success("✅ Dinâmica Kids gerada e salva com sucesso!")
+        st.toast("✅ Dinâmica Kids gerada com sucesso!", icon="👶")
 
     if st.session_state.get("dinamic_kids_custom"):
         st.divider()
@@ -804,10 +815,10 @@ with aba_drills:
         series_drill = st.number_input("Número de Séries / Rounds:", 1, 20, 5, 1, key="drill_series")
 
     if st.button("🚀 Iniciar Sessão de Drills", use_container_width=True, key="btn_iniciar_drills"):
-        st.success(f"Sessão configurada! {series_drill} séries de {tempo_drill} segundos. Foco total na velocidade e precisão técnica!")
+        st.toast(f"Sessão iniciada! {series_drill} séries de {tempo_drill}s.", icon="⏱️")
 
 # ===========================================================================
-# ABA 8: PRESSÃO (ATUALIZADA: JOGO OPOSTO + FLASHCARDS COM TEXTO E ÁUDIO)
+# ABA 8: PRESSÃO (JOGO OPOSTO + FLASHCARDS COM TEXTO E ÁUDIO)
 # ===========================================================================
 with aba_pressao:
     st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧠 FLASHCARDS & SIMULADOR DE JOGO OPOSTO</h2>", unsafe_allow_html=True)
@@ -821,7 +832,7 @@ with aba_pressao:
         if jogo_usuario_aud is not None:
             base_jogo += " [Áudio do seu jogo transcrito com sucesso]"
 
-        st.success("✅ Jogo oposto e flashcards gerados baseados no seu estilo!")
+        st.toast("✅ Jogo oposto e flashcards gerados com sucesso!", icon="🧠")
         
         mostrar_html(f"""
         <div class='camp-box'>
@@ -838,7 +849,7 @@ with aba_pressao:
         st.write("👉 **Resposta Recomendada:** Faça fuga de quadril imediata, coloque o joelho de defesa no bíceps dele e recupere a meia guarda profunda.")
 
 # ===========================================================================
-# ABA 9: GRADUAÇÃO
+# ABA 9: GRADUAÇÃO (COM RELATÓRIO EXECUTIVO)
 # ===========================================================================
 with aba_grad:
     st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🥇 CONTROLE DE GRADUAÇÃO DE ALUNOS</h2>", unsafe_allow_html=True)
@@ -862,17 +873,27 @@ with aba_grad:
                     "data": datetime.now().strftime("%d/%m/%Y")
                 })
                 salvar_tudo()
-                st.success(f"✅ Aluno {nome_aluno} cadastrado com sucesso!")
+                st.toast(f"✅ Aluno {nome_aluno} cadastrado com sucesso!", icon="🥇")
                 st.rerun()
 
     if st.session_state.alunos_graduacao:
         st.divider()
         st.markdown("### 📋 Alunos Registrados:")
+        texto_turma = "=== RELATÓRIO DE GRADUAÇÃO DA EQUIPE ===\n"
         for a in st.session_state.alunos_graduacao:
             st.write(f"• **{a['nome']}** — Faixa {a['faixa']} ({a['graus']}º Grau) | Cadastrado em: {a['data']}")
+            texto_turma += f"- {a['nome']} | Faixa: {a['faixa']} | {a['graus']} Graus\n"
+        
+        st.download_button(
+            "📥 Baixar Lista de Graduação (TXT)",
+            data=texto_turma,
+            file_name=f"graduacao_alunos_{datetime.now().strftime('%Y%m%d')}.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
 
 # ===========================================================================
-# ABA 10: KIMONO (ATUALIZADA: CONSULTÓRIO DE MANUTENÇÃO COM TEXTO E ÁUDIO)
+# ABA 10: KIMONO (CONSULTÓRIO DE MANUTENÇÃO COM TEXTO E ÁUDIO)
 # ===========================================================================
 with aba_kimono:
     st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🥋 CONSULTÓRIO DE HIGIENE & MANUTENÇÃO DO KIMONO</h2>", unsafe_allow_html=True)
@@ -886,9 +907,8 @@ with aba_kimono:
         if kimono_duvida_aud is not None:
             pergunta_kimono += " [Áudio com a dúvida do kimono gravado e transcrito]"
 
-        st.success("✅ Solução encontrada com sucesso!")
+        st.toast("✅ Solução encontrada com sucesso!", icon="🥋")
         
-        # Resposta inteligente simulada baseada na dúvida comum
         st.markdown(f"""
         <div class='nutri-box'>
             <h3>💡 Guia de Solução Personalizada:</h3>
@@ -913,7 +933,7 @@ with aba_card:
     medalha_card = st.selectbox("Resultado:", ["🥇 Ouro / Campeão", "🥈 Prata / Vice", "🥉 Bronze / 3º Lugar", "🔥 Vitória no Rola / Super Luta"], key="card_med")
 
     if st.button("🎨 Gerar Card Personalizado", use_container_width=True, key="btn_gerar_card"):
-        st.success("✅ Card gerado com sucesso!")
+        st.toast("✅ Card gerado com sucesso!", icon="📸")
         mostrar_html(f"""
         <div style='background: linear-gradient(135deg, #1a1a1a, #cc0000); border: 3px solid #ff1e27; border-radius: 20px; padding: 30px; text-align: center; color: #ffffff; box-shadow: 0 0 20px rgba(255,30,39,0.7);'>
             <h1 style='color: #ffffff; margin-bottom: 10px;'>🥋 OSSBOT CHAMPION</h1>
@@ -945,7 +965,7 @@ with aba_caderneta:
             if c_nome.strip():
                 st.session_state.lista_alunos_academia.append({"nome": c_nome.strip(), "tel": c_tel.strip(), "obs": c_obs.strip()})
                 salvar_tudo()
-                st.success("✅ Aluno salvo na caderneta!")
+                st.toast("✅ Aluno salvo na caderneta!", icon="📇")
                 st.rerun()
 
     if st.session_state.lista_alunos_academia:
@@ -966,7 +986,7 @@ with aba_chaves:
         if len(nomes) < 2:
             st.warning("Insira pelo menos 2 atletas.")
         else:
-            st.success("🏆 Chave gerada com sucesso!")
+            st.toast("🏆 Chave gerada com sucesso!", icon="⏱️")
             st.markdown("### 🥇 Semifinais / Quartas:")
             for i in range(0, len(nomes) - 1, 2):
                 st.markdown(f"⚔️ **Confronto:** `{nomes[i]}` 🆚 `{nomes[i+1]}`")
@@ -991,7 +1011,7 @@ with aba_cronograma:
         if treino_desc.strip():
             st.session_state.cronogramas_aulas.append({"dia": dia_escolhido, "desc": treino_desc.strip()})
             salvar_tudo()
-            st.success("✅ Atividade adicionada à sua agenda!")
+            st.toast("✅ Atividade adicionada à sua agenda!", icon="📋")
             st.rerun()
 
     if st.session_state.cronogramas_aulas:
@@ -1001,7 +1021,7 @@ with aba_cronograma:
             st.write(f"• **{c['dia']}**: {c['desc']}")
 
 # ===========================================================================
-# ABA 15: RECUPERAÇÃO (ATUALIZADA: PRONTUÁRIO PROVISÓRIO DE LESÕES COM TEXTO E ÁUDIO)
+# ABA 15: RECUPERAÇÃO (PRONTUÁRIO COM EXPORTAÇÃO EXECUTIVA)
 # ===========================================================================
 with aba_recuperacao:
     st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧘 RECUPERAÇÃO & PRONTUÁRIO DE LESÕES</h2>", unsafe_allow_html=True)
@@ -1015,7 +1035,23 @@ with aba_recuperacao:
         if lesao_aud is not None:
             relato_lesao += " [Áudio do relato de lesão gravado e transcrito]"
 
-        st.success("✅ Prontuário provisório gerado com sucesso!")
+        st.toast("✅ Prontuário provisório gerado com sucesso!", icon="🩺")
+        
+        prontuario_texto = f"""=== PRONTUÁRIO PROVISÓRIO DE PRIMEIROS CUIDADOS ===
+Atleta: {st.session_state.get('perfil_nome', 'Atleta')}
+Data/Hora: {datetime.now().strftime('%d/%m/%Y - %H:%M')}
+Relato: {relato_lesao if relato_lesao else 'Dor articular / muscular recente'}
+
+PROTOCOLO R.I.C.E. (Até avaliação médica):
+1. Repouso (Rest): Evite apoiar ou forçar a região afetada.
+2. Gelo (Ice): Compressas de 15 a 20 min, 3 a 4 vezes ao dia.
+3. Compressão (Compression): Faixa elástica leve, sem apertar a circulação.
+4. Elevação (Elevation): Mantenha o membro acima da altura do coração.
+
+AVISO: Este relatório é um guia de suporte inicial e não substitui o médico.
+=================================================="""
+
+        st.session_state.ultimo_prontuario = prontuario_texto
         
         st.markdown(f"""
         <div class='nutri-box'>
@@ -1031,6 +1067,15 @@ with aba_recuperacao:
         </div>
         """, unsafe_allow_html=True)
 
+    if st.session_state.get("ultimo_prontuario"):
+        st.download_button(
+            "📥 Baixar Prontuário Executivo (TXT)",
+            data=st.session_state.ultimo_prontuario,
+            file_name=f"prontuario_lesao_{datetime.now().strftime('%Y%m%d')}.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+
     if "foco_recuperacao" not in st.session_state:
         st.session_state.foco_recuperacao = []
 
@@ -1039,7 +1084,7 @@ with aba_recuperacao:
         if nota_rec.strip():
             st.session_state.foco_recuperacao.append({"data": datetime.now().strftime("%d/%m/%Y"), "texto": nota_rec.strip()})
             salvar_tudo()
-            st.success("✅ Nota salva!")
+            st.toast("✅ Nota de recuperação salva!", icon="🧘")
             st.rerun()
 
     if st.session_state.foco_recuperacao:
