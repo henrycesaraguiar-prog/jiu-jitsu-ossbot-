@@ -256,6 +256,7 @@ if not st.session_state.autenticado:
             with st.form("form_cadastro"):
                 email_novo = st.text_input("Digite seu E-mail:").strip().lower()
                 senha_nova = st.text_input("Crie uma Senha (mín. 6 caracteres):", type="password")
+                academia_nova = st.text_input("Sua Academia / Equipe (Ex: Gracie Barra, Ze Radiola Team...):", value="Academia BJJ").strip()
                 btn_envia_cad = st.form_submit_button("➕ Criar Minha Conta", use_container_width=True)
                 
                 if btn_envia_cad:
@@ -278,6 +279,9 @@ if not st.session_state.autenticado:
                             salvar_banco_usuarios(banco)
                             st.session_state.autenticado = True
                             carregar_usuario(email_novo)
+                            if academia_nova:
+                                st.session_state.perfil_academia = academia_nova
+                                salvar_tudo()
                             st.success("🎉 Conta criada com sucesso! Acessando...")
                             st.rerun()
 
@@ -405,15 +409,21 @@ with st.sidebar:
             st.success("✅ Perfil e carteirinha salvos com sucesso!")
             st.rerun()
 
-    # PAINEL MASTER / ADMINISTRADOR
+    # PAINEL MASTER / ADMINISTRADOR COM ACADEMIAS
     if st.session_state.is_admin:
         st.divider()
         st.markdown("## 👑 Painel Master")
-        with st.expander("🛠️ Gestão de Usuários (Dono)"):
+        with st.expander("🛠️ Gestão de Usuários e Academias (Dono)"):
             banco = carregar_banco_usuarios()
             st.write(f"📊 **Total de Contas:** {len(banco)}")
+            st.divider()
             for usr, info in banco.items():
-                st.caption(f"• **E-mail:** `{usr}` | **Criado:** {info.get('data_criacao', 'S/D')}")
+                dados_usr = carregar_dados_usuario(usr)
+                nome_usr = dados_usr.get("perfil_nome", "Sem Nome")
+                academia_usr = dados_usr.get("perfil_academia", "Não informada")
+                st.markdown(f"• **Atleta:** `{nome_usr}`")
+                st.caption(f"📧 `{usr}` | 🥋 **Academia:** {academia_usr} | 📅 {info.get('data_criacao', 'S/D')}")
+                st.markdown("---")
 
     st.divider()
 
