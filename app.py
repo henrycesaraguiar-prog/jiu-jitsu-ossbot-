@@ -2,6 +2,7 @@ import os
 import io
 import json
 import uuid
+import base64
 import html as html_lib
 from datetime import datetime, date
 
@@ -57,7 +58,8 @@ CAMPOS = [
     "conversas", "historico_lutas", "dinamic_kids_custom", "flashcards_pressao",
     "alunos_graduacao", "cards_vitoria", "cursos_interativos",
     "lista_alunos_academia", "notas_kimono", "cronogramas_aulas", "foco_recuperacao",
-    "perfil_faixa", "perfil_academia"
+    "perfil_nome", "perfil_faixa", "perfil_graus", "perfil_academia", 
+    "perfil_peso", "perfil_estilo", "perfil_status", "perfil_foto_b64"
 ]
 
 
@@ -81,7 +83,8 @@ def salvar_banco_usuarios(usuarios):
         pass
 
 
-def dados_vazios():
+def dados_vazios(email=""):
+    nome_padrao = email.split("@")[0].title() if email else "Atleta"
     return {
         "conversas": {},
         "historico_lutas": [],
@@ -94,8 +97,14 @@ def dados_vazios():
         "notas_kimono": [],
         "cronogramas_aulas": [],
         "foco_recuperacao": [],
+        "perfil_nome": nome_padrao,
         "perfil_faixa": "Branca",
-        "perfil_academia": "Academia BJJ"
+        "perfil_graus": 0,
+        "perfil_academia": "Academia BJJ",
+        "perfil_peso": "Médio",
+        "perfil_estilo": "Versátil / Equilibrado",
+        "perfil_status": "Atleta Competidor 🏆",
+        "perfil_foto_b64": ""
     }
 
 
@@ -105,7 +114,7 @@ def obter_caminho_usuario(email_usuario):
 
 
 def carregar_dados_usuario(email_usuario):
-    dados = dados_vazios()
+    dados = dados_vazios(email_usuario)
     caminho = obter_caminho_usuario(email_usuario)
     try:
         if os.path.exists(caminho):
@@ -133,7 +142,7 @@ def salvar_tudo():
         return
     dados = {}
     for campo in CAMPOS:
-        dados[campo] = st.session_state.get(campo, {} if campo == "conversas" else ([] if campo not in ["perfil_faixa", "perfil_academia"] else "Branca"))
+        dados[campo] = st.session_state.get(campo, dados_vazios(usuario)[campo])
     salvar_dados_usuario(usuario, dados)
 
 
@@ -164,7 +173,7 @@ def carregar_usuario(email):
     st.session_state.usuario_email = email
     st.session_state.usuario_atual = email.split("@")[0]
     for campo in CAMPOS:
-        st.session_state[campo] = dados.get(campo, dados_vazios()[campo])
+        st.session_state[campo] = dados.get(campo, dados_vazios(email)[campo])
     if st.session_state.conversas:
         ultimo_id = max(st.session_state.conversas,
                         key=lambda c: st.session_state.conversas[c].get("atualizada", ""))
@@ -218,12 +227,13 @@ div[data-baseweb="select"] svg { fill: #ffffff !important; }
 .kids-box { background-color: #451a03; border: 2px solid #fbbf24; }
 .badge-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
 .badge { background-color: #1e1e1e; border: 1px solid #ff4d4d; color: #ff4d4d; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+.carteirinha-card { background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%); border: 2px solid #00ffcc; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,255,204,0.2); }
 """
 css_compacto = " ".join(CSS.split())
 st.markdown(f"<style>{css_compacto}</style>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# TELA DE LOGIN PROFISSIONAL COM FORMULÁRIOS (SEM TRAVAMENTO DE DIGITAÇÃO)
+# TELA DE LOGIN PROFISSIONAL COM FORMULÁRIOS
 # ---------------------------------------------------------------------------
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
@@ -238,7 +248,7 @@ if not st.session_state.autenticado:
     <div class='badge-container'>
         <span class='badge'>🛡️ 100% Offline & Seguro</span>
         <span class='badge'>⏱️ Placar & Cronômetro</span>
-        <span class='badge'>🏆 Estratégias de Competição</span>
+        <span class='badge'>🏆 Carteirinha & Competição</span>
     </div>
     """)
     st.divider()
@@ -247,7 +257,6 @@ if not st.session_state.autenticado:
     with col_l2:
         aba_entrar, aba_cadastrar, aba_recuperar = st.tabs(["🔑 Entrar", "📝 Criar Conta", "🔄 Recuperar Senha"])
 
-        # ABA DE ENTRAR
         with aba_entrar:
             with st.form("form_login"):
                 email_log = st.text_input("Seu E-mail:").strip().lower()
@@ -264,7 +273,6 @@ if not st.session_state.autenticado:
                     else:
                         st.error("❌ E-mail ou senha incorretos.")
 
-        # ABA DE CADASTRAR
         with aba_cadastrar:
             with st.form("form_cadastro"):
                 email_novo = st.text_input("Digite seu E-mail:").strip().lower()
@@ -293,7 +301,6 @@ if not st.session_state.autenticado:
                             st.success("🎉 Conta criada com sucesso! Acessando...")
                             st.rerun()
 
-        # ABA DE RECUPERAR SENHA
         with aba_recuperar:
             with st.form("form_recuperacao"):
                 email_rec = st.text_input("E-mail Cadastrado:").strip().lower()
@@ -367,25 +374,57 @@ doc.body.appendChild(caixa);
 """, height=0)
 
 # ---------------------------------------------------------------------------
-# Barra lateral (Perfil Completo do Atleta, Backup, Pesquisa, Modo Offline)
+# Barra lateral (Carteirinha do Atleta, Foto, Dados, Backup, Pesquisa)
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown("## 🥋 Meu Perfil")
+    st.markdown("## 🥋 Carteirinha do Atleta")
     st.caption(f"📧 **{st.session_state.get('usuario_email')}**")
-    
+
+    # Upload de foto de perfil
+    foto_perfil_up = st.file_uploader("Enviar Foto de Perfil:", type=["jpg", "png", "jpeg"], key="up_foto_atleta")
+    if foto_perfil_up is not None:
+        try:
+            b64_img = base64.b64encode(foto_perfil_up.getvalue()).decode("utf-8")
+            st.session_state.perfil_foto_b64 = b64_img
+            salvar_tudo()
+        except Exception:
+            pass
+
+    # Exibição da foto atual na carteirinha
+    if st.session_state.get("perfil_foto_b64"):
+        try:
+            img_bytes = base64.b64decode(st.session_state.perfil_foto_b64)
+            st.image(img_bytes, width=130, caption="Foto Oficial")
+        except Exception:
+            st.info("📷 Sem foto carregada.")
+    else:
+        st.info("📷 Envie sua foto acima para aparecer na carteirinha.")
+
+    # Edição dos dados da carteirinha
+    st.session_state.perfil_nome = st.text_input("Nome Completo:", value=st.session_state.get("perfil_nome", "Atleta"), key="input_perfil_nome")
     st.session_state.perfil_faixa = st.selectbox(
-        "Sua Faixa:", 
+        "Faixa:", 
         ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta"],
         index=["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta"].index(st.session_state.get("perfil_faixa", "Branca")),
         key="select_perfil_faixa"
     )
-    st.session_state.perfil_academia = st.text_input(
-        "Sua Academia / Equipe:", 
-        value=st.session_state.get("perfil_academia", "Academia BJJ"),
-        key="input_perfil_academia"
+    st.session_state.perfil_graus = st.slider("Graus:", 0, 4, int(st.session_state.get("perfil_graus", 0)), key="slider_perfil_graus")
+    st.session_state.perfil_academia = st.text_input("Academia / Equipe:", value=st.session_state.get("perfil_academia", "Academia BJJ"), key="input_perfil_academia")
+    st.session_state.perfil_peso = st.text_input("Categoria de Peso:", value=st.session_state.get("perfil_peso", "Médio"), key="input_perfil_peso")
+    st.session_state.perfil_status = st.selectbox(
+        "Status:",
+        ["Atleta Competidor 🏆", "Praticante / Hobby 🥋", "Monitor / Instrutor 🥇", "Faixa Preta / Mestre 👑"],
+        index=0,
+        key="select_perfil_status"
     )
-    salvar_tudo()
 
+    if st.button("💾 Salvar Carteirinha", use_container_width=True, key="btn_salvar_perfil"):
+        salvar_tudo()
+        st.success("✅ Perfil e carteirinha salvos com sucesso!")
+
+    st.divider()
+
+    # Opções extras na barra lateral
     dados_usuario_atual = {}
     for c in CAMPOS:
         dados_usuario_atual[c] = st.session_state.get(c, {})
@@ -490,8 +529,8 @@ with col_esq:
              caption="Técnica e Combate", use_container_width=True)
 with col_centro:
     st.markdown("<h1 style='text-align: center; color: #ff4d4d;'>🥋 OssBot App</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h4 style='text-align: center; color: #00ffcc;'>Atleta: {esc(st.session_state.usuario_atual)} | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))}</h4>", unsafe_allow_html=True)
-    st.markdown(f"<h5 style='text-align: center; color: #aaaaaa;'>{esc(st.session_state.get('perfil_academia', 'Academia BJJ'))}</h5>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='text-align: center; color: #00ffcc;'>Atleta: {esc(st.session_state.get('perfil_nome', 'Atleta'))} | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h5 style='text-align: center; color: #aaaaaa;'>{esc(st.session_state.get('perfil_academia', 'Academia BJJ'))} | {esc(st.session_state.get('perfil_status', 'Atleta'))}</h5>", unsafe_allow_html=True)
 with col_dir:
     st.image("https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=600&auto=format&fit=crop",
              caption="Faixa Preta — Tradição", use_container_width=True)
