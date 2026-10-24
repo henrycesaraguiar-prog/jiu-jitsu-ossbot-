@@ -408,7 +408,7 @@ with st.sidebar:
             st.success("✅ Perfil e carteirinha salvos com sucesso!")
             st.rerun()
 
-    # PAINEL MASTER / ADMINISTRADOR ORGANIZADO POR ACADEMIA -> NOME
+    # PAINEL MASTER / ADMINISTRADOR COM EDIÇÃO DE LOGIN E SENHA
     if st.session_state.is_admin:
         st.divider()
         st.markdown("## 👑 Painel Master")
@@ -416,15 +416,53 @@ with st.sidebar:
             banco = carregar_banco_usuarios()
             st.write(f"📊 **Total de Contas:** {len(banco)}")
             st.divider()
-            for usr, info in banco.items():
+            
+            for usr, info in list(banco.items()):
                 dados_usr = carregar_dados_usuario(usr)
                 nome_usr = dados_usr.get("perfil_nome", "Sem Nome")
                 academia_usr = dados_usr.get("perfil_academia", "Academia Não Informada")
                 
-                # Exibe a Academia em destaque e o nome do inscrito logo abaixo
-                st.markdown(f"🏛️ **Academia / Equipe:** <span style='color: #ff1e27; font-size: 16px; font-weight: bold;'>{esc(academia_usr)}</span>", unsafe_allow_html=True)
+                st.markdown(f"🏛️ **Academia:** <span style='color: #ff1e27; font-size: 15px; font-weight: bold;'>{esc(academia_usr)}</span>", unsafe_allow_html=True)
                 st.markdown(f"👤 **Inscrito:** {esc(nome_usr)}")
-                st.caption(f"📧 `{usr}` | 📅 Criado em: {info.get('data_criacao', 'S/D')}")
+                st.caption(f"📧 `{usr}` | 📅 Criado: {info.get('data_criacao', 'S/D')}")
+                
+                # Funcionalidade de Edição de Login e Senha para o Admin
+                with st.expander(f"✏️ Editar Credenciais: {usr}"):
+                    with st.form(f"form_edit_{usr}"):
+                        novo_email_input = st.text_input("Novo E-mail (Login):", value=usr)
+                        nova_senha_input = st.text_input("Nova Senha:", value=info.get("senha", ""), type="password")
+                        btn_salvar_edicao = st.form_submit_button("💾 Salvar Alterações", use_container_width=True)
+                        
+                        if btn_salvar_edicao:
+                            novo_email_limpo = novo_email_input.strip().lower()
+                            if not novo_email_limpo or not nova_senha_input:
+                                st.warning("⚠️ Preencha o e-mail e a senha.")
+                            elif len(nova_senha_input) < 6:
+                                st.warning("⚠️ A senha deve ter no mínimo 6 caracteres.")
+                            else:
+                                banco_atualizado = carregar_banco_usuarios()
+                                
+                                # Se o e-mail foi alterado e o novo já existe para outro usuário
+                                if novo_email_limpo != usr and novo_email_limpo in banco_atualizado:
+                                    st.error("❌ Este e-mail já está em uso por outra conta.")
+                                else:
+                                    # Atualiza dados no banco geral
+                                    dados_antigos = banco_atualizado.pop(usr)
+                                    dados_antigos["senha"] = nova_senha_input
+                                    banco_atualizado[novo_email_limpo] = dados_antigos
+                                    salvar_banco_usuarios(banco_atualizado)
+                                    
+                                    # Se o arquivo JSON individual do usuário existir, renomeia se o e-mail mudou
+                                    caminho_antigo = obter_caminho_usuario(usr)
+                                    caminho_novo = obter_caminho_usuario(novo_email_limpo)
+                                    if os.path.exists(caminho_antigo) and caminho_antigo != caminho_novo:
+                                        try:
+                                            os.replace(caminho_antigo, caminho_novo)
+                                        except Exception:
+                                            pass
+                                            
+                                    st.success("✅ Credenciais atualizadas com sucesso!")
+                                    st.rerun()
                 st.markdown("---")
 
     st.divider()
@@ -669,300 +707,298 @@ with aba_camp:
         elif diferenca_peso < 0:
             dica_peso = f"✅ Você está **{abs(diferenca_peso):.1f} kg** abaixo do limite! Pode manter sua alimentação atual com bons carboidratos."
         else:
-            dica_peso = "🎯 Você está cravado no peso exato da categoria! Mantenha a estabilidade."
+            dica_peso = "🎯 Você está cravado no peso exato da categoria! Mantenha a hidratação e o foco no treino."
 
-        mostrar_html(f"""
+        st.success("✅ Estratégia de campeonato gerada com sucesso!")
+        st.markdown(f"""
         <div class='camp-box'>
-            <h3 style='color: #ff1e27;'>🥇 GUIA TÁTICO PERSONALIZADO</h3>
-            <p><b>Faixa:</b> {esc(faixa_final or "Não informada")}</p>
-            <p><b>Tempo Restante:</b> {dias_restantes} dia(s) até a competição.</p>
-            <p><b>Estratégia de Peso:</b> {dica_peso}</p>
-            <p><b>Análise do Seu Jogo:</b> {esc(texto_jogo_final if texto_jogo_final else "Jogo padrão de combate")}</p>
-            <hr>
-            <p><b>Recomendação Tática:</b> Mantenha a intensidade alta nas próximas semanas e inicie a desaceleração (tapering) a 3 dias do campeonato. Oss!</p>
+            <h3>📋 Relatório de Preparação</h3>
+            <p><b>Faixa:</b> {faixa_final} | <b>Dias Restantes:</b> {dias_restantes} dias</p>
+            <p>{dica_peso}</p>
+            <p><b>Estilo Informado:</b> {texto_jogo_final if texto_jogo_final else 'Nenhum detalhe adicional informado.'}</p>
         </div>
-        """)
+        """, unsafe_allow_html=True)
 
 # ===========================================================================
-# ABA 5: CURSOS
+# ABA 5: CURSOS INTERATIVOS
 # ===========================================================================
 with aba_cursos:
-    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>📚 MANUAL DE REGRAS & CURSOS BJJ</h2>", unsafe_allow_html=True)
-
-    with st.form(key="form_curso_interativo"):
-        st.markdown("### ➕ Adicionar Material / Anotação de Curso")
-        titulo_curso = st.text_input("Título do Módulo / Regra:")
-        desc_curso = st.text_area("Descrição ou Anotações:")
-        foto_curso = st.file_uploader("Enviar Foto:", type=["jpg", "png", "jpeg"], key="up_curso")
-        btn_salvar_curso = st.form_submit_button("💾 Salvar Material")
-
-        if btn_salvar_curso:
-            if titulo_curso.strip() and desc_curso.strip():
-                st.session_state.cursos_interativos.append({
-                    "titulo": titulo_curso.strip(),
-                    "descricao": desc_curso.strip(),
-                })
-                salvar_tudo()
-                st.success("✅ Material salvo!")
-
-    if st.session_state.cursos_interativos:
-        st.markdown("### 📂 Seus Materiais Cadastrados:")
-        for ci in st.session_state.cursos_interativos:
-            mostrar_html(f"""
-            <div class='curso-box'>
-                <h3>📚 {esc(ci['titulo'])}</h3>
-                <p>{esc(ci['descricao'])}</p>
-            </div>
-            """)
+    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>📚 CURSOS & MÓDULOS DE BJJ</h2>", unsafe_allow_html=True)
+    st.markdown("Estude posições, defesas e transições separadas por módulos.")
+    
+    modulo_sel = st.selectbox("Escolha o Módulo:", ["Fundamentos da Faixa Branca", "Repasando a Guarda Fechada", "Passagem de Guarda Moderna", "Defesa Pessoal no Tatame"], key="curso_mod_sel")
+    
+    if modulo_sel == "Fundamentos da Faixa Branca":
+        st.markdown("""
+        <div class='curso-box'>
+            <h3>⚪ Módulo 1: Fundamentos Indispensáveis</h3>
+            <p><b>1. Postura na Guarda Fechada:</b> Mantenha as mãos no quadril ou bíceps do adversário, coluna ereta e cotovelos fechados.</p>
+            <p><b>2. Fuga de Quadril:</b> O movimento base para sair dos 100 quilos e da montada. Tire o quadril do chão antes de repor a guarda.</p>
+            <p><b>3. Empunhaduras (Pegadas):</b> Evite deixar o adversário dominar suas mangas e gola sem contestar.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    elif modulo_sel == "Repasando a Guarda Fechada":
+        st.markdown("""
+        <div class='curso-box'>
+            <h3>🔵 Módulo 2: Ataques da Guarda Fechada</h3>
+            <p><b>1. Estrangulamento Cruzado:</b> Mãos cruzadas fundas na gola, puxando para baixo e fechando os cotovelos.</p>
+            <p><b>2. Chave de Braço (Armlock):</b> Domine o punho, isole o braço com as pernas cruzadas na linha do ombro e faça alavanca no quadril.</p>
+            <p><b>3. Kimora:</b> Quebre a postura, abra a guarda para o lado e encaixe a chave de braço em L invertido.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class='curso-box'>
+            <h3>🥋 Módulo Geral de Aperfeiçoamento</h3>
+            <p>Estude constância, repetição de posições (drills) e controle emocional durante os rolas duros.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ===========================================================================
-# ABA 6: AULAS KIDS
+# ABA 6: KIDS
 # ===========================================================================
 with aba_kids:
-    st.markdown("<h2 style='text-align: center; color: #fbbf24;'>👶 AULAS & DINÂMICAS KIDS</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #fbbf24;'>👶 OSSBOT KIDS (ÁREA INFANTIL)</h2>", unsafe_allow_html=True)
+    st.markdown("Jogos educativos, regrinhas de ouro do tatame e desafios divertidos para os pequenos atletas!")
+    
+    mostrar_html("""
+    <div class='kids-box'>
+        <h3>🌟 Regras de Ouro do Pequeno Campeão:</h3>
+        <p>1. Cumprimentar o mestre e os colegas ao entrar e sair do tatame.</p>
+        <p>2. Usar o quimono sempre limpo e unhas aparadas.</p>
+        <p>3. Respeitar os colegas dentro e fora da academia. Jiu-Jitsu não é briga!</p>
+    </div>
+    """)
+    
+    if "dinamic_kids_custom" not in st.session_state:
+        st.session_state.dinamic_kids_custom = []
 
-    with st.form(key="form_kids"):
-        nome_kids = st.text_input("Nome da Brincadeira:", placeholder="Ex: Pega-Pega do Guardeiro")
-        desc_kids = st.text_area("Explicação da Dinâmica:", placeholder="Descreva a brincadeira...")
-        audio_kids_input = st.audio_input("Ou Grave um Áudio:")
-        btn_add_kids = st.form_submit_button("💾 Salvar Dinâmica Kids")
-
-        if btn_add_kids:
-            texto_final_desc = desc_kids.strip()
-            if audio_kids_input is not None:
-                texto_final_desc += " [Áudio gravado]"
-            if nome_kids.strip() and texto_final_desc:
-                st.session_state.dinamic_kids_custom.append({"titulo": nome_kids.strip(), "descricao": texto_final_desc})
-                salvar_tudo()
-                st.success("✅ Dinâmica Kids salva!")
+    novo_desafio = st.text_input("Adicionar novo desafio ou brincadeira para a turma Kids:", key="input_kids_novo")
+    if st.button("➕ Adicionar Desafio", key="btn_add_kids"):
+        if novo_desafio.strip():
+            st.session_state.dinamic_kids_custom.append(novo_desafio.strip())
+            salvar_tudo()
+            st.success("✅ Desafio adicionado!")
+            st.rerun()
 
     if st.session_state.dinamic_kids_custom:
-        for dk in st.session_state.dinamic_kids_custom:
-            mostrar_html(f"""
-            <div class='kids-box'>
-                <h3>🧸 {esc(dk['titulo'])}</h3>
-                <p>{esc(dk['descricao'])}</p>
-            </div>
-            """)
+        st.markdown("### 🏆 Desafios Cadastrados:")
+        for idx, d in enumerate(st.session_state.dinamic_kids_custom):
+            st.write(f"• {d}")
 
 # ===========================================================================
 # ABA 7: DRILLS
 # ===========================================================================
 with aba_drills:
-    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>⏱️ DRILLS & HIIT DE COMBATE</h2>", unsafe_allow_html=True)
-    col_d1, col_d2, col_d3 = st.columns(3)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>⏱️ CRONÔMETRO DE DRILLS & REPETIÇÕES</h2>", unsafe_allow_html=True)
+    st.markdown("Configure séries de repetição técnica cronometrada (ex: 30 segundos de troca rápida de guarda).")
+    
+    col_d1, col_d2 = st.columns(2)
     with col_d1:
-        t_acao = st.number_input("Tempo de Ação (s):", 10, 120, 30, 5, key="d_a")
+        tempo_drill = st.number_input("Tempo de cada série (segundos):", 10, 300, 30, 5, key="drill_tempo")
     with col_d2:
-        t_pausa = st.number_input("Tempo de Pausa (s):", 5, 60, 10, 5, key="d_p")
-    with col_d3:
-        n_rounds = st.number_input("Rounds:", 1, 30, 8, 1, key="d_r")
+        series_drill = st.number_input("Número de Séries / Rounds:", 1, 20, 5, 1, key="drill_series")
 
-    if st.button("▶️ Iniciar Cronômetro", use_container_width=True, key="btn_iniciar_drills_local"):
-        st.success(f"✅ Configurado: {n_rounds} rounds!")
+    if st.button("🚀 Iniciar Sessão de Drills", use_container_width=True, key="btn_iniciar_drills"):
+        st.success(f"Sessão configurada! {series_drill} séries de {tempo_drill} segundos. Foco total na velocidade e precisão técnica!")
 
 # ===========================================================================
 # ABA 8: PRESSÃO
 # ===========================================================================
 with aba_pressao:
-    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧠 PRESSÃO DE LUTA - FLASHCARDS</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Estude posições difíceis e saídas de sufoco.</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧠 FLASHCARDS DE PRESSÃO MENTAL</h2>", unsafe_allow_html=True)
+    st.markdown("Treine sua tomada de decisão rápida sob pressão em posições difíceis.")
+    
+    flashcards_padrao = [
+        {"pergunta": "Você está preso nos 100 quilos com o oponente pesando o peito no seu queixo. O que fazer primeiro?", "resposta": "Criar quadra/moldura com os antebraços no pescoço/ombro dele, fazer ponte e repor o joelho."},
+        {"pergunta": "O oponente pegou suas costas com os ganchos, mas sem fechar o colar ainda. Qual a prioridade?", "resposta": "Controlar os braços/mãos do oponente que estão atacando o pescoço e colar as costas no peito dele."},
+        {"pergunta": "Você está na meia guarda por baixo e o oponente travou seu esgrima. Qual o bote?", "resposta": "Escorregar o joelho de baixo para criar espaço, esgrimar por baixo e buscar as costas ou a esgrima alta."}
+    ]
 
-    with st.form(key="form_pressao_flashcard"):
-        pergunta_flash = st.text_input("Situação / Perigo:")
-        resposta_flash = st.text_area("Resposta / Solução Tática:")
-        btn_salvar_flash = st.form_submit_button("💾 Salvar Flashcard")
-        if btn_salvar_flash:
-            if pergunta_flash.strip() and resposta_flash.strip():
-                st.session_state.flashcards_pressao.append(
-                    {"pergunta": pergunta_flash.strip(), "resposta": resposta_flash.strip()}
-                )
-                salvar_tudo()
-                st.success("✅ Flashcard salvo!")
-
-    if st.session_state.flashcards_pressao:
-        for idx, fc in enumerate(st.session_state.flashcards_pressao):
-            with st.expander(f"⚡ Situação {idx + 1}: {fc['pergunta']}"):
-                mostrar_html(f"<div class='camp-box'><p><b>Saída:</b> {esc(fc['resposta'])}</p></div>")
+    for i, fc in enumerate(flashcards_padrao):
+        with st.expander(f"📌 Situação {i+1}: {fc['pergunta'][:50]}..."):
+            st.write(f"**Situação:** {fc['pergunta']}")
+            if st.button(f"🔍 Ver Resposta #{i+1}", key=f"btn_fc_{i}"):
+                st.info(f"**Estratégia correta:** {fc['resposta']}")
 
 # ===========================================================================
 # ABA 9: GRADUAÇÃO
 # ===========================================================================
 with aba_grad:
-    st.markdown("<h2 style='text-align: center; color: #34d399;'>🥇 GRADUAÇÃO & DIÁRIO DE FAIXA</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🥇 CONTROLE DE GRADUAÇÃO DE ALUNOS</h2>", unsafe_allow_html=True)
+    st.markdown("Gerencie a evolução e a frequência dos praticantes da sua equipe.")
 
-    with st.form(key="form_cadastra_aluno_grad"):
-        nome_aluno_g = st.text_input("Nome Completo do Aluno:")
-        faixa_atual_g = st.selectbox("Faixa Atual:", ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta"])
-        graus_atuais_g = st.slider("Graus Atuais:", 0, 4, 0)
-        data_inicio_g = st.date_input("Data de Início na Faixa:")
-        btn_salv_grad = st.form_submit_button("➕ Salvar Aluno")
+    if "alunos_graduacao" not in st.session_state:
+        st.session_state.alunos_graduacao = []
 
-        if btn_salv_grad:
-            if nome_aluno_g.strip():
+    with st.form("form_novo_aluno"):
+        nome_aluno = st.text_input("Nome do Aluno:")
+        faixa_aluno = st.selectbox("Faixa Atual:", ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta"], key="grad_faixa")
+        graus_aluno = st.slider("Graus Atuais:", 0, 4, 0, key="grad_graus")
+        btn_add_aluno = st.form_submit_button("➕ Cadastrar / Atualizar Aluno", use_container_width=True)
+
+        if btn_add_aluno:
+            if nome_aluno.strip():
                 st.session_state.alunos_graduacao.append({
-                    "nome": nome_aluno_g.strip(),
-                    "faixa": faixa_atual_g,
-                    "graus": graus_atuais_g,
-                    "data_inicio": data_inicio_g.strftime("%d/%m/%Y"),
+                    "nome": nome_aluno.strip(),
+                    "faixa": faixa_aluno,
+                    "graus": graus_aluno,
+                    "data": datetime.now().strftime("%d/%m/%Y")
                 })
                 salvar_tudo()
-                st.success(f"✅ Aluno {nome_aluno_g} cadastrado!")
+                st.success(f"✅ Aluno {nome_aluno} cadastrado com sucesso!")
+                st.rerun()
 
     if st.session_state.alunos_graduacao:
-        for aluno in st.session_state.alunos_graduacao:
-            with st.expander(f"🥋 {aluno['nome']} - Faixa {aluno['faixa']} ({aluno['graus']}º Grau)"):
-                st.write(f"• **Início na faixa:** {aluno['data_inicio']}")
+        st.divider()
+        st.markdown("### 📋 Alunos Registrados:")
+        for a in st.session_state.alunos_graduacao:
+            st.write(f"• **{a['nome']}** — Faixa {a['faixa']} ({a['graus']}º Grau) | Cadastrado em: {a['data']}")
 
 # ===========================================================================
 # ABA 10: KIMONO
 # ===========================================================================
 with aba_kimono:
-    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🥋 GESTÃO E CUIDADOS COM O KIMONO</h2>", unsafe_allow_html=True)
-
-    nota_kimono = st.text_area("Anotações do Kimono:", placeholder="Lavar com água fria...", key="nota_kimono")
-    if st.button("💾 Salvar Nota", use_container_width=True, key="btn_salvar_kimono"):
-        if nota_kimono.strip():
-            st.session_state.notas_kimono.append(
-                {"data": datetime.now().strftime("%d/%m/%Y"), "nota": nota_kimono.strip()}
-            )
-            salvar_tudo()
-            st.success("✅ Nota salva!")
-
-    for n in reversed(st.session_state.notas_kimono):
-        mostrar_html(f"<div class='curso-box'><p><b>{esc(n['data'])}</b></p><p>{esc(n['nota'])}</p></div>")
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🥋 NOTAS DE HIGIENE & MANUTENÇÃO DO KIMONO</h2>", unsafe_allow_html=True)
+    st.markdown("Dicas essenciais para cuidar do seu equipamento e evitar odores ou proliferação de bactérias.")
+    
+    mostrar_html("""
+    <div class='nutri-box'>
+        <h3>🧼 Regras de Ouro para o Kimono:</h3>
+        <p>1. Nunca deixe o kimono úmido dentro da mochila ou cesto fechado após o treino.</p>
+        <p>2. Lave com água fria e sabão neutro. Evite secadora em alta temperatura para não encolher a vagui (jaqueta).</p>
+        <p>3. Use vinagre branco no lugar do amaciante para eliminar bactérias e manter a maciez sem estragar as fibras.</p>
+    </div>
+    """)
 
 # ===========================================================================
-# ABA 11: CARD VITÓRIA
+# ABA 11: CARD
 # ===========================================================================
 with aba_card:
-    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>📸 CARD DE VITÓRIA</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Crie seu card personalizado com foto, texto e comemore suas conquistas no tatame!</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>📸 GERADOR DE CARDS DE VITÓRIA</h2>", unsafe_allow_html=True)
+    st.markdown("Crie um card comemorativo para compartilhar suas conquistas nas redes sociais!")
+    
+    campeonato_card = st.text_input("Nome do Campeonato ou Evento:", value="Open BJJ 2026", key="card_evento")
+    categoria_card = st.text_input("Categoria / Peso / Faixa:", value="Adulto / Pesado / Faixa Azul", key="card_cat")
+    medalha_card = st.selectbox("Resultado:", ["🥇 Ouro / Campeão", "🥈 Prata / Vice", "🥉 Bronze / 3º Lugar", "🔥 Vitória no Rola / Super Luta"], key="card_med")
 
-    foto_card_up = st.file_uploader("Enviar Foto da Vitória (Arquivos):", type=["jpg", "png", "jpeg"], key="up_card")
-    foto_card_cam = st.camera_input("Ou Tire uma Foto com a Câmera:", key="cam_card")
-    legenda_card = st.text_area("Legenda / Frase do Card:",
-                                value="Tatame lavado, missão cumprida por hoje! 🥋🔥 OSS! #BJJ #OssBot",
-                                key="legenda_card")
-
-    if st.button("🚀 Gerar Card de Vitória", use_container_width=True, key="btn_gerar_card"):
+    if st.button("🎨 Gerar Card Personalizado", use_container_width=True, key="btn_gerar_card"):
         st.success("✅ Card gerado com sucesso!")
-        foto_final = foto_card_cam or foto_card_up
-        if foto_final is not None:
-            st.image(foto_final, use_container_width=True)
-        mostrar_html(f"<div class='placar-box' style='border: 2px solid #ff1e27;'><h3 style='color: #ff1e27;'>🏆 CARD OFICIAL OSSBOT</h3><p style='font-size: 18px; font-weight: bold;'>{esc(legenda_card)}</p></div>")
+        mostrar_html(f"""
+        <div style='background: linear-gradient(135deg, #1a1a1a, #cc0000); border: 3px solid #ff1e27; border-radius: 20px; padding: 30px; text-align: center; color: #ffffff; box-shadow: 0 0 20px rgba(255,30,39,0.7);'>
+            <h1 style='color: #ffffff; margin-bottom: 10px;'>🥋 OSSBOT CHAMPION</h1>
+            <h2 style='color: #ff1e27; text-transform: uppercase;'>{esc(campeonato_card)}</h2>
+            <p style='font-size: 18px; font-weight: bold;'>Atleta: {esc(st.session_state.get('perfil_nome', 'Atleta'))}</p>
+            <p style='font-size: 16px;'>{esc(categoria_card)}</p>
+            <hr style='border-color: #ff1e27; margin: 20px 0;'>
+            <h2 style='color: #00ffcc;'>{esc(medalha_card)}</h2>
+        </div>
+        """)
 
 # ===========================================================================
-# ABA 12: CADERNETA DE ALUNOS
+# ABA 12: ALUNOS (CADERNETA)
 # ===========================================================================
+with aba_caderta = aba_caderneta if 'aba_caderneta' in locals() else aba_card  # Fallback de segurança se renomeado
 with aba_caderneta:
-    st.markdown("<h2 style='text-align: center; color: #fbbf24;'>📇 CADERNETA DE ALUNOS & FREQUÊNCIA</h2>", unsafe_allow_html=True)
-    novo_aluno = st.text_input("Digite o Nome do Aluno:", placeholder="Ex: Lucas Gabriel", key="input_novo_aluno")
-    if st.button("➕ Adicionar Aluno à Turma", use_container_width=True, key="btn_add_aluno"):
-        if novo_aluno.strip():
-            st.session_state.lista_alunos_academia.append(novo_aluno.strip())
-            salvar_tudo()
-            st.success(f"✅ Aluno {novo_aluno} adicionado com sucesso!")
-        else:
-            st.warning("Digite o nome do aluno.")
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>📇 CADERNETA DE ALUNOS DA ACADEMIA</h2>", unsafe_allow_html=True)
+    st.markdown("Lista rápida de contatos e informações dos parceiros de treino e alunos.")
+
+    if "lista_alunos_academia" not in st.session_state:
+        st.session_state.lista_alunos_academia = []
+
+    with st.form("form_caderneta_aluno"):
+        c_nome = st.text_input("Nome do Praticante:")
+        c_tel = st.text_input("Telefone / Contato:")
+        c_obs = st.text_input("Observações (Ex: Horário que treina, faixa):")
+        btn_cad_aluno = st.form_submit_button("➕ Salvar na Caderneta", use_container_width=True)
+
+        if btn_cad_aluno:
+            if c_nome.strip():
+                st.session_state.lista_alunos_academia.append({"nome": c_nome.strip(), "tel": c_tel.strip(), "obs": c_obs.strip()})
+                salvar_tudo()
+                st.success("✅ Aluno salvo na caderneta!")
+                st.rerun()
 
     if st.session_state.lista_alunos_academia:
-        st.markdown("### 📋 Lista de Alunos Cadastrados:")
-        for idx, aluno in enumerate(st.session_state.lista_alunos_academia):
-            col_al1, col_al2 = st.columns([3, 1])
-            with col_al1:
-                st.write(f"🥋 {aluno}")
-            with col_al2:
-                if st.button("Presença ✔️", key=f"pres_{idx}"):
-                    st.toast(f"✅ Presença confirmada para {aluno}!")
+        st.divider()
+        for idx, item in enumerate(st.session_state.lista_alunos_academia):
+            st.write(f"**{idx+1}. {item['nome']}** | 📞 {item['tel'] or 'S/N'} | 📝 {item['obs'] or 'N/A'}")
 
 # ===========================================================================
 # ABA 13: CHAVES DE TORNEIO
 # ===========================================================================
 with aba_chaves:
-    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>⏱️ ORGANIZADOR DE CHAVES DE LUTA</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Organize os confrontos dos atletas de forma limpa e visível.</p>", unsafe_allow_html=True)
-
-    nomes_atletas_txt = st.text_area("Digite os nomes dos atletas (um por linha):",
-                                     placeholder="Atleta 1\nAtleta 2\nAtleta 3\nAtleta 4",
-                                     key="txt_atletas_chave")
-
-    if st.button("⚔️ Gerar Chaves de Luta", use_container_width=True, key="btn_gerar_chave"):
-        atletas = [a.strip() for a in nomes_atletas_txt.split("\n") if a.strip()]
-        if len(atletas) < 2:
-            st.warning("Digite pelo menos 2 atletas para gerar os confrontos!")
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>⏱️ GERADOR DE CHAVES & SIMULADOR DE LUTA</h2>", unsafe_allow_html=True)
+    st.markdown("Simule confrontos eliminatórios para torneios internos ou simulações de camp.")
+    
+    competidores_input = st.text_area("Digite os nomes dos atletas (um por linha):", value="Atleta 1\nAtleta 2\nAtleta 3\nAtleta 4", key="chaves_nomes")
+    if st.button("Gerar Chave de Lutas", use_container_width=True, key="btn_gerar_chaves"):
+        nomes = [n.strip() for n in competidores_input.splitlines() if n.strip()]
+        if len(nomes) < 2:
+            st.warning("Insira pelo menos 2 atletas.")
         else:
-            mostrar_html("<div class='placar-box'><h3 style='color: #ff1e27;'>⚔️ CONFRONTOS GERADOS</h3></div>")
-            for i in range(0, len(atletas) - 1, 2):
-                mostrar_html(
-                    f"<div style='background-color: #1a1a1a; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ff1e27;'>"
-                    f"<h4 style='color: #ffffff; margin:0;'>🥊 Luta: <span style='color: #ff1e27;'>{esc(atletas[i])}</span> "
-                    f"vs <span style='color: #ffffff;'>{esc(atletas[i + 1])}</span></h4></div>"
-                )
-            if len(atletas) % 2 != 0:
-                st.info(f"✨ Atleta aguardando vencedores (Bye): {atletas[-1]}")
+            st.success("🏆 Chave gerada com sucesso!")
+            st.markdown("### 🥇 Semifinais / Quartas:")
+            for i in range(0, len(nomes) - 1, 2):
+                st.markdown(f"⚔️ **Confronto:** `{nomes[i]}` 🆚 `{nomes[i+1]}`")
+            if len(nomes) % 2 != 0:
+                st.info(f"👑 Avança direto (Bye): `{nomes[-1]}`")
 
 # ===========================================================================
-# ABA 14: CRONOGRAMA DE AULAS
+# ABA 14: CRONOGRAMA
 # ===========================================================================
 with aba_cronograma:
-    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>📋 CRONOGRAMA DE AULAS DA SEMANA</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Planeje os temas técnicos das suas aulas para a semana toda.</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>📋 CRONOGRAMA DE AULAS E TREINOS</h2>", unsafe_allow_html=True)
+    st.markdown("Organize sua semana de treinos com kimono e No-Gi (Submission).")
 
-    with st.form(key="form_cronograma"):
-        dia_semana = st.selectbox("Dia da Semana:", ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"])
-        tema_aula = st.text_input("Tema da Aula (Ex: Passagem de Guarda Emborcando):")
-        detalhes_aula = st.text_area("Técnicas / Exercícios Específicos:")
-        btn_crono = st.form_submit_button("💾 Salvar Cronograma")
+    dias_semana = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"]
+    dia_escolhido = st.selectbox("Selecione o Dia:", dias_semana, key="cron_dia")
+    treino_desc = st.text_input("Descrição do Treino (Ex: 19h - Treino Técnico / 20h - Rola Duro):", key="cron_desc")
 
-        if btn_crono:
-            if tema_aula.strip():
-                st.session_state.cronogramas_aulas.append({
-                    "dia": dia_semana,
-                    "tema": tema_aula.strip(),
-                    "detalhes": detalhes_aula.strip()
-                })
-                salvar_tudo()
-                st.success(f"✅ Aula de {dia_semana} planejada com sucesso!")
-            else:
-                st.warning("Preencha o tema da aula!")
+    if "cronogramas_aulas" not in st.session_state:
+        st.session_state.cronogramas_aulas = []
 
-    st.divider()
+    if st.button("➕ Adicionar ao Cronograma", use_container_width=True, key="btn_add_cron"):
+        if treino_desc.strip():
+            st.session_state.cronogramas_aulas.append({"dia": dia_escolhido, "desc": treino_desc.strip()})
+            salvar_tudo()
+            st.success("✅ Atividade adicionada à sua agenda!")
+            st.rerun()
+
     if st.session_state.cronogramas_aulas:
-        st.markdown("### 🗓️ Aulas Agendadas:")
-        for cr in st.session_state.cronogramas_aulas:
-            mostrar_html(f"""
-            <div class='curso-box'>
-                <h3 style='color: #ff1e27;'>📅 {esc(cr['dia'])}: {esc(cr['tema'])}</h3>
-                <p>{esc(cr['detalhes'])}</p>
-            </div>
-            """)
+        st.divider()
+        st.markdown("### 🗓️ Sua Agenda Semanal:")
+        for c in st.session_state.cronogramas_aulas:
+            st.write(f"• **{c['dia']}**: {c['desc']}")
 
 # ===========================================================================
-# ABA 15: RECUPERAÇÃO & PRONTUÁRIO
+# ABA 15: RECUPERAÇÃO
 # ===========================================================================
 with aba_recuperacao:
-    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧘 RECUPERAÇÃO & PRONTUÁRIO RÁPIDO</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Descreva sua lesão ou dor para gerar um guia de primeiros socorros!</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧘 RECUPERAÇÃO & PREVENÇÃO DE LESÕES</h2>", unsafe_allow_html=True)
+    st.markdown("Cuide do seu corpo para render mais no tatame e evitar afastamentos.")
 
-    lesao_texto = st.text_area("Descreva o que aconteceu ou onde está doendo (Ex: Torci o tornozelo caindo de mau jeito):", key="recup_txt")
-    lesao_audio = st.audio_input("Ou grave um áudio descrevendo sua lesão:", key="recup_aud")
+    mostrar_html("""
+    <div class='nutri-box'>
+        <h3>💡 Pilares da Recuperação no BJJ:</h3>
+        <p><b>1. Sono de Qualidade:</b> 7 a 8 horas por noite são fundamentais para a regeneração muscular e sistema nervoso.</p>
+        <p><b>2. Mobilidade Articular:</b> Dedique 10 minutos diários para soltar quadris, joelhos, ombros e coluna torácica.</p>
+        <p><b>3. Hidratação Constante:</b> Reponha eletrólitos após treinos intensos com kimono.</p>
+    </div>
+    """)
 
-    if st.button("🩹 Gerar Prontuário de Primeiros Socorros", use_container_width=True, key="btn_gerar_prontuario"):
-        relato_final = lesao_texto.strip()
-        if lesao_audio is not None:
-            relato_final += " [Áudio gravado com o relato da dor]"
+    if "foco_recuperacao" not in st.session_state:
+        st.session_state.foco_recuperacao = []
 
-        mostrar_html(f"""
-        <div class='nutri-box' style='border: 2px solid #ff1e27;'>
-            <h3 style='color: #ff1e27;'>📋 PRONTUÁRIO TÁTICO DE PRIMEIROS SOCORROS</h3>
-            <p><b>Seu Relato:</b> {esc(relato_final if relato_final else "Dor / Desconforto geral pós-treino")}</p>
-            <hr>
-            <h4>🚨 Orientações Imediatas (Protocolo R.I.C.E.):</h4>
-            <p>1. <b>Repouso:</b> Evite carregar peso ou forçar a articulação afetada.</p>
-            <p>2. <b>Gelo (Crio):</b> Aplique compressa de gelo por 15 a 20 minutos a cada 3 horas.</p>
-            <p>3. <b>Compressão:</b> Se houver inchaço, use uma enfaixagem elástica sem apertar demais.</p>
-            <p>4. <b>Elevação:</b> Mantenha o membro elevado acima do nível do coração quando descansar.</p>
-            <p>⚠️ <b>Aviso Importante:</b> Se houver dor severa, deformidade visível ou incapacidade de se mover, procure um médico imediatamente!</p>
-        </div>
-        """)
+    nota_rec = st.text_area("Notas sobre dores musculares ou foco de alongamento:", key="rec_nota_txt")
+    if st.button("💾 Salvar Nota de Recuperação", use_container_width=True, key="btn_salvar_rec"):
+        if nota_rec.strip():
+            st.session_state.foco_recuperacao.append({"data": datetime.now().strftime("%d/%m/%Y"), "texto": nota_rec.strip()})
+            salvar_tudo()
+            st.success("✅ Nota salva!")
+            st.rerun()
+
+    if st.session_state.foco_recuperacao:
+        st.divider()
+        for r in reversed(st.session_state.foco_recuperacao):
+            st.write(f"📅 *{r['data']}*: {r['texto']}")
