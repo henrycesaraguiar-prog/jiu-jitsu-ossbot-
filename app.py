@@ -10,11 +10,14 @@ import streamlit.components.v1 as components
 
 # Configuração da página
 st.set_page_config(
-    page_title="OssBot - Assistente de Jiu-Jitsu",
+    page_title="OssBot Pro - Assistente de Jiu-Jitsu",
     page_icon="🥋",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# E-mail Master (Comando Fodão / Administrador Supremo)
+EMAIL_ADMIN_MASTER = "henry.cesaraguiar@gmail.com"
 
 # Biblioteca de áudio
 try:
@@ -148,6 +151,7 @@ def carregar_usuario(email):
     dados = carregar_dados_usuario(email)
     st.session_state.usuario_email = email
     st.session_state.usuario_atual = email.split("@")[0]
+    st.session_state.is_admin = (email.lower() == EMAIL_ADMIN_MASTER.lower())
     for campo in CAMPOS:
         st.session_state[campo] = dados.get(campo, dados_vazios(email)[campo])
 
@@ -156,70 +160,73 @@ def fazer_logout():
     st.session_state.autenticado = False
     st.session_state.usuario_email = ""
     st.session_state.usuario_atual = ""
+    st.session_state.is_admin = False
     st.rerun()
 
 
 # ---------------------------------------------------------------------------
-# CSS
+# CSS - PALETA AZUL BATIK PROFISSIONAL
 # ---------------------------------------------------------------------------
 CSS = """
-.stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { background-color: #121212 !important; }
-[data-testid="stSidebar"], [data-testid="stSidebar"] > div { background-color: #181818 !important; }
+.stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { background-color: #0b131e !important; }
+[data-testid="stSidebar"], [data-testid="stSidebar"] > div { background-color: #132238 !important; }
 .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp p, .stApp li, .stApp label, .stApp summary { color: #ffffff; }
-[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * { color: #aaaaaa !important; }
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * { color: #8da4c4 !important; }
 
-div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="textarea"], div[data-baseweb="select"] > div { background-color: #1e1e1e !important; border-color: #ff4d4d !important; border-radius: 8px !important; }
-div[data-baseweb="input"] input, div[data-baseweb="base-input"] input, div[data-baseweb="textarea"] textarea, div[data-baseweb="base-input"] textarea, input, textarea { background-color: #1e1e1e !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; caret-color: #ffffff !important; font-weight: bold !important; }
-input::placeholder, textarea::placeholder { color: #9ca3af !important; -webkit-text-fill-color: #9ca3af !important; opacity: 1 !important; }
+div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="textarea"], div[data-baseweb="select"] > div { background-color: #1b2e4b !important; border-color: #00a8e8 !important; border-radius: 8px !important; }
+div[data-baseweb="input"] input, div[data-baseweb="base-input"] input, div[data-baseweb="textarea"] textarea, div[data-baseweb="base-input"] textarea, input, textarea { background-color: #1b2e4b !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; caret-color: #ffffff !important; font-weight: bold !important; }
+input::placeholder, textarea::placeholder { color: #8da4c4 !important; -webkit-text-fill-color: #8da4c4 !important; opacity: 1 !important; }
 div[data-baseweb="select"] * { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 div[data-baseweb="select"] svg { fill: #ffffff !important; }
 
-[data-testid="stNumberInput"] button { background-color: #2a2a2a !important; color: #ffffff !important; border: none !important; }
+[data-testid="stNumberInput"] button { background-color: #243b5e !important; color: #ffffff !important; border: none !important; }
 
-[data-testid="stFileUploaderDropzone"], [data-testid="stFileUploader"] section { background-color: #1e1e1e !important; border: 2px dashed #ff4d4d !important; border-radius: 10px !important; }
+[data-testid="stFileUploaderDropzone"], [data-testid="stFileUploader"] section { background-color: #1b2e4b !important; border: 2px dashed #00a8e8 !important; border-radius: 10px !important; }
 [data-testid="stFileUploader"] * { color: #ffffff !important; }
 [data-testid="stFileUploader"] svg { fill: #ffffff !important; }
-[data-testid="stFileUploader"] button { background-color: #ff4d4d !important; border: 2px solid #ffffff !important; }
+[data-testid="stFileUploader"] button { background-color: #006699 !important; border: 2px solid #ffffff !important; }
 
-.stButton > button, div[data-testid="stFormSubmitButton"] > button { border-radius: 10px !important; font-weight: bold !important; background-color: #ff4d4d !important; color: #ffffff !important; border: 2px solid #ffffff !important; }
+.stButton > button, div[data-testid="stFormSubmitButton"] > button { border-radius: 10px !important; font-weight: bold !important; background-color: #006699 !important; color: #ffffff !important; border: 2px solid #00a8e8 !important; }
 .stButton > button p, div[data-testid="stFormSubmitButton"] > button p { color: #ffffff !important; }
-.stButton > button:hover, div[data-testid="stFormSubmitButton"] > button:hover { background-color: #e60000 !important; color: #ffffff !important; }
+.stButton > button:hover, div[data-testid="stFormSubmitButton"] > button:hover { background-color: #00a8e8 !important; color: #ffffff !important; }
 
-[data-testid="stExpander"] { background-color: #1e1e1e !important; border: 1px solid #444444 !important; border-radius: 10px !important; }
-[data-testid="stForm"] { border: 1px solid #444444 !important; border-radius: 12px !important; }
+[data-testid="stExpander"] { background-color: #1b2e4b !important; border: 1px solid #00a8e8 !important; border-radius: 10px !important; }
+[data-testid="stForm"] { border: 1px solid #00a8e8 !important; border-radius: 12px !important; }
 
-.placar-box, .nutri-box, .camp-box, .curso-box, .kids-box { color: #ffffff; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
-.placar-box { background-color: #1e1e1e; border: 2px solid #ff4d4d; text-align: center; }
+.placar-box, .nutri-box, .camp-box, .curso-box, .kids-box, .admin-box { color: #ffffff; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
+.placar-box { background-color: #132238; border: 2px solid #00a8e8; text-align: center; }
 .placar-numero { font-size: 50px; font-weight: bold; color: #00ffcc; }
-.nutri-box { background-color: #1e293b; border: 2px solid #00ffcc; }
-.camp-box { background-color: #1e1b4b; border: 2px solid #ff4d4d; }
-.curso-box { background-color: #0f172a; border: 2px solid #38bdf8; }
-.kids-box { background-color: #451a03; border: 2px solid #fbbf24; }
+.nutri-box { background-color: #1b2e4b; border: 2px solid #00ffcc; }
+.camp-box { background-color: #0f1c2e; border: 2px solid #00a8e8; }
+.curso-box { background-color: #132238; border: 2px solid #38bdf8; }
+.kids-box { background-color: #1b2e4b; border: 2px solid #fbbf24; }
 .badge-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-.badge { background-color: #1e1e1e; border: 1px solid #ff4d4d; color: #ff4d4d; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; }
-.foto-bolinha { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #00ffcc; display: block; margin: 0 auto 10px auto; }
-.bolinha-padrao { width: 80px; height: 80px; border-radius: 50%; background-color: #2a2a2a; border: 2px solid #00ffcc; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 10px auto; }
+.badge { background-color: #1b2e4b; border: 1px solid #00a8e8; color: #00a8e8; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+.foto-bolinha { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 3px solid #00a8e8; display: block; margin: 0 auto 10px auto; box-shadow: 0 0 10px rgba(0,168,232,0.5); }
+.bolinha-padrao { width: 85px; height: 85px; border-radius: 50%; background-color: #1b2e4b; border: 3px solid #00a8e8; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 10px auto; }
 """
 css_compacto = " ".join(CSS.split())
 st.markdown(f"<style>{css_compacto}</style>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# TELA DE LOGIN PROFISSIONAL COM FORMULÁRIOS
+# TELA DE LOGIN PROFISSIONAL COM AZUL BATIK
 # ---------------------------------------------------------------------------
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
 if "usuario_email" not in st.session_state:
     st.session_state.usuario_email = ""
+if "is_admin" not in st.session_state:
+    st.session_state.is_admin = False
 
 if not st.session_state.autenticado:
-    st.markdown("<h1 style='text-align: center; color: #ff4d4d;'>🥋 OssBot Pro</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; color: #aaaaaa;'>O Assistente Definitivo para Atletas e Professores de Jiu-Jitsu</h3>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #00a8e8;'>🥋 OssBot Pro</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #8da4c4;'>Plataforma Inteligente de Gestão de BJJ & Tatame</h3>", unsafe_allow_html=True)
     
     mostrar_html("""
     <div class='badge-container'>
-        <span class='badge'>🛡️ 100% Offline & Seguro</span>
-        <span class='badge'>⏱️ Placar & Cronômetro</span>
-        <span class='badge'>🏆 Carteirinha & Competição</span>
+        <span class='badge'>🎨 Tema Azul Batik Pro</span>
+        <span class='badge'>🛡️ Acesso Seguro & Multi-Usuário</span>
+        <span class='badge'>⏱️ 15 Abas Especializadas</span>
     </div>
     """)
     st.divider()
@@ -264,6 +271,7 @@ if not st.session_state.autenticado:
                         else:
                             banco[email_novo] = {
                                 "senha": senha_nova,
+                                "plano": "ativo" if email_novo == EMAIL_ADMIN_MASTER.lower() else "pro",
                                 "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
                             }
                             salvar_banco_usuarios(banco)
@@ -309,8 +317,8 @@ const estilo = document.createElement('style');
 estilo.id = 'estilo-botoes-rolagem';
 estilo.innerHTML = `
   #botoes-rolagem { position: fixed; right: 20px; bottom: 110px; display: flex; flex-direction: column; gap: 12px; z-index: 999999; }
-  #botoes-rolagem button { width: 64px; height: 64px; font-size: 28px; font-weight: bold; color: #ffffff; background-color: #e60000; border: 2px solid #ffffff; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.6); }
-  #botoes-rolagem button:hover { background-color: #ff4d4d; }
+  #botoes-rolagem button { width: 64px; height: 64px; font-size: 28px; font-weight: bold; color: #ffffff; background-color: #006699; border: 2px solid #00a8e8; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.6); }
+  #botoes-rolagem button:hover { background-color: #00a8e8; }
 `;
 doc.head.appendChild(estilo);
 
@@ -345,12 +353,11 @@ doc.body.appendChild(caixa);
 """, height=0)
 
 # ---------------------------------------------------------------------------
-# Barra lateral limpa (Apenas Bolinha de Perfil, Carteirinha e Conexão)
+# Barra lateral (Bolinha de Perfil, Carteirinha, Graus 0-11, Painel Master)
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown("## 🥋 Meu Perfil")
+    st.markdown("## 🥋 Meu Perfil Pro")
     
-    # Bolinha de perfil no topo
     if st.session_state.get("perfil_foto_b64"):
         try:
             mostrar_html(f"<img src='data:image/png;base64,{st.session_state.perfil_foto_b64}' class='foto-bolinha' />")
@@ -361,6 +368,8 @@ with st.sidebar:
 
     with st.expander(f"👤 Carteirinha: {st.session_state.get('perfil_nome', 'Atleta')}"):
         st.caption(f"📧 **{st.session_state.get('usuario_email')}**")
+        if st.session_state.is_admin:
+            st.success("👑 **Master Admin / Dono** (Acesso Total)")
 
         foto_perfil_up = st.file_uploader("Enviar Foto de Perfil:", type=["jpg", "png", "jpeg"], key="up_foto_atleta")
         if foto_perfil_up is not None:
@@ -380,9 +389,7 @@ with st.sidebar:
             key="select_perfil_faixa"
         )
         
-        # Graus de 0 a 11
         st.session_state.perfil_graus = st.slider("Graus (0 a 11):", 0, 11, int(st.session_state.get("perfil_graus", 0)), key="slider_perfil_graus")
-        
         st.session_state.perfil_academia = st.text_input("Academia / Equipe:", value=st.session_state.get("perfil_academia", "Academia BJJ"), key="input_perfil_academia")
         st.session_state.perfil_peso = st.text_input("Categoria de Peso:", value=st.session_state.get("perfil_peso", "Médio"), key="input_perfil_peso")
         st.session_state.perfil_status = st.selectbox(
@@ -396,6 +403,16 @@ with st.sidebar:
             salvar_tudo()
             st.success("✅ Perfil e carteirinha salvos com sucesso!")
             st.rerun()
+
+    # PAINEL MASTER / ADMINISTRADOR
+    if st.session_state.is_admin:
+        st.divider()
+        st.markdown("## 👑 Painel Master")
+        with st.expander("🛠️ Gestão de Usuários (Dono)"):
+            banco = carregar_banco_usuarios()
+            st.write(f"📊 **Total de Contas:** {len(banco)}")
+            for usr, info in banco.items():
+                st.caption(f"• **E-mail:** `{usr}` | **Criado:** {info.get('data_criacao', 'S/D')}")
 
     st.divider()
 
@@ -464,16 +481,16 @@ def zerar_luta():
 
 
 # ---------------------------------------------------------------------------
-# Cabeçalho
+# Cabeçalho Principal (Tema Azul Batik)
 # ---------------------------------------------------------------------------
 col_esq, col_centro, col_dir = st.columns([1.2, 2.6, 1.2])
 with col_esq:
     st.image("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop",
              caption="Técnica e Combate", use_container_width=True)
 with col_centro:
-    st.markdown("<h1 style='text-align: center; color: #ff4d4d;'>🥋 OssBot App</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #00a8e8;'>🥋 OssBot App</h1>", unsafe_allow_html=True)
     st.markdown(f"<h4 style='text-align: center; color: #00ffcc;'>Atleta: {esc(st.session_state.get('perfil_nome', 'Atleta'))} | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</h4>", unsafe_allow_html=True)
-    st.markdown(f"<h5 style='text-align: center; color: #aaaaaa;'>{esc(st.session_state.get('perfil_academia', 'Academia BJJ'))} | {esc(st.session_state.get('perfil_status', 'Atleta'))}</h5>", unsafe_allow_html=True)
+    st.markdown(f"<h5 style='text-align: center; color: #8da4c4;'>{esc(st.session_state.get('perfil_academia', 'Academia BJJ'))} | {esc(st.session_state.get('perfil_status', 'Atleta'))}</h5>", unsafe_allow_html=True)
 with col_dir:
     st.image("https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=600&auto=format&fit=crop",
              caption="Faixa Preta — Tradição", use_container_width=True)
@@ -516,7 +533,7 @@ def bloco_placar(lado, nome, emoji, cor):
 
 
 with aba_modo_luta:
-    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>⏱️ PLACAR & CRONÔMETRO DE LUTA</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #00a8e8;'>⏱️ PLACAR & CRONÔMETRO DE LUTA</h2>", unsafe_allow_html=True)
 
     col_l1, col_l2 = st.columns(2)
     with col_l1:
@@ -540,7 +557,7 @@ with aba_modo_luta:
                     st.rerun(scope="app")
             mins, segs = divmod(st.session_state.tempo_segundos, 60)
             st.markdown(
-                f"<h1 style='text-align: center; font-size: 70px; color: #ff4d4d;'>{mins:02d}:{segs:02d}</h1>",
+                f"<h1 style='text-align: center; font-size: 70px; color: #00a8e8;'>{mins:02d}:{segs:02d}</h1>",
                 unsafe_allow_html=True,
             )
 
@@ -554,7 +571,7 @@ with aba_modo_luta:
     st.divider()
     col_p1, col_p2 = st.columns(2)
     with col_p1:
-        bloco_placar("a", nome_atleta_a, "🔵", "#4da6ff")
+        bloco_placar("a", nome_atleta_a, "🔵", "#00a8e8")
     with col_p2:
         bloco_placar("b", nome_atleta_b, "⚪", "#ffffff")
 
@@ -604,7 +621,7 @@ with aba_nutricao:
 # ABA 4: ESTRATÉGIA DE CAMPEONATO
 # ===========================================================================
 with aba_camp:
-    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>🏆 ESTRATÉGIA DE CAMPEONATO</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #00a8e8;'>🏆 ESTRATÉGIA DE CAMPEONATO</h2>", unsafe_allow_html=True)
     
     col_c1, col_c2 = st.columns(2)
     with col_c1:
@@ -735,7 +752,7 @@ with aba_drills:
 # ABA 8: PRESSÃO
 # ===========================================================================
 with aba_pressao:
-    st.markdown("<h2 style='text-align: center; color: #f43f5e;'>🧠 PRESSÃO DE LUTA - FLASHCARDS</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #00a8e8;'>🧠 PRESSÃO DE LUTA - FLASHCARDS</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Estude posições difíceis e saídas de sufoco.</p>", unsafe_allow_html=True)
 
     with st.form(key="form_pressao_flashcard"):
@@ -806,7 +823,7 @@ with aba_kimono:
 # ABA 11: CARD VITÓRIA
 # ===========================================================================
 with aba_card:
-    st.markdown("<h2 style='text-align: center; color: #a855f7;'>📸 CARD DE VITÓRIA</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #00a8e8;'>📸 CARD DE VITÓRIA</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Crie seu card personalizado com foto, texto e comemore suas conquistas no tatame!</p>", unsafe_allow_html=True)
 
     foto_card_up = st.file_uploader("Enviar Foto da Vitória (Arquivos):", type=["jpg", "png", "jpeg"], key="up_card")
@@ -820,7 +837,7 @@ with aba_card:
         foto_final = foto_card_cam or foto_card_up
         if foto_final is not None:
             st.image(foto_final, use_container_width=True)
-        mostrar_html(f"<div class='placar-box' style='border: 2px solid #a855f7;'><h3 style='color: #a855f7;'>🏆 CARD OFICIAL OSSBOT</h3><p style='font-size: 18px; font-weight: bold;'>{esc(legenda_card)}</p></div>")
+        mostrar_html(f"<div class='placar-box' style='border: 2px solid #00a8e8;'><h3 style='color: #00a8e8;'>🏆 CARD OFICIAL OSSBOT</h3><p style='font-size: 18px; font-weight: bold;'>{esc(legenda_card)}</p></div>")
 
 # ===========================================================================
 # ABA 12: CADERNETA DE ALUNOS
@@ -850,7 +867,7 @@ with aba_caderneta:
 # ABA 13: CHAVES DE TORNEIO
 # ===========================================================================
 with aba_chaves:
-    st.markdown("<h2 style='text-align: center; color: #f43f5e;'>⏱️ ORGANIZADOR DE CHAVES DE LUTA</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #00a8e8;'>⏱️ ORGANIZADOR DE CHAVES DE LUTA</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Organize os confrontos dos atletas de forma limpa e visível.</p>", unsafe_allow_html=True)
 
     nomes_atletas_txt = st.text_area("Digite os nomes dos atletas (um por linha):",
@@ -865,9 +882,9 @@ with aba_chaves:
             mostrar_html("<div class='placar-box'><h3 style='color: #00ffcc;'>⚔️ CONFRONTOS GERADOS</h3></div>")
             for i in range(0, len(atletas) - 1, 2):
                 mostrar_html(
-                    f"<div style='background-color: #1e1e1e; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ff4d4d;'>"
+                    f"<div style='background-color: #1b2e4b; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #00a8e8;'>"
                     f"<h4 style='color: #ffffff; margin:0;'>🥊 Luta: <span style='color: #00ffcc;'>{esc(atletas[i])}</span> "
-                    f"vs <span style='color: #ff4d4d;'>{esc(atletas[i + 1])}</span></h4></div>"
+                    f"vs <span style='color: #00a8e8;'>{esc(atletas[i + 1])}</span></h4></div>"
                 )
             if len(atletas) % 2 != 0:
                 st.info(f"✨ Atleta aguardando vencedores (Bye): {atletas[-1]}")
@@ -912,7 +929,7 @@ with aba_cronograma:
 # ABA 15: RECUPERAÇÃO & PRONTUÁRIO
 # ===========================================================================
 with aba_recuperacao:
-    st.markdown("<h2 style='text-align: center; color: #a855f7;'>🧘 RECUPERAÇÃO & PRONTUÁRIO RÁPIDO</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #00a8e8;'>🧘 RECUPERAÇÃO & PRONTUÁRIO RÁPIDO</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Descreva sua lesão ou dor para gerar um guia de primeiros socorros!</p>", unsafe_allow_html=True)
 
     lesao_texto = st.text_area("Descreva o que aconteceu ou onde está doendo (Ex: Torci o tornozelo caindo de mau jeito):", key="recup_txt")
@@ -924,8 +941,8 @@ with aba_recuperacao:
             relato_final += " [Áudio gravado com o relato da dor]"
 
         mostrar_html(f"""
-        <div class='nutri-box' style='border: 2px solid #a855f7;'>
-            <h3 style='color: #a855f7;'>📋 PRONTUÁRIO TÁTICO DE PRIMEIROS SOCORROS</h3>
+        <div class='nutri-box' style='border: 2px solid #00a8e8;'>
+            <h3 style='color: #00a8e8;'>📋 PRONTUÁRIO TÁTICO DE PRIMEIROS SOCORROS</h3>
             <p><b>Seu Relato:</b> {esc(relato_final if relato_final else "Dor / Desconforto geral pós-treino")}</p>
             <hr>
             <h4>🚨 Orientações Imediatas (Protocolo R.I.C.E.):</h4>
