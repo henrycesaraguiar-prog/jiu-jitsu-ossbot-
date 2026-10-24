@@ -1,7 +1,6 @@
 import os
 import io
 import json
-import uuid
 import base64
 import html as html_lib
 from datetime import datetime, date
@@ -55,7 +54,7 @@ PASTA_DADOS = os.path.dirname(os.path.abspath(__file__))
 ARQUIVO_BANCO_USUARIOS = os.path.join(PASTA_DADOS, "banco_usuarios.json")
 
 CAMPOS = [
-    "conversas", "historico_lutas", "dinamic_kids_custom", "flashcards_pressao",
+    "historico_lutas", "dinamic_kids_custom", "flashcards_pressao",
     "alunos_graduacao", "cards_vitoria", "cursos_interativos",
     "lista_alunos_academia", "notas_kimono", "cronogramas_aulas", "foco_recuperacao",
     "perfil_nome", "perfil_faixa", "perfil_graus", "perfil_academia", 
@@ -86,7 +85,6 @@ def salvar_banco_usuarios(usuarios):
 def dados_vazios(email=""):
     nome_padrao = email.split("@")[0].title() if email else "Atleta"
     return {
-        "conversas": {},
         "historico_lutas": [],
         "dinamic_kids_custom": [],
         "flashcards_pressao": [],
@@ -146,40 +144,12 @@ def salvar_tudo():
     salvar_dados_usuario(usuario, dados)
 
 
-def iniciar_nova_conversa():
-    st.session_state.historico = []
-    st.session_state.conversa_id = uuid.uuid4().hex
-    st.session_state.titulo = ""
-
-
-def abrir_conversa(cid):
-    conv = st.session_state.conversas.get(cid)
-    if conv:
-        st.session_state.historico = conv.get("mensagens", [])
-        st.session_state.conversa_id = cid
-        st.session_state.titulo = conv.get("titulo", "")
-
-
-def apagar_conversa(cid):
-    if cid in st.session_state.conversas:
-        del st.session_state.conversas[cid]
-        salvar_tudo()
-    if cid == st.session_state.get("conversa_id"):
-        iniciar_nova_conversa()
-
-
 def carregar_usuario(email):
     dados = carregar_dados_usuario(email)
     st.session_state.usuario_email = email
     st.session_state.usuario_atual = email.split("@")[0]
     for campo in CAMPOS:
         st.session_state[campo] = dados.get(campo, dados_vazios(email)[campo])
-    if st.session_state.conversas:
-        ultimo_id = max(st.session_state.conversas,
-                        key=lambda c: st.session_state.conversas[c].get("atualizada", ""))
-        abrir_conversa(ultimo_id)
-    else:
-        iniciar_nova_conversa()
 
 
 def fazer_logout():
@@ -375,12 +345,12 @@ doc.body.appendChild(caixa);
 """, height=0)
 
 # ---------------------------------------------------------------------------
-# Barra lateral (Bolinha de Perfil, Carteirinha de Atleta, Graus 0-11)
+# Barra lateral limpa (Apenas Bolinha de Perfil, Carteirinha e Conexão)
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("## 🥋 Meu Perfil")
     
-    # Exibição da foto circular (bolinha) no topo da barra lateral
+    # Bolinha de perfil no topo
     if st.session_state.get("perfil_foto_b64"):
         try:
             mostrar_html(f"<img src='data:image/png;base64,{st.session_state.perfil_foto_b64}' class='foto-bolinha' />")
@@ -389,7 +359,6 @@ with st.sidebar:
     else:
         mostrar_html("<div class='bolinha-padrao'>🥋</div>")
 
-    # Expander de perfil que abre ao clicar
     with st.expander(f"👤 Carteirinha: {st.session_state.get('perfil_nome', 'Atleta')}"):
         st.caption(f"📧 **{st.session_state.get('usuario_email')}**")
 
@@ -411,7 +380,7 @@ with st.sidebar:
             key="select_perfil_faixa"
         )
         
-        # Ajustado para 0 a 11 graus
+        # Graus de 0 a 11
         st.session_state.perfil_graus = st.slider("Graus (0 a 11):", 0, 11, int(st.session_state.get("perfil_graus", 0)), key="slider_perfil_graus")
         
         st.session_state.perfil_academia = st.text_input("Academia / Equipe:", value=st.session_state.get("perfil_academia", "Academia BJJ"), key="input_perfil_academia")
@@ -453,37 +422,6 @@ with st.sidebar:
 
     if st.session_state.get("modo_offline"):
         st.success("Modo Offline ligado com sucesso!")
-
-    st.divider()
-    st.markdown("## 🥋 Minhas conversas")
-    st.button("➕ Adicionar mais nova conversa", on_click=iniciar_nova_conversa, key="btn_nova_conversa",
-              use_container_width=True)
-
-    busca = st.text_input("🔍 Pesquisar histórico", placeholder="Ex.: Armlock", key="busca_conversas").strip().lower()
-    st.divider()
-
-    conversas = st.session_state.get("conversas", {})
-    ids = sorted(conversas, key=lambda c: conversas[c].get("atualizada", ""), reverse=True)
-
-    mostradas = 0
-    for cid in ids:
-        conv = conversas[cid]
-        if busca:
-            texto_total = conv.get("titulo", "").lower() + " " + " ".join(m.get("content", "").lower() for m in conv.get("mensagens", []))
-            if busca not in texto_total:
-                continue
-        mostradas += 1
-        atual = cid == st.session_state.get("conversa_id")
-        col_a, col_b = st.columns([5, 1])
-        with col_a:
-            st.button(("▶ " if atual else "") + conv.get("titulo", "Nova conversa"), key=f"abrir_{cid}",
-                      on_click=abrir_conversa, args=(cid,), use_container_width=True)
-        with col_b:
-            st.button("🗑️", key=f"apagar_{cid}", on_click=apagar_conversa, args=(cid,),
-                      help="Apagar esta conversa")
-
-    if mostradas == 0:
-        st.caption("Nenhuma conversa encontrada." if busca else "Suas conversas salvas vão aparecer aqui. 🥋")
 
 # ---------------------------------------------------------------------------
 # Estados auxiliares
