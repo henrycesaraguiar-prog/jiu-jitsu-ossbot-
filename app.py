@@ -408,7 +408,7 @@ with st.sidebar:
             st.success("✅ Perfil e carteirinha salvos com sucesso!")
             st.rerun()
 
-    # PAINEL MASTER / ADMINISTRADOR COM ACADEMIAS
+    # PAINEL MASTER / ADMINISTRADOR ORGANIZADO POR ACADEMIA -> NOME
     if st.session_state.is_admin:
         st.divider()
         st.markdown("## 👑 Painel Master")
@@ -419,9 +419,12 @@ with st.sidebar:
             for usr, info in banco.items():
                 dados_usr = carregar_dados_usuario(usr)
                 nome_usr = dados_usr.get("perfil_nome", "Sem Nome")
-                academia_usr = dados_usr.get("perfil_academia", "Não informada")
-                st.markdown(f"• **Atleta:** `{nome_usr}`")
-                st.caption(f"📧 `{usr}` | 🥋 **Academia:** {academia_usr} | 📅 {info.get('data_criacao', 'S/D')}")
+                academia_usr = dados_usr.get("perfil_academia", "Academia Não Informada")
+                
+                # Exibe a Academia em destaque e o nome do inscrito logo abaixo
+                st.markdown(f"🏛️ **Academia / Equipe:** <span style='color: #ff1e27; font-size: 16px; font-weight: bold;'>{esc(academia_usr)}</span>", unsafe_allow_html=True)
+                st.markdown(f"👤 **Inscrito:** {esc(nome_usr)}")
+                st.caption(f"📧 `{usr}` | 📅 Criado em: {info.get('data_criacao', 'S/D')}")
                 st.markdown("---")
 
     st.divider()
