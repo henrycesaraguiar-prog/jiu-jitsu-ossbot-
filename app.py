@@ -227,7 +227,8 @@ div[data-baseweb="select"] svg { fill: #ffffff !important; }
 .kids-box { background-color: #451a03; border: 2px solid #fbbf24; }
 .badge-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
 .badge { background-color: #1e1e1e; border: 1px solid #ff4d4d; color: #ff4d4d; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; }
-.carteirinha-card { background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%); border: 2px solid #00ffcc; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,255,204,0.2); }
+.foto-bolinha { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #00ffcc; display: block; margin: 0 auto 10px auto; }
+.bolinha-padrao { width: 80px; height: 80px; border-radius: 50%; background-color: #2a2a2a; border: 2px solid #00ffcc; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 10px auto; }
 """
 css_compacto = " ".join(CSS.split())
 st.markdown(f"<style>{css_compacto}</style>", unsafe_allow_html=True)
@@ -374,57 +375,61 @@ doc.body.appendChild(caixa);
 """, height=0)
 
 # ---------------------------------------------------------------------------
-# Barra lateral (Carteirinha do Atleta, Foto, Dados, Backup, Pesquisa)
+# Barra lateral (Bolinha de Perfil, Carteirinha de Atleta, Graus 0-11)
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown("## 🥋 Carteirinha do Atleta")
-    st.caption(f"📧 **{st.session_state.get('usuario_email')}**")
-
-    # Upload de foto de perfil
-    foto_perfil_up = st.file_uploader("Enviar Foto de Perfil:", type=["jpg", "png", "jpeg"], key="up_foto_atleta")
-    if foto_perfil_up is not None:
-        try:
-            b64_img = base64.b64encode(foto_perfil_up.getvalue()).decode("utf-8")
-            st.session_state.perfil_foto_b64 = b64_img
-            salvar_tudo()
-        except Exception:
-            pass
-
-    # Exibição da foto atual na carteirinha
+    st.markdown("## 🥋 Meu Perfil")
+    
+    # Exibição da foto circular (bolinha) no topo da barra lateral
     if st.session_state.get("perfil_foto_b64"):
         try:
-            img_bytes = base64.b64decode(st.session_state.perfil_foto_b64)
-            st.image(img_bytes, width=130, caption="Foto Oficial")
+            mostrar_html(f"<img src='data:image/png;base64,{st.session_state.perfil_foto_b64}' class='foto-bolinha' />")
         except Exception:
-            st.info("📷 Sem foto carregada.")
+            mostrar_html("<div class='bolinha-padrao'>🥋</div>")
     else:
-        st.info("📷 Envie sua foto acima para aparecer na carteirinha.")
+        mostrar_html("<div class='bolinha-padrao'>🥋</div>")
 
-    # Edição dos dados da carteirinha
-    st.session_state.perfil_nome = st.text_input("Nome Completo:", value=st.session_state.get("perfil_nome", "Atleta"), key="input_perfil_nome")
-    st.session_state.perfil_faixa = st.selectbox(
-        "Faixa:", 
-        ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta"],
-        index=["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta"].index(st.session_state.get("perfil_faixa", "Branca")),
-        key="select_perfil_faixa"
-    )
-    st.session_state.perfil_graus = st.slider("Graus:", 0, 4, int(st.session_state.get("perfil_graus", 0)), key="slider_perfil_graus")
-    st.session_state.perfil_academia = st.text_input("Academia / Equipe:", value=st.session_state.get("perfil_academia", "Academia BJJ"), key="input_perfil_academia")
-    st.session_state.perfil_peso = st.text_input("Categoria de Peso:", value=st.session_state.get("perfil_peso", "Médio"), key="input_perfil_peso")
-    st.session_state.perfil_status = st.selectbox(
-        "Status:",
-        ["Atleta Competidor 🏆", "Praticante / Hobby 🥋", "Monitor / Instrutor 🥇", "Faixa Preta / Mestre 👑"],
-        index=0,
-        key="select_perfil_status"
-    )
+    # Expander de perfil que abre ao clicar
+    with st.expander(f"👤 Carteirinha: {st.session_state.get('perfil_nome', 'Atleta')}"):
+        st.caption(f"📧 **{st.session_state.get('usuario_email')}**")
 
-    if st.button("💾 Salvar Carteirinha", use_container_width=True, key="btn_salvar_perfil"):
-        salvar_tudo()
-        st.success("✅ Perfil e carteirinha salvos com sucesso!")
+        foto_perfil_up = st.file_uploader("Enviar Foto de Perfil:", type=["jpg", "png", "jpeg"], key="up_foto_atleta")
+        if foto_perfil_up is not None:
+            try:
+                b64_img = base64.b64encode(foto_perfil_up.getvalue()).decode("utf-8")
+                st.session_state.perfil_foto_b64 = b64_img
+                salvar_tudo()
+                st.rerun()
+            except Exception:
+                pass
+
+        st.session_state.perfil_nome = st.text_input("Nome Completo:", value=st.session_state.get("perfil_nome", "Atleta"), key="input_perfil_nome")
+        st.session_state.perfil_faixa = st.selectbox(
+            "Faixa:", 
+            ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"],
+            index=["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"].index(st.session_state.get("perfil_faixa", "Branca")),
+            key="select_perfil_faixa"
+        )
+        
+        # Ajustado para 0 a 11 graus
+        st.session_state.perfil_graus = st.slider("Graus (0 a 11):", 0, 11, int(st.session_state.get("perfil_graus", 0)), key="slider_perfil_graus")
+        
+        st.session_state.perfil_academia = st.text_input("Academia / Equipe:", value=st.session_state.get("perfil_academia", "Academia BJJ"), key="input_perfil_academia")
+        st.session_state.perfil_peso = st.text_input("Categoria de Peso:", value=st.session_state.get("perfil_peso", "Médio"), key="input_perfil_peso")
+        st.session_state.perfil_status = st.selectbox(
+            "Status:",
+            ["Atleta Competidor 🏆", "Praticante / Hobby 🥋", "Monitor / Instrutor 🥇", "Faixa Preta / Mestre 👑"],
+            index=0,
+            key="select_perfil_status"
+        )
+
+        if st.button("💾 Salvar Carteirinha", use_container_width=True, key="btn_salvar_perfil"):
+            salvar_tudo()
+            st.success("✅ Perfil e carteirinha salvos com sucesso!")
+            st.rerun()
 
     st.divider()
 
-    # Opções extras na barra lateral
     dados_usuario_atual = {}
     for c in CAMPOS:
         dados_usuario_atual[c] = st.session_state.get(c, {})
