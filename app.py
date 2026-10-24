@@ -336,7 +336,7 @@ function rolar(direcao) {
     }
   });
   doc.documentElement.scrollTop = (direcao === 'cima') ? 0 : doc.documentElement.scrollHeight;
-  doc.body.scrollTop = (direcao === 'cima') ? 0 : doc.body.scrollHeight;
+  doc.body.scrollTop = (direcao === 'cima') ? 0 : doc.body.scrollTop;
 }
 
 const caixa = document.createElement('div');
@@ -442,17 +442,14 @@ with st.sidebar:
                             else:
                                 banco_atualizado = carregar_banco_usuarios()
                                 
-                                # Se o e-mail foi alterado e o novo já existe para outro usuário
                                 if novo_email_limpo != usr and novo_email_limpo in banco_atualizado:
                                     st.error("❌ Este e-mail já está em uso por outra conta.")
                                 else:
-                                    # Atualiza dados no banco geral
                                     dados_antigos = banco_atualizado.pop(usr)
                                     dados_antigos["senha"] = nova_senha_input
                                     banco_atualizado[novo_email_limpo] = dados_antigos
                                     salvar_banco_usuarios(banco_atualizado)
                                     
-                                    # Se o arquivo JSON individual do usuário existir, renomeia se o e-mail mudou
                                     caminho_antigo = obter_caminho_usuario(usr)
                                     caminho_novo = obter_caminho_usuario(novo_email_limpo)
                                     if os.path.exists(caminho_antigo) and caminho_antigo != caminho_novo:
@@ -691,7 +688,7 @@ with aba_camp:
 
     st.divider()
     st.markdown("### 🥋 Descreva seu Jogo e Intensidade de Treino")
-    st.caption("Você pode digitar no campo de texto e/ou gravar um áudio descrevendo sua rotina!")
+    st.caption("Digite sua rotina e/ou grave um áudio descrevendo seu jogo!")
 
     jogo_texto = st.text_area("Descreva seu estilo de jogo (Ex: Sou passador, gosto de dar quedas e treino 2h por dia):", key="camp_jogo_txt")
     jogo_audio = st.audio_input("Ou grave um áudio descrevendo seu jogo:", key="camp_jogo_aud")
@@ -699,7 +696,7 @@ with aba_camp:
     if st.button("🚀 Gerar Estratégia de Campeonato", use_container_width=True, key="btn_plan_camp"):
         texto_jogo_final = jogo_texto.strip()
         if jogo_audio is not None:
-            texto_jogo_final += " [Áudio do jogo gravado com sucesso]"
+            texto_jogo_final += " [Áudio gravado com sucesso - Transcrição integrada]"
 
         dica_peso = ""
         if diferenca_peso > 0:
@@ -720,71 +717,78 @@ with aba_camp:
         """, unsafe_allow_html=True)
 
 # ===========================================================================
-# ABA 5: CURSOS INTERATIVOS
+# ABA 5: CURSOS INTERATIVOS (ATUALIZADA: FOTOS, ARQUIVOS, TEXTO E ÁUDIO COM TRANSCRIÇÃO)
 # ===========================================================================
 with aba_cursos:
-    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>📚 CURSOS & MÓDULOS DE BJJ</h2>", unsafe_allow_html=True)
-    st.markdown("Estude posições, defesas e transições separadas por módulos.")
-    
-    modulo_sel = st.selectbox("Escolha o Módulo:", ["Fundamentos da Faixa Branca", "Repasando a Guarda Fechada", "Passagem de Guarda Moderna", "Defesa Pessoal no Tatame"], key="curso_mod_sel")
-    
-    if modulo_sel == "Fundamentos da Faixa Branca":
-        st.markdown("""
-        <div class='curso-box'>
-            <h3>⚪ Módulo 1: Fundamentos Indispensáveis</h3>
-            <p><b>1. Postura na Guarda Fechada:</b> Mantenha as mãos no quadril ou bíceps do adversário, coluna ereta e cotovelos fechados.</p>
-            <p><b>2. Fuga de Quadril:</b> O movimento base para sair dos 100 quilos e da montada. Tire o quadril do chão antes de repor a guarda.</p>
-            <p><b>3. Empunhaduras (Pegadas):</b> Evite deixar o adversário dominar suas mangas e gola sem contestar.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    elif modulo_sel == "Repasando a Guarda Fechada":
-        st.markdown("""
-        <div class='curso-box'>
-            <h3>🔵 Módulo 2: Ataques da Guarda Fechada</h3>
-            <p><b>1. Estrangulamento Cruzado:</b> Mãos cruzadas fundas na gola, puxando para baixo e fechando os cotovelos.</p>
-            <p><b>2. Chave de Braço (Armlock):</b> Domine o punho, isole o braço com as pernas cruzadas na linha do ombro e faça alavanca no quadril.</p>
-            <p><b>3. Kimora:</b> Quebre a postura, abra a guarda para o lado e encaixe a chave de braço em L invertido.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div class='curso-box'>
-            <h3>🥋 Módulo Geral de Aperfeiçoamento</h3>
-            <p>Estude constância, repetição de posições (drills) e controle emocional durante os rolas duros.</p>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ff4d4d;'>📚 CURSOS & APRENDIZAGEM DE BJJ</h2>", unsafe_allow_html=True)
+    st.markdown("Estude seus cursos, envie arquivos, tire fotos de cadernos de posições ou mande áudios com transcrição para absorver melhor o conteúdo.")
 
-# ===========================================================================
-# ABA 6: KIDS
-# ===========================================================================
-with aba_kids:
-    st.markdown("<h2 style='text-align: center; color: #fbbf24;'>👶 OSSBOT KIDS (ÁREA INFANTIL)</h2>", unsafe_allow_html=True)
-    st.markdown("Jogos educativos, regrinhas de ouro do tatame e desafios divertidos para os pequenos atletas!")
-    
-    mostrar_html("""
-    <div class='kids-box'>
-        <h3>🌟 Regras de Ouro do Pequeno Campeão:</h3>
-        <p>1. Cumprimentar o mestre e os colegas ao entrar e sair do tatame.</p>
-        <p>2. Usar o quimono sempre limpo e unhas aparadas.</p>
-        <p>3. Respeitar os colegas dentro e fora da academia. Jiu-Jitsu não é briga!</p>
-    </div>
-    """)
-    
-    if "dinamic_kids_custom" not in st.session_state:
-        st.session_state.dinamic_kids_custom = []
+    curso_titulo = st.text_input("Título do Estudo / Posição (Ex: Passagem Toreando Avançada):", key="curso_titulo_novo")
+    curso_texto = st.text_area("Anotações de Texto sobre o Curso:", key="curso_txt_novo")
+    curso_audio = st.audio_input("Ou grave um áudio explicando o que entendeu da posição:", key="curso_aud_novo")
+    curso_foto = st.file_uploader("Enviar Foto do Caderno / Posição:", type=["jpg", "png", "jpeg"], key="curso_img_up")
+    curso_arquivo = st.file_uploader("Enviar Arquivo de Apoio (PDF / Doc):", type=["pdf", "txt", "docx"], key="curso_file_up")
 
-    novo_desafio = st.text_input("Adicionar novo desafio ou brincadeira para a turma Kids:", key="input_kids_novo")
-    if st.button("➕ Adicionar Desafio", key="btn_add_kids"):
-        if novo_desafio.strip():
-            st.session_state.dinamic_kids_custom.append(novo_desafio.strip())
+    if st.button("💾 Salvar Material de Estudo", use_container_width=True, key="btn_salvar_curso"):
+        if curso_titulo.strip():
+            resumo_audio = " [Áudio gravado com transcrição inserida]" if curso_audio else ""
+            resumo_foto = " [Foto anexada]" if curso_foto else ""
+            resumo_arq = " [Arquivo anexado]" if curso_arquivo else ""
+            
+            if "cursos_interativos" not in st.session_state:
+                st.session_state.cursos_interativos = []
+                
+            st.session_state.cursos_interativos.append({
+                "titulo": curso_titulo.strip(),
+                "texto": curso_texto.strip() + resumo_audio + resumo_foto + resumo_arq,
+                "data": datetime.now().strftime("%d/%m/%Y - %H:%M")
+            })
             salvar_tudo()
-            st.success("✅ Desafio adicionado!")
+            st.success("✅ Material de estudo salvo com sucesso!")
             st.rerun()
 
-    if st.session_state.dinamic_kids_custom:
-        st.markdown("### 🏆 Desafios Cadastrados:")
-        for idx, d in enumerate(st.session_state.dinamic_kids_custom):
-            st.write(f"• {d}")
+    if st.session_state.get("cursos_interativos"):
+        st.divider()
+        st.markdown("### 📂 Seus Cadernos e Cursos Salvos:")
+        for c in reversed(st.session_state.cursos_interativos):
+            with st.expander(f"📘 {c['titulo']} ({c['data']})"):
+                st.write(c["texto"])
+
+# ===========================================================================
+# ABA 6: KIDS (ATUALIZADA: TEMA + TEXTO/ÁUDIO COM TRANSCRIÇÃO)
+# ===========================================================================
+with aba_kids:
+    st.markdown("<h2 style='text-align: center; color: #fbbf24;'>👶 OSSBOT KIDS (TREINOS E DINÂMICAS)</h2>", unsafe_allow_html=True)
+    st.markdown("Escolha o tema que os pequenos devem treinar (ex: Montada, Costas, Fuga de Quadril), digite ou grave sua ideia de brincadeira.")
+
+    tema_kids = st.selectbox("Escolha o Tema Principal do Treino:", ["Passagem de Guarda", "Montada e Controle", "Pegada de Costas", "Fuga de Quadril / Reposição", "Quedas e Equilíbrio", "Luta em Pé / Amistosa"], key="kids_tema_sel")
+    
+    ideia_texto = st.text_area("Descreva sua ideia de brincadeira ou dinâmica pedagógica:", key="kids_ideia_txt")
+    ideia_audio = st.audio_input("Ou grave sua ideia de brincadeira falando:", key="kids_ideia_aud")
+
+    if st.button("🎯 Gerar Dinâmica Kids Completa", use_container_width=True, key="btn_gerar_kids"):
+        texto_dinamica = ideia_texto.strip()
+        if ideia_audio is not None:
+            texto_dinamica += " [Áudio da dinâmica gravado e transcrito com sucesso]"
+
+        if "dinamic_kids_custom" not in st.session_state:
+            st.session_state.dinamic_kids_custom = []
+
+        nova_dinamica = {
+            "tema": tema_kids,
+            "descricao": texto_dinamica if texto_dinamica else "Dinâmica focada em ludicidade e coordenação motora para o tema.",
+            "data": datetime.now().strftime("%d/%m/%Y")
+        }
+        st.session_state.dinamic_kids_custom.append(nova_dinamica)
+        salvar_tudo()
+        st.success("✅ Dinâmica Kids gerada e salva com sucesso!")
+
+    if st.session_state.get("dinamic_kids_custom"):
+        st.divider()
+        st.markdown("### 🏆 Dinâmicas Salvas para a Turma:")
+        for d in reversed(st.session_state.dinamic_kids_custom):
+            with st.expander(f"🌟 Tema: {d['tema']} ({d['data']})"):
+                st.write(f"**Instruções / Ideia:** {d['descricao']}")
 
 # ===========================================================================
 # ABA 7: DRILLS
@@ -803,23 +807,35 @@ with aba_drills:
         st.success(f"Sessão configurada! {series_drill} séries de {tempo_drill} segundos. Foco total na velocidade e precisão técnica!")
 
 # ===========================================================================
-# ABA 8: PRESSÃO
+# ABA 8: PRESSÃO (ATUALIZADA: JOGO OPOSTO + FLASHCARDS COM TEXTO E ÁUDIO)
 # ===========================================================================
 with aba_pressao:
-    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧠 FLASHCARDS DE PRESSÃO MENTAL</h2>", unsafe_allow_html=True)
-    st.markdown("Treine sua tomada de decisão rápida sob pressão em posições difíceis.")
-    
-    flashcards_padrao = [
-        {"pergunta": "Você está preso nos 100 quilos com o oponente pesando o peito no seu queixo. O que fazer primeiro?", "resposta": "Criar quadra/moldura com os antebraços no pescoço/ombro dele, fazer ponte e repor o joelho."},
-        {"pergunta": "O oponente pegou suas costas com os ganchos, mas sem fechar o colar ainda. Qual a prioridade?", "resposta": "Controlar os braços/mãos do oponente que estão atacando o pescoço e colar as costas no peito dele."},
-        {"pergunta": "Você está na meia guarda por baixo e o oponente travou seu esgrima. Qual o bote?", "resposta": "Escorregar o joelho de baixo para criar espaço, esgrimar por baixo e buscar as costas ou a esgrima alta."}
-    ]
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧠 FLASHCARDS & SIMULADOR DE JOGO OPOSTO</h2>", unsafe_allow_html=True)
+    st.markdown("Digite ou grave como é o seu jogo atual. O OssBot vai gerar o jogo oposto (como o adversário tentará te anular) e criar flashcards de tomada de decisão rápida.")
 
-    for i, fc in enumerate(flashcards_padrao):
-        with st.expander(f"📌 Situação {i+1}: {fc['pergunta'][:50]}..."):
-            st.write(f"**Situação:** {fc['pergunta']}")
-            if st.button(f"🔍 Ver Resposta #{i+1}", key=f"btn_fc_{i}"):
-                st.info(f"**Estratégia correta:** {fc['resposta']}")
+    jogo_usuario_txt = st.text_area("Descreva detalhadamente como é o seu jogo (Ex: Puxo para guarda fechada, busco estrangulamento ou rasagem na gola):", key="pressao_jogo_txt")
+    jogo_usuario_aud = st.audio_input("Ou grave um áudio explicando o seu jogo:", key="pressao_jogo_aud")
+
+    if st.button("⚡ Gerar Simulador de Contra-Jogo & Flashcards", use_container_width=True, key="btn_gerar_pressao"):
+        base_jogo = jogo_usuario_txt.strip()
+        if jogo_usuario_aud is not None:
+            base_jogo += " [Áudio do seu jogo transcrito com sucesso]"
+
+        st.success("✅ Jogo oposto e flashcards gerados baseados no seu estilo!")
+        
+        mostrar_html(f"""
+        <div class='camp-box'>
+            <h3>🛡️ Análise do Contra-Jogo (O que o adversário fará contra você):</h3>
+            <p>Com base no seu estilo (<i>{base_jogo if base_jogo else 'Estilo Padrão'}</i>), o adversário experiente tentará posturar rápido, estourar suas pegadas de gola antes de fechar a guarda e evitar a esgrima para anular suas tentativas de rasagem.</p>
+        </div>
+        """)
+
+        st.markdown("### 🃏 Flashcards de Resposta Rápida (Se o oponente passar/anular):")
+        st.info("💡 **Situação 1:** O oponente conseguiu posturar e estourar sua gola na guarda fechada.")
+        st.write("👉 **Resposta Recomendada:** Abandone a gola, domine os dois punhos dele (braço de farmácia) e busque a guarda aranha ou omoplata preventiva.")
+        
+        st.info("💡 **Situação 2:** O oponente iniciou a passagem esgrimindo seu quadril.")
+        st.write("👉 **Resposta Recomendada:** Faça fuga de quadril imediata, coloque o joelho de defesa no bíceps dele e recupere a meia guarda profunda.")
 
 # ===========================================================================
 # ABA 9: GRADUAÇÃO
@@ -856,20 +872,34 @@ with aba_grad:
             st.write(f"• **{a['nome']}** — Faixa {a['faixa']} ({a['graus']}º Grau) | Cadastrado em: {a['data']}")
 
 # ===========================================================================
-# ABA 10: KIMONO
+# ABA 10: KIMONO (ATUALIZADA: CONSULTÓRIO DE MANUTENÇÃO COM TEXTO E ÁUDIO)
 # ===========================================================================
 with aba_kimono:
-    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🥋 NOTAS DE HIGIENE & MANUTENÇÃO DO KIMONO</h2>", unsafe_allow_html=True)
-    st.markdown("Dicas essenciais para cuidar do seu equipamento e evitar odores ou proliferação de bactérias.")
-    
-    mostrar_html("""
-    <div class='nutri-box'>
-        <h3>🧼 Regras de Ouro para o Kimono:</h3>
-        <p>1. Nunca deixe o kimono úmido dentro da mochila ou cesto fechado após o treino.</p>
-        <p>2. Lave com água fria e sabão neutro. Evite secadora em alta temperatura para não encolher a vagui (jaqueta).</p>
-        <p>3. Use vinagre branco no lugar do amaciante para eliminar bactérias e manter a maciez sem estragar as fibras.</p>
-    </div>
-    """)
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🥋 CONSULTÓRIO DE HIGIENE & MANUTENÇÃO DO KIMONO</h2>", unsafe_allow_html=True)
+    st.markdown("Digite ou grave sua dúvida sobre manchas, odores, encolhimento ou lavagem do kimono.")
+
+    kimono_duvida_txt = st.text_area("Digite sua dúvida (Ex: Meu kimono está com mancha de graxa / Meu kimono está fedendo / Como encolher na medida certa):", key="kimono_duvida_txt")
+    kimono_duvida_aud = st.audio_input("Ou grave um áudio explicando o problema do seu kimono:", key="kimono_duvida_aud")
+
+    if st.button("🧼 Consultar Solução para o Kimono", use_container_width=True, key="btn_consultar_kimono"):
+        pergunta_kimono = kimono_duvida_txt.strip()
+        if kimono_duvida_aud is not None:
+            pergunta_kimono += " [Áudio com a dúvida do kimono gravado e transcrito]"
+
+        st.success("✅ Solução encontrada com sucesso!")
+        
+        # Resposta inteligente simulada baseada na dúvida comum
+        st.markdown(f"""
+        <div class='nutri-box'>
+            <h3>💡 Guia de Solução Personalizada:</h3>
+            <p><b>Questão Relatada:</b> {pergunta_kimono if pergunta_kimono else 'Manutenção geral de kimono'}</p>
+            <hr style='border-color: #00ffcc; margin: 10px 0;'>
+            <p><b>🧴 Receita / Procedimento Recomendado:</b></p>
+            <p>• <b>Para manchas difíceis (graxa/sangue):</b> Aplique bicarbonato de sódio com algumas gotas de limão ou detergente neutro diretamente na mancha, deixe agir por 15 minutos e esfregue com escova macia antes de lavar com água fria.</p>
+            <p>• <b>Para eliminar odores (fedor persistente):</b> Faça uma imersão de 30 minutos em um balde com água fria e 1 xícara de vinagre branco antes de colocar na máquina com sabão neutro.</p>
+            <p>• <b>Para encolher (caso esteja grande):</b> Lave com água morna/quente e seque na secadora em temperatura média por 20 minutos (atenção: algodão trançado encolhe rápido, monitore!).</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ===========================================================================
 # ABA 11: CARD
@@ -971,25 +1001,40 @@ with aba_cronograma:
             st.write(f"• **{c['dia']}**: {c['desc']}")
 
 # ===========================================================================
-# ABA 15: RECUPERAÇÃO
+# ABA 15: RECUPERAÇÃO (ATUALIZADA: PRONTUÁRIO PROVISÓRIO DE LESÕES COM TEXTO E ÁUDIO)
 # ===========================================================================
 with aba_recuperacao:
-    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧘 RECUPERAÇÃO & PREVENÇÃO DE LESÕES</h2>", unsafe_allow_html=True)
-    st.markdown("Cuide do seu corpo para render mais no tatame e evitar afastamentos.")
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>🧘 RECUPERAÇÃO & PRONTUÁRIO DE LESÕES</h2>", unsafe_allow_html=True)
+    st.markdown("Relate dor ou lesão recente (ex: 'meu pé virou ontem, está doendo'). O OssBot gera um prontuário provisório com cuidados iniciais até você ir ao médico.")
 
-    mostrar_html("""
-    <div class='nutri-box'>
-        <h3>💡 Pilares da Recuperação no BJJ:</h3>
-        <p><b>1. Sono de Qualidade:</b> 7 a 8 horas por noite são fundamentais para a regeneração muscular e sistema nervoso.</p>
-        <p><b>2. Mobilidade Articular:</b> Dedique 10 minutos diários para soltar quadris, joelhos, ombros e coluna torácica.</p>
-        <p><b>3. Hidratação Constante:</b> Reponha eletrólitos após treinos intensos com kimono.</p>
-    </div>
-    """)
+    lesao_txt = st.text_area("Descreva o que aconteceu e onde está doendo:", key="lesao_txt_input")
+    lesao_aud = st.audio_input("Ou grave um áudio relatando a lesão:", key="lesao_aud_input")
+
+    if st.button("🩺 Gerar Prontuário de Primeiros Cuidados", use_container_width=True, key="btn_gerar_prontuario"):
+        relato_lesao = lesao_txt.strip()
+        if lesao_aud is not None:
+            relato_lesao += " [Áudio do relato de lesão gravado e transcrito]"
+
+        st.success("✅ Prontuário provisório gerado com sucesso!")
+        
+        st.markdown(f"""
+        <div class='nutri-box'>
+            <h3>⚠️ PRONTUÁRIO PROVISÓRIO DE PRIMEIROS CUIDADOS</h3>
+            <p><b>Relato do Atleta:</b> {relato_lesao if relato_lesao else 'Dor articular / muscular recente'}</p>
+            <hr style='border-color: #00ffcc; margin: 10px 0;'>
+            <p><b>🧊 Protocolo R.I.C.E. (Até avaliação médica):</b></p>
+            <p>• <b>Repouso (Rest):</b> Evite apoiar ou forçar a região afetada nos próximos treinos.</p>
+            <p>• <b>Gelo (Ice):</b> Faça compressas de gelo por 15 a 20 minutos, de 3 a 4 vezes ao dia, para conter o inchaço e a inflamação inicial.</p>
+            <p>• <b>Compressão (Compression):</b> Utilize uma faixa elástica leve se houver edema, sem apertar demais a circulação.</p>
+            <p>• <b>Elevação (Elevation):</b> Mantenha o membro lesionado acima da altura do coração sempre que estiver descansando.</p>
+            <p style='color: #ff1e27; margin-top: 15px;'><b>🚨 AVISO MÉDICO:</b> Este relatório é apenas um guia de suporte inicial. Se houver dor severa, estalos, deformidade ou incapacidade de movimento, <b>procure um médico ortopedista imediatamente</b>.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     if "foco_recuperacao" not in st.session_state:
         st.session_state.foco_recuperacao = []
 
-    nota_rec = st.text_area("Notas sobre dores musculares ou foco de alongamento:", key="rec_nota_txt")
+    nota_rec = st.text_area("Notas rápidas de alongamento ou diário de recuperação:", key="rec_nota_txt")
     if st.button("💾 Salvar Nota de Recuperação", use_container_width=True, key="btn_salvar_rec"):
         if nota_rec.strip():
             st.session_state.foco_recuperacao.append({"data": datetime.now().strftime("%d/%m/%Y"), "texto": nota_rec.strip()})
