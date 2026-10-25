@@ -16,7 +16,7 @@ st.set_page_config(
 
 # Constantes globais do Fundador
 EMAIL_ADMIN_MASTER = "henry.cesaraguiar@gmail.com"
-SENHA_ADMIN_MASTER = "BJJ980950"
+SENHA_ADMIN_MASTER = "adminpassword"
 
 CAMPOS = [
     "perfil_nome", "perfil_faixa", "perfil_graus", "perfil_academia", 
@@ -389,16 +389,29 @@ with st.sidebar:
     if st.session_state.get("is_admin", False) or st.session_state.get("tipo_usuario") in ["Professor / Instrutor", "Master (Fundador)"]:
         st.markdown("## 👑 Painel de Gestão & Coach")
         
+        # MÓDULO QR CODE DINÂMICO DO DIA
         with st.expander("📱 Check-in de Presença (QR Code)"):
-            st.markdown("<p style='font-size: 12px; color: #cccccc;'>Simule a leitura do QR Code da academia para registar a presença de hoje:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-size: 12px; color: #cccccc;'>Aponte a câmara para o QR Code do dia para fazer o check-in:</p>", unsafe_allow_html=True)
+            
+            # Gerador automático do QR Code baseado na data de hoje (Muda todo dia automaticamente)
+            data_hoje_str = datetime.now().strftime("%d/%m/%Y")
+            data_api_str = datetime.now().strftime("%Y-%m-%d")
+            qr_url_dia = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=OssBot-Checkin-{data_api_str}"
+            
+            st.markdown(f"""
+            <div style='text-align: center; background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #ff1e27; margin-bottom: 10px;'>
+                <img src='{qr_url_dia}' style='border-radius: 6px; width: 140px; height: 140px; border: 2px solid #ffffff;'/>
+                <p style='color: #00ffcc; font-size: 12px; margin-top: 8px; font-weight: bold;'>📅 QR Code de Hoje: {data_hoje_str}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
             if st.button("📍 Fazer Check-in na Aula Hoje", use_container_width=True):
-                hoje_str = datetime.now().strftime("%d/%m/%Y")
                 presencas = st.session_state.get("historico_presencas", [])
-                if hoje_str not in presencas:
-                    presencas.append(hoje_str)
+                if data_hoje_str not in presencas:
+                    presencas.append(data_hoje_str)
                     st.session_state["historico_presencas"] = presencas
                     salvar_tudo()
-                    st.success(f"✅ Presença registada para hoje ({hoje_str})!")
+                    st.success(f"✅ Presença registada para hoje ({data_hoje_str})!")
                     st.rerun()
                 else:
                     st.info("ℹ️ Já fez check-in hoje!")
