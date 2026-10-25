@@ -16,7 +16,7 @@ st.set_page_config(
 
 # Constantes globais
 EMAIL_ADMIN_MASTER = "henry.cesaraguiar@gmail.com"
-SENHA_ADMIN_MASTER = "DCA980950"
+SENHA_ADMIN_MASTER = "adminpassword"
 
 CAMPOS = [
     "perfil_nome", "perfil_faixa", "perfil_graus", "perfil_academia", 
@@ -58,6 +58,7 @@ def carregar_banco_usuarios():
     return {
         EMAIL_ADMIN_MASTER.lower(): {
             "senha": SENHA_ADMIN_MASTER,
+            "is_admin": True,
             "plano": "ativo",
             "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
         }
@@ -109,9 +110,16 @@ def salvar_dados_usuario(email, dados):
         json.dump(dados, f, ensure_ascii=False, indent=2)
 
 def carregar_usuario(email):
-    st.session_state.usuario_email = email.lower()
-    st.session_state.is_admin = (email.lower() == EMAIL_ADMIN_MASTER.lower())
-    dados = carregar_dados_usuario(email)
+    email_l = email.lower()
+    st.session_state.usuario_email = email_l
+    banco = carregar_banco_usuarios()
+    
+    # Verifica se é admin master global ou se está marcado como admin no banco
+    is_master_global = (email_l == EMAIL_ADMIN_MASTER.lower())
+    is_admin_banco = banco.get(email_l, {}).get("is_admin", False)
+    st.session_state.is_admin = (is_master_global or is_admin_banco)
+    
+    dados = carregar_dados_usuario(email_l)
     for c in CAMPOS:
         st.session_state[c] = dados.get(c, {})
 
@@ -149,7 +157,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# Tela de Login, Cadastro e Recuperação Direta de Senha
+# Tela de Login, Cadastro, Recuperação e Criação Protegida de Admin
 # ---------------------------------------------------------------------------
 if not st.session_state.autenticado:
     col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
@@ -176,7 +184,7 @@ if not st.session_state.autenticado:
                     else:
                         st.error("❌ E-mail ou senha incorretos.")
                         
-            # LOGIN ADMIN MASTER SEGURO POR SENHA
+            # LOGIN ADMIN MASTER E CRIADOR SEGURO DE NOVOS ADMINS COM A SENHA DO FUNDADOR
             with st.expander("👑 Acesso Restrito Master (Admin)"):
                 with st.form("form_admin_login"):
                     senha_master_input = st.text_input("Senha de Administrador Master:", type="password")
@@ -189,6 +197,40 @@ if not st.session_state.autenticado:
                             st.rerun()
                         else:
                             st.error("❌ Senha de administrador incorreta.")
+                
+                st.divider()
+                st.markdown("<p style='color: #ff1e27; font-weight: bold;'>➕ Adicionar Novo Administrador</p>", unsafe_allow_html=True)
+                with st.form("form_criar_novo_admin_master"):
+                    senha_fundador_check = st.text_input("Senha Mestre do Fundador (Sua Senha):", type="password", key="s_fund_novo")
+                    novo_admin_email = st.text_input("E-mail do Novo Admin:", key="n_adm_email")
+                    novo_admin_senha = st.text_input("Senha do Novo Admin (mín. 6):", type="password", key="n_adm_senha")
+                    novo_admin_nome = st.text_input("Nome do Novo Admin:", value="", key="n_adm_nome")
+                    btn_criar_admin = st.form_submit_button("✨ Criar Novo Acesso Master", use_container_width=True)
+                    
+                    if btn_criar_admin:
+                        if senha_fundador_check != SENHA_ADMIN_MASTER:
+                            st.error("❌ Senha mestre do fundador incorreta! Acesso negado.")
+                        else:
+                            email_limpo_adm = novo_admin_email.strip().lower()
+                            if not email_limpo_adm or not novo_admin_senha:
+                                st.warning("⚠️ Preencha o e-mail e a senha do novo admin.")
+                            elif len(novo_admin_senha) < 6:
+                                st.warning("⚠️ A senha deve ter no mínimo 6 caracteres.")
+                            else:
+                                banco = carregar_banco_usuarios()
+                                banco[email_limpo_adm] = {
+                                    "senha": novo_admin_senha,
+                                    "is_admin": True,
+                                    "plano": "ativo",
+                                    "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
+                                }
+                                salvar_banco_usuarios(banco)
+                                
+                                du = carregar_dados_usuario(email_limpo_adm)
+                                if novo_admin_nome.strip():
+                                    du["perfil_nome"] = novo_admin_nome.strip()
+                                salvar_dados_usuario(email_limpo_adm, du)
+                                st.success(f"✅ Novo administrador '{email_limpo_adm}' criado com sucesso!")
 
         with aba_cadastro:
             with st.form("form_cadastro"):
@@ -211,6 +253,7 @@ if not st.session_state.autenticado:
                         else:
                             banco[email_limpo] = {
                                 "senha": nova_senha,
+                                "is_admin": False,
                                 "plano": "ativo",
                                 "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
                             }
@@ -320,7 +363,7 @@ if "tempo_segundos" not in st.session_state: st.session_state.tempo_segundos = 3
 if "cronometro_rodando" not in st.session_state: st.session_state.cronometro_rodando = False
 
 # ---------------------------------------------------------------------------
-# BARRA LATERAL (SIDEBAR) & PAINEL MASTER COM DASHBOARD EXPORTÁVEL
+# BARRA LATERAL (SIDEBAR) & PAINEL MASTER COM DASHBOARD E EXCLUSÃO
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("### 🥋 Carteirinha & Perfil")
@@ -376,7 +419,13 @@ with st.sidebar:
                             nova_faixa_input = st.selectbox("Faixa:", faixas_possiveis, index=idx_f, key=f"nfaixa_u_{usr}")
                             novos_graus_input = st.slider("Graus:", 0, 11, int(graus_usr), key=f"slider_mg_u_{usr}")
                             
-                            if st.form_submit_button("💾 Salvar Aluno", use_container_width=True):
+                            col_b1, col_b2 = st.columns(2)
+                            with col_b1:
+                                btn_salvar_aluno = st.form_submit_button("💾 Salvar Aluno", use_container_width=True)
+                            with col_b2:
+                                btn_excluir_aluno = st.form_submit_button("🗑️ Excluir Aluno", use_container_width=True)
+                            
+                            if btn_salvar_aluno:
                                 novo_email_limpo = novo_email_input.strip().lower()
                                 if not novo_email_limpo or not nova_senha_input:
                                     st.warning("⚠️ Preencha e-mail e senha.")
@@ -403,13 +452,24 @@ with st.sidebar:
                                             except: pass
                                         st.toast("✅ Atualizado com sucesso!", icon="👑")
                                         st.rerun()
+                                        
+                            if btn_excluir_aluno:
+                                banco_atual = carregar_banco_usuarios()
+                                if usr in banco_atual:
+                                    del banco_atual[usr]
+                                    salvar_banco_usuarios(banco_atual)
+                                    caminho_arq_aluno = obter_caminho_usuario(usr)
+                                    if os.path.exists(caminho_arq_aluno):
+                                        try: os.remove(caminho_arq_aluno)
+                                        except: pass
+                                    st.toast("✅ Aluno excluído com sucesso!", icon="🗑️")
+                                    st.rerun()
 
                 # DASHBOARD EXECUTIVO EM FORMATO DE PLANILHA COM EXPORTAÇÃO
                 with st.expander(f"📊 Dashboard & Planilha: {acad_nome}"):
                     total_lutas_acad = sum(len(d[2].get("historico_lutas", [])) for d in lista_alunos)
                     st.markdown(f"<p style='color: #00ffcc;'><b>Total de Lutas da Turma:</b> {total_lutas_acad}</p>", unsafe_allow_html=True)
                     
-                    # Montando dados tabulares (Planilha) para o Professor
                     dados_planilha = []
                     for _, _, d_usr in lista_alunos:
                         dados_planilha.append({
@@ -423,7 +483,6 @@ with st.sidebar:
                     df_academia = pd.DataFrame(dados_planilha)
                     st.dataframe(df_academia, use_container_width=True)
                     
-                    # Botão para baixar a planilha em CSV
                     csv_export = df_academia.to_csv(index=False).encode('utf-8')
                     st.download_button(
                         label=f"📥 Baixar Planilha da Turma (.csv)",
@@ -441,7 +500,7 @@ with st.sidebar:
         fazer_logout()
 
 # ---------------------------------------------------------------------------
-# TELA PRINCIPAL & 15 ABAS 100% INTERATIVAS
+# ECRÃ PRINCIPAL & 15 ABAS 100% INTERATIVAS
 # ---------------------------------------------------------------------------
 st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot App Pro</h1>", unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center; color: #cccccc;'>Atleta: <b>{esc(st.session_state.get('perfil_nome', 'Atleta'))}</b> | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>", unsafe_allow_html=True)
@@ -519,7 +578,7 @@ with abas_app[1]:
                 lutas.append({"data": datetime.now().strftime("%d/%m/%Y"), "adversario": adv, "resultado": res, "detalhes": det})
                 st.session_state["historico_lutas"] = lutas
                 salvar_tudo()
-                st.toast("✅ Luta registrada!", icon="🥋")
+                st.toast("✅ Luta registada!", icon="🥋")
                 st.rerun()
             else:
                 st.warning("⚠️ Insira o nome do oponente.")
@@ -539,7 +598,7 @@ with abas_app[2]:
     with st.form("form_nutri"):
         refeicao = st.text_input("Refeição / Dieta:")
         kcal = st.text_input("Calorias / Hidratação:")
-        if st.form_submit_button("Adicionar Registro Nutricional", use_container_width=True):
+        if st.form_submit_button("Adicionar Registo Nutricional", use_container_width=True):
             if refeicao:
                 nutri = st.session_state.get("dicas_nutricao", [])
                 nutri.append({"refeicao": refeicao, "kcal": kcal})
@@ -625,7 +684,7 @@ with abas_app[6]:
 
 # 8. Pressão
 with abas_app[7]:
-    st.markdown("### 🛡️ Flashcards de Controle & Pressão")
+    st.markdown("### 🛡️ Flashcards de Controlo & Pressão")
     with st.form("form_pressao"):
         posicao_p = st.text_input("Posição (Ex: Cem-Quilos):")
         detalhe_p = st.text_area("Detalhe de Ajuste de Peso/Pegada:")
@@ -643,7 +702,7 @@ with abas_app[7]:
 
 # 9. Graduação
 with abas_app[8]:
-    st.markdown("### 🥋 Controle de Graduação")
+    st.markdown("### 🥋 Controlo de Graduação")
     with st.form("form_grad"):
         aluno_g = st.text_input("Nome do Aluno:")
         faixa_g = st.selectbox("Faixa:", ["Branca", "Azul", "Roxa", "Castanha", "Preta"])
@@ -680,10 +739,10 @@ with abas_app[9]:
 
 # 11. Card & Relatório
 with abas_app[10]:
-    st.markdown("### 📇 Carteirinha Digital & Relatório Oficial")
+    st.markdown("### 📇 Cartão Digital & Relatório Oficial")
     st.markdown(f"""
     <div class='placar-box' style='text-align: left; max-width: 400px; margin: 0 auto 20px auto;'>
-        <h3 style='color: #ff1e27; margin-top: 0;'>🥋 CARTEIRINHA OFICIAL</h3>
+        <h3 style='color: #ff1e27; margin-top: 0;'>🥋 CARTÃO OFICIAL</h3>
         <p><b>Nome:</b> {esc(st.session_state.get('perfil_nome', ''))}</p>
         <p><b>Faixa:</b> {esc(st.session_state.get('perfil_faixa', ''))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>
         <p><b>Academia:</b> {esc(st.session_state.get('perfil_academia', ''))}</p>
@@ -694,7 +753,7 @@ with abas_app[10]:
     st.divider()
     st.markdown("### 📄 Relatório Executivo & Prontuário")
     st.download_button(
-        "📥 Baixar Relatório Oficial (.txt)",
+        "📥 Descarregar Relatório Oficial (.txt)",
         data=gerar_relatorio_pdf_atleta(),
         file_name=f"relatorio_ossbot_{st.session_state.get('perfil_nome', 'atleta').lower().replace(' ', '_')}.txt",
         mime="text/plain",
@@ -703,7 +762,7 @@ with abas_app[10]:
 
 # 12. Perfil (Edição Completa)
 with abas_app[11]:
-    st.markdown("### 👥 Meu Perfil & Configurações")
+    st.markdown("### 👥 O Meu Perfil & Configurações")
     with st.form("form_edicao_perfil"):
         novo_nome = st.text_input("Nome Completo:", value=st.session_state.get("perfil_nome", ""))
         
@@ -713,7 +772,7 @@ with abas_app[11]:
         nova_faixa = st.selectbox("Faixa:", faixas_p, index=idx_fx)
         
         novos_graus = st.slider("Graus:", 0, 11, int(st.session_state.get("perfil_graus", 0)))
-        nova_academia = st.text_input("Academia / Equipe:", value=st.session_state.get("perfil_academia", ""))
+        nova_academia = st.text_input("Academia / Equipa:", value=st.session_state.get("perfil_academia", ""))
         novo_status = st.selectbox("Status:", ["Atleta Competidor 🏆", "Praticante / Hobby", "Professor / Instrutor"], index=0 if "Competidor" in st.session_state.get("perfil_status", "") else 1)
         
         arquivo_foto = st.file_uploader("Enviar Foto de Perfil (JPG/PNG):", type=["jpg", "png", "jpeg"])
