@@ -8,22 +8,23 @@ import pandas as pd
 
 # Configuração inicial da página
 st.set_page_config(
-    page_title="OssBot Pro - Gestão de BJJ",
+    page_title="OssBot Pro - Gestão Profissional de BJJ",
     page_icon="🥋",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Constantes globais
+# Constantes globais do Fundador
 EMAIL_ADMIN_MASTER = "henry.cesaraguiar@gmail.com"
-SENHA_ADMIN_MASTER = "BJJ980950"
+SENHA_ADMIN_MASTER = "adminpassword"
 
 CAMPOS = [
     "perfil_nome", "perfil_faixa", "perfil_graus", "perfil_academia", 
     "perfil_peso", "perfil_status", "perfil_foto_b64", "historico_lutas", 
     "cursos_interativos", "dinamic_kids_custom", "flashcards_pressao", 
     "alunos_graduacao", "notas_kimono", "cronogramas_aulas", "dicas_nutricao",
-    "camp_competicao", "drills_treino", "chaves_luta", "recuperacao_notas"
+    "camp_competicao", "drills_treino", "chaves_luta", "recuperacao_notas",
+    "historico_presencas", "tipo_usuario"
 ]
 
 def esc(texto):
@@ -58,6 +59,7 @@ def carregar_banco_usuarios():
     return {
         EMAIL_ADMIN_MASTER.lower(): {
             "senha": SENHA_ADMIN_MASTER,
+            "tipo_usuario": "Master (Fundador)",
             "is_admin": True,
             "plano": "ativo",
             "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
@@ -79,6 +81,7 @@ def carregar_dados_usuario(email):
         "perfil_peso": "Médio",
         "perfil_status": "Atleta Competidor 🏆",
         "perfil_foto_b64": "",
+        "tipo_usuario": "Master (Fundador)",
         "historico_lutas": [],
         "cursos_interativos": [],
         "dinamic_kids_custom": [],
@@ -90,7 +93,8 @@ def carregar_dados_usuario(email):
         "camp_competicao": [],
         "drills_treino": [],
         "chaves_luta": [],
-        "recuperacao_notas": []
+        "recuperacao_notas": [],
+        "historico_presencas": []
     }
     if os.path.exists(caminho):
         try:
@@ -114,10 +118,12 @@ def carregar_usuario(email):
     st.session_state.usuario_email = email_l
     banco = carregar_banco_usuarios()
     
-    # Verifica se é admin master global ou se está marcado como admin no banco
+    info_banco = banco.get(email_l, {})
     is_master_global = (email_l == EMAIL_ADMIN_MASTER.lower())
-    is_admin_banco = banco.get(email_l, {}).get("is_admin", False)
+    is_admin_banco = info_banco.get("is_admin", False)
+    
     st.session_state.is_admin = (is_master_global or is_admin_banco)
+    st.session_state.tipo_usuario = info_banco.get("tipo_usuario", "Atleta")
     
     dados = carregar_dados_usuario(email_l)
     for c in CAMPOS:
@@ -135,12 +141,14 @@ def fazer_logout():
     st.session_state.autenticado = False
     st.session_state.usuario_email = ""
     st.session_state.is_admin = False
+    st.session_state.tipo_usuario = "Atleta"
     st.rerun()
 
 # Inicialização de estados de sessão
 if "autenticado" not in st.session_state: st.session_state.autenticado = False
 if "usuario_email" not in st.session_state: st.session_state.usuario_email = ""
 if "is_admin" not in st.session_state: st.session_state.is_admin = False
+if "tipo_usuario" not in st.session_state: st.session_state.tipo_usuario = "Atleta"
 
 # ---------------------------------------------------------------------------
 # Estilização CSS Glow UI (Tema Preto & Vermelho)
@@ -157,7 +165,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# Tela de Login, Cadastro, Recuperação e Criação Protegida de Admin
+# Ecrã de Login, Registo, Recuperação e Criação Protegida de Admin
 # ---------------------------------------------------------------------------
 if not st.session_state.autenticado:
     col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
@@ -170,7 +178,7 @@ if not st.session_state.autenticado:
         with aba_login:
             with st.form("form_login"):
                 email_input = st.text_input("E-mail de Acesso:")
-                senha_input = st.text_input("Senha:", type="password")
+                senha_input = st.text_input("Palavra-passe:", type="password")
                 btn_entrar = st.form_submit_button("🚀 Entrar no Sistema", use_container_width=True)
                 
                 if btn_entrar:
@@ -182,12 +190,12 @@ if not st.session_state.autenticado:
                         st.toast("✅ Login realizado com sucesso!", icon="🥋")
                         st.rerun()
                     else:
-                        st.error("❌ E-mail ou senha incorretos.")
+                        st.error("❌ E-mail ou palavra-passe incorretos.")
                         
-            # LOGIN ADMIN MASTER E CRIADOR SEGURO DE NOVOS ADMINS COM A SENHA DO FUNDADOR
+            # LOGIN ADMIN MASTER E CRIADOR SEGURO DE NOVOS ADMINS COM A PALAVRA-PASSE DO FUNDADOR
             with st.expander("👑 Acesso Restrito Master (Admin)"):
                 with st.form("form_admin_login"):
-                    senha_master_input = st.text_input("Senha de Administrador Master:", type="password")
+                    senha_master_input = st.text_input("Palavra-passe de Administrador Master:", type="password")
                     btn_admin_entrar = st.form_submit_button("🔒 Entrar como Master", use_container_width=True)
                     if btn_admin_entrar:
                         if senha_master_input == SENHA_ADMIN_MASTER:
@@ -196,30 +204,32 @@ if not st.session_state.autenticado:
                             st.toast("✅ Acesso Master autorizado!", icon="👑")
                             st.rerun()
                         else:
-                            st.error("❌ Senha de administrador incorreta.")
+                            st.error("❌ Palavra-passe de administrador incorreta.")
                 
                 st.divider()
                 st.markdown("<p style='color: #ff1e27; font-weight: bold;'>➕ Adicionar Novo Administrador</p>", unsafe_allow_html=True)
                 with st.form("form_criar_novo_admin_master"):
-                    senha_fundador_check = st.text_input("Senha Mestre do Fundador (Sua Senha):", type="password", key="s_fund_novo")
+                    senha_fundador_check = st.text_input("Palavra-passe Mestre do Fundador (Sua Palavra-passe):", type="password", key="s_fund_novo")
                     novo_admin_email = st.text_input("E-mail do Novo Admin:", key="n_adm_email")
-                    novo_admin_senha = st.text_input("Senha do Novo Admin (mín. 6):", type="password", key="n_adm_senha")
+                    novo_admin_senha = st.text_input("Palavra-passe do Novo Admin (mín. 6):", type="password", key="n_adm_senha")
                     novo_admin_nome = st.text_input("Nome do Novo Admin:", value="", key="n_adm_nome")
+                    tipo_novo_admin = st.selectbox("Nível de Acesso:", ["Professor / Instrutor", "Master (Fundador)"], key="n_adm_tipo")
                     btn_criar_admin = st.form_submit_button("✨ Criar Novo Acesso Master", use_container_width=True)
                     
                     if btn_criar_admin:
                         if senha_fundador_check != SENHA_ADMIN_MASTER:
-                            st.error("❌ Senha mestre do fundador incorreta! Acesso negado.")
+                            st.error("❌ Palavra-passe mestre do fundador incorreta! Acesso negado.")
                         else:
                             email_limpo_adm = novo_admin_email.strip().lower()
                             if not email_limpo_adm or not novo_admin_senha:
-                                st.warning("⚠️ Preencha o e-mail e a senha do novo admin.")
+                                st.warning("⚠️ Preencha o e-mail e a palavra-passe do novo admin.")
                             elif len(novo_admin_senha) < 6:
-                                st.warning("⚠️ A senha deve ter no mínimo 6 caracteres.")
+                                st.warning("⚠️ A palavra-passe deve ter no mínimo 6 caracteres.")
                             else:
                                 banco = carregar_banco_usuarios()
                                 banco[email_limpo_adm] = {
                                     "senha": novo_admin_senha,
+                                    "tipo_usuario": tipo_novo_admin,
                                     "is_admin": True,
                                     "plano": "ativo",
                                     "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
@@ -229,31 +239,35 @@ if not st.session_state.autenticado:
                                 du = carregar_dados_usuario(email_limpo_adm)
                                 if novo_admin_nome.strip():
                                     du["perfil_nome"] = novo_admin_nome.strip()
+                                du["tipo_usuario"] = tipo_novo_admin
                                 salvar_dados_usuario(email_limpo_adm, du)
                                 st.success(f"✅ Novo administrador '{email_limpo_adm}' criado com sucesso!")
 
         with aba_cadastro:
             with st.form("form_cadastro"):
-                novo_email = st.text_input("Seu E-mail:")
-                nova_senha = st.text_input("Crie uma Senha (mín. 6 caracteres):", type="password")
-                nome_inicial = st.text_input("Seu Nome Completo:", value="Henry Cesar")
-                acad_inicial = st.text_input("Sua Academia:", value="GRACIE BARRA ALPHAVILLE ESPLANADA")
+                novo_email = st.text_input("O seu E-mail:")
+                nova_senha = st.text_input("Crie uma Palavra-passe (mín. 6 caracteres):", type="password")
+                nome_inicial = st.text_input("O seu Nome Completo:", value="Henry Cesar")
+                acad_inicial = st.text_input("A sua Academia:", value="GRACIE BARRA ALPHAVILLE ESPLANADA")
+                tipo_registo = st.selectbox("Perfil de Utilizador:", ["Atleta", "Professor / Instrutor"])
                 btn_cadastrar = st.form_submit_button("✨ Criar Conta Agora", use_container_width=True)
                 
                 if btn_cadastrar:
                     email_limpo = novo_email.strip().lower()
                     if not email_limpo or not nova_senha:
-                        st.warning("⚠️ Preencha o e-mail e a senha.")
+                        st.warning("⚠️ Preencha o e-mail e a palavra-passe.")
                     elif len(nova_senha) < 6:
-                        st.warning("⚠️ A senha deve ter no mínimo 6 caracteres.")
+                        st.warning("⚠️ A palavra-passe deve ter no mínimo 6 caracteres.")
                     else:
                         banco = carregar_banco_usuarios()
                         if email_limpo in banco:
-                            st.error("❌ Este e-mail já está cadastrado.")
+                            st.error("❌ Este e-mail já está registado.")
                         else:
+                            is_adm_flag = (tipo_registo == "Professor / Instrutor")
                             banco[email_limpo] = {
                                 "senha": nova_senha,
-                                "is_admin": False,
+                                "tipo_usuario": tipo_registo,
+                                "is_admin": is_adm_flag,
                                 "plano": "ativo",
                                 "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
                             }
@@ -262,40 +276,41 @@ if not st.session_state.autenticado:
                             dados_novos = carregar_dados_usuario(email_limpo)
                             dados_novos["perfil_nome"] = nome_inicial
                             dados_novos["perfil_academia"] = acad_inicial
+                            dados_novos["tipo_usuario"] = tipo_registo
                             salvar_dados_usuario(email_limpo, dados_novos)
                             
-                            st.success("✅ Conta criada com sucesso! Vá na aba 'Entrar' para acessar.")
+                            st.success("✅ Conta criada com sucesso! Vá na aba 'Entrar' para aceder.")
 
         with aba_recuperar:
             with st.form("form_esqueci_senha"):
-                st.markdown("<p style='color: #cccccc; font-size: 13px;'>Digite seu e-mail cadastrado e defina uma nova senha instantaneamente:</p>", unsafe_allow_html=True)
-                email_recup = st.text_input("E-mail Cadastrado:")
-                nova_senha_recup = st.text_input("Nova Senha (mín. 6 caracteres):", type="password")
-                btn_resetar = st.form_submit_button("🔄 Atualizar Senha Agora", use_container_width=True)
+                st.markdown("<p style='color: #cccccc; font-size: 13px;'>Digite o seu e-mail registado e defina uma nova palavra-passe instantaneamente:</p>", unsafe_allow_html=True)
+                email_recup = st.text_input("E-mail Registado:")
+                nova_senha_recup = st.text_input("Nova Palavra-passe (mín. 6 caracteres):", type="password")
+                btn_resetar = st.form_submit_button("🔄 Atualizar Palavra-passe Agora", use_container_width=True)
                 
                 if btn_resetar:
                     email_limpo = email_recup.strip().lower()
                     banco = carregar_banco_usuarios()
                     if email_limpo in banco:
                         if len(nova_senha_recup) < 6:
-                            st.warning("⚠️ A nova senha deve ter no mínimo 6 caracteres.")
+                            st.warning("⚠️ A nova palavra-passe deve ter no mínimo 6 caracteres.")
                         else:
                             banco[email_limpo]["senha"] = nova_senha_recup
                             salvar_banco_usuarios(banco)
-                            st.success("✅ Senha atualizada com sucesso! Vá na aba 'Entrar' para acessar.")
+                            st.success("✅ Palavra-passe atualizada com sucesso! Vá na aba 'Entrar' para aceder.")
                     else:
-                        st.error("❌ E-mail não encontrado no banco de dados.")
+                        st.error("❌ E-mail não encontrado na base de dados.")
     st.stop()
 
 # ---------------------------------------------------------------------------
-# Funções de Gamificação, Relatórios e Cronômetro
+# Funções de Gamificação, Relatórios e Cronómetro
 # ---------------------------------------------------------------------------
 def verificar_e_conceder_badges():
     badges = []
     total_lutas = len(st.session_state.get("historico_lutas", []))
-    if total_lutas >= 1: badges.append(("🤼 Guerreiro do Tatame", "Registrou a primeira luta!"))
-    if total_lutas >= 5: badges.append(("🔥 Atleta Dedicado", "5+ lutas registradas!"))
-    if len(st.session_state.get("cursos_interativos", [])) >= 1: badges.append(("📚 Estudioso da Arte", "Cadastrou material de BJJ!"))
+    if total_lutas >= 1: badges.append(("🤼 Guerreiro do Tatame", "Registou a primeira luta!"))
+    if total_lutas >= 5: badges.append(("🔥 Atleta Dedicado", "5+ lutas registadas!"))
+    if len(st.session_state.get("cursos_interativos", [])) >= 1: badges.append(("📚 Estudioso da Arte", "Registo de material de BJJ!"))
     if st.session_state.get("perfil_status") == "Atleta Competidor 🏆": badges.append(("🏆 Competidor Elite", "Perfil de Competição ativo!"))
     return badges
 
@@ -340,6 +355,7 @@ Data: {datetime.now().strftime('%d/%m/%Y - %H:%M')}
 • Cursos/Técnicas: {len(st.session_state.get("cursos_interativos", []))}
 • Dinâmicas Kids: {len(st.session_state.get("dinamic_kids_custom", []))}
 • Flashcards de Pressão: {len(st.session_state.get("flashcards_pressao", []))}
+• Presenças Registadas: {len(st.session_state.get("historico_presencas", []))}
 =====================================================
 """
 
@@ -363,7 +379,7 @@ if "tempo_segundos" not in st.session_state: st.session_state.tempo_segundos = 3
 if "cronometro_rodando" not in st.session_state: st.session_state.cronometro_rodando = False
 
 # ---------------------------------------------------------------------------
-# BARRA LATERAL (SIDEBAR) & PAINEL MASTER COM DASHBOARD E EXCLUSÃO
+# BARRA LATERAL (SIDEBAR) & PAINEL MASTER / COACH COM RBAC, QR CODE E PLANILHA
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("### 🥋 Carteirinha & Perfil")
@@ -375,27 +391,56 @@ with st.sidebar:
         
     st.markdown(f"<h4 style='text-align: center; color: #ff1e27; margin: 5px 0;'>{esc(st.session_state.get('perfil_nome', 'Atleta'))}</h4>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; color: #cccccc; font-size: 13px; margin: 0;'>Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: #00ffcc; font-size: 12px; margin: 5px 0 15px 0;'>{esc(st.session_state.get('perfil_academia', 'Academia BJJ'))}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #00ffcc; font-size: 12px; margin: 5px 0 5px 0;'>{esc(st.session_state.get('perfil_academia', 'Academia BJJ'))}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #fbbf24; font-size: 11px; margin: 0 0 15px 0;'>Perfil: <b>{esc(st.session_state.get('tipo_usuario', 'Atleta'))}</b></p>", unsafe_allow_html=True)
     
     st.divider()
     renderizar_secao_gamificacao()
     st.divider()
     
-    # PAINEL MASTER EXCLUSIVO E BLINDADO POR SENHA
-    if st.session_state.get("is_admin", False):
-        st.markdown("## 👑 Painel Master & Gestão")
+    # PAINEL DE GESTÃO (MASTER OU PROFESSOR - RBAC)
+    if st.session_state.get("is_admin", False) or st.session_state.get("tipo_usuario") in ["Professor / Instrutor", "Master (Fundador)"]:
+        st.markdown("## 👑 Painel de Gestão & Coach")
+        
+        # MÓDULO CHECK-IN QR CODE (IDEIA 3)
+        with st.expander("📱 Check-in de Presença (QR Code)"):
+            st.markdown("<p style='font-size: 12px; color: #cccccc;'>Simule a leitura do QR Code da academia para registar a presença de hoje:</p>", unsafe_allow_html=True)
+            if st.button("📍 Fazer Check-in na Aula Hoje", use_container_width=True):
+                hoje_str = datetime.now().strftime("%d/%m/%Y")
+                presencas = st.session_state.get("historico_presencas", [])
+                if hoje_str not in presencas:
+                    presencas.append(hoje_str)
+                    st.session_state["historico_presencas"] = presencas
+                    salvar_tudo()
+                    st.success(f"✅ Presença registada para hoje ({hoje_str})!")
+                    st.rerun()
+                else:
+                    st.info("ℹ️ Já fez check-in hoje!")
+            st.write(f"Total de presenças: **{len(st.session_state.get('historico_presencas', []))}**")
+
         with st.expander("🛠️ Gestão de Alunos e Academias"):
             banco = carregar_banco_usuarios()
-            st.write(f"📊 **Total de Contas:** {len(banco)}")
+            tipo_atual = st.session_state.get("tipo_usuario")
+            academia_atual = st.session_state.get("perfil_academia", "").strip().lower()
+            
+            st.write(f"📊 **Total de Contas no Sistema:** {len(banco)}")
             st.divider()
             
             academias_dict = {}
             for usr, info in banco.items():
                 dados_usr = carregar_dados_usuario(usr)
                 acad = dados_usr.get("perfil_academia", "Academia Não Informada").strip()
+                
+                # Se for Professor (não Master global), filtra apenas a sua academia
+                if tipo_atual == "Professor / Instrutor" and acad.lower() != academia_atual:
+                    continue
+                    
                 if acad not in academias_dict:
                     academias_dict[acad] = []
                 academias_dict[acad].append((usr, info, dados_usr))
+            
+            if not academias_dict:
+                st.info("Nenhum aluno encontrado na sua academia.")
             
             for acad_nome, lista_alunos in academias_dict.items():
                 st.markdown(f"🏛️ **Academia:** <span style='color: #ff1e27; font-size: 15px; font-weight: bold;'>{esc(acad_nome)}</span>", unsafe_allow_html=True)
@@ -405,13 +450,21 @@ with st.sidebar:
                     nome_usr = dados_usr.get("perfil_nome", "Sem Nome")
                     faixa_usr = dados_usr.get("perfil_faixa", "Branca")
                     graus_usr = dados_usr.get("perfil_graus", 0)
+                    presencas_aluno = len(dados_usr.get("historico_presencas", []))
                     
-                    st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;• **{esc(nome_usr)}** ({faixa_usr} - {graus_usr}º Grau)")
+                    # ALERTA AUTOMÁTICO DE GRADUAÇÃO (IDEIA 4)
+                    status_grad = "🟢 Ritmo Normal"
+                    if presencas_aluno >= 15 and graus_usr < 4:
+                        status_grad = "🔥 APTO PARA GRAU!"
+                    elif presencas_aluno >= 50:
+                        status_grad = "🏆 APTO PARA FAIXA!"
                     
-                    with st.expander(f"⚙️ Gerenciar: {nome_usr} ({usr})"):
+                    st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;• **{esc(nome_usr)}** ({faixa_usr} - {graus_usr}º Grau) | *{status_grad}*")
+                    
+                    with st.expander(f"⚙️ Gerir: {nome_usr} ({usr})"):
                         with st.form(key=f"form_gestao_aluno_unico_{usr}"):
                             novo_email_input = st.text_input("Novo E-mail:", value=usr, key=f"nem_u_{usr}")
-                            nova_senha_input = st.text_input("Nova Senha:", value=info.get("senha", ""), type="password", key=f"nsem_u_{usr}")
+                            nova_senha_input = st.text_input("Nova Palavra-passe:", value=info.get("senha", ""), type="password", key=f"nsem_u_{usr}")
                             novo_nome_input = st.text_input("Nome:", value=nome_usr, key=f"nnome_u_{usr}")
                             
                             faixas_possiveis = ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"]
@@ -428,7 +481,7 @@ with st.sidebar:
                             if btn_salvar_aluno:
                                 novo_email_limpo = novo_email_input.strip().lower()
                                 if not novo_email_limpo or not nova_senha_input:
-                                    st.warning("⚠️ Preencha e-mail e senha.")
+                                    st.warning("⚠️ Preencha o e-mail e a palavra-passe.")
                                 else:
                                     banco_atual = carregar_banco_usuarios()
                                     if novo_email_limpo != usr and novo_email_limpo in banco_atual:
@@ -472,11 +525,16 @@ with st.sidebar:
                     
                     dados_planilha = []
                     for _, _, d_usr in lista_alunos:
+                        pres_count = len(d_usr.get("historico_presencas", []))
+                        status_apto = "Normal"
+                        if pres_count >= 15: status_apto = "Apto p/ Grau"
                         dados_planilha.append({
                             "Atleta": d_usr.get("perfil_nome", "Sem Nome"),
                             "Faixa": d_usr.get("perfil_faixa", "Branca"),
                             "Graus": d_usr.get("perfil_graus", 0),
                             "Status": d_usr.get("perfil_status", "Atleta"),
+                            "Presenças": pres_count,
+                            "Avaliação Graduação": status_apto,
                             "Total Lutas": len(d_usr.get("historico_lutas", []))
                         })
                     
@@ -485,7 +543,7 @@ with st.sidebar:
                     
                     csv_export = df_academia.to_csv(index=False).encode('utf-8')
                     st.download_button(
-                        label=f"📥 Baixar Planilha da Turma (.csv)",
+                        label=f"📥 Descarregar Planilha da Turma (.csv)",
                         data=csv_export,
                         file_name=f"dashboard_{acad_nome.lower().replace(' ', '_')}.csv",
                         mime="text/csv",
@@ -500,10 +558,39 @@ with st.sidebar:
         fazer_logout()
 
 # ---------------------------------------------------------------------------
-# ECRÃ PRINCIPAL & 15 ABAS 100% INTERATIVAS
+# ECRÃ PRINCIPAL, ANALYTICS & 15 ABAS INTERATIVAS
 # ---------------------------------------------------------------------------
 st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot App Pro</h1>", unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center; color: #cccccc;'>Atleta: <b>{esc(st.session_state.get('perfil_nome', 'Atleta'))}</b> | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>", unsafe_allow_html=True)
+
+# MÓDULO VISUAL DE ANALYTICS & DESEMPENHO (IDEIA 1)
+with st.expander("📊 Painel de Analytics & Evolução Visual", expanded=False):
+    lutas_list = st.session_state.get("historico_lutas", [])
+    if not lutas_list:
+        st.info("💡 Registe as suas lutas na aba 'Histórico' para visualizar os seus gráficos de desempenho em tempo real!")
+    else:
+        col_g1, col_g2 = st.columns(2)
+        
+        with col_g1:
+            st.markdown("##### 📈 Distribuição de Resultados")
+            resultados_count = {}
+            for l in lutas_list:
+                res = l.get("resultado", "Outro")
+                resultados_count[res] = resultados_count.get(res, 0) + 1
+            
+            df_res = pd.DataFrame(list(resultados_count.items()), columns=["Resultado", "Quantidade"])
+            st.bar_chart(df_res.set_index("Resultado"))
+            
+        with col_g2:
+            st.markdown("##### 🗓️ Frequência de Presenças nas Aulas")
+            presencas_list = st.session_state.get("historico_presencas", [])
+            if presencas_list:
+                df_pres = pd.DataFrame({"Data": presencas_list, "Presença": [1]*len(presencas_list)})
+                st.line_chart(df_pres.set_index("Data"))
+            else:
+                st.write("Nenhuma presença registada via QR Code ainda.")
+
+st.divider()
 
 abas_app = st.tabs([
     "🤼 Luta", "📜 Histórico", "🥗 Nutrição", "🏆 Camp", "📚 Cursos", 
@@ -529,43 +616,9 @@ with abas_app[0]:
             if st.button("+3 Pts (A)", use_container_width=True): somar("a", "pts_a", 3); st.rerun()
         with c2:
             if st.button("+4 Pts (A)", use_container_width=True): somar("a", "pts_a", 4); st.rerun()
-            if st.button("Vantagem (A)", use_container_width=True): somar("a", "vant_a", 1); st.rerun()
-        with c3:
-            if st.button("Punição (A)", use_container_width=True): somar("a", "pun_a", 1); st.rerun()
-            
-    with col_p2:
-        mostrar_html(f"""
-        <div class='placar-box'>
-            <p style='color: #cccccc; margin: 0;'>ATLETA 2 (Branco):</p>
-            <h3 style='color: #ffffff; margin: 5px 0;'>Atleta Branco</h3>
-            <div class='placar-numero'>{st.session_state.pts_b}</div>
-            <p style='color: #ffffff; margin: 5px 0;'>Vantagens: {st.session_state.vant_b} | Punições: {st.session_state.pun_b}</p>
-        </div>
-        """)
-        cb1, cb2, cb3 = st.columns(3)
-        with cb1:
-            if st.button("+2 Pts (B)", use_container_width=True): somar("b", "pts_b", 2); st.rerun()
-            if st.button("+3 Pts (B)", use_container_width=True): somar("b", "pts_b", 3); st.rerun()
-        with cb2:
-            if st.button("+4 Pts (B)", use_container_width=True): somar("b", "pts_b", 4); st.rerun()
-            if st.button("Vantagem (B)", use_container_width=True): somar("b", "vant_b", 1); st.rerun()
-        with cb3:
-            if st.button("Punição (B)", use_container_width=True): somar("b", "pun_b", 1); st.rerun()
+            if st.button("Vantagem (A)", use_container_width=True): somar("a", "vant_a
 
-    st.divider()
-    ct1, ct2, ct3 = st.columns(3)
-    with ct1: st.selectbox("Tempo do Rola:", [1, 2, 3, 5, 6, 10], key="select_tempo", on_change=definir_tempo)
-    with ct2:
-        mr, sr = st.session_state.tempo_segundos // 60, st.session_state.tempo_segundos % 60
-        st.markdown(f"<h2 style='text-align: center; color: #ff1e27; margin: 0;'>⏱️ {mr:02d}:{sr:02d}</h2>", unsafe_allow_html=True)
-    with ct3:
-        if not st.session_state.cronometro_rodando:
-            if st.button("▶️ Iniciar", use_container_width=True): iniciar_cronometro(); st.rerun()
-        else:
-            if st.button("⏸️ Pausar", use_container_width=True): pausar_cronometro(); st.rerun()
-        if st.button("🔄 Zerar Luta", use_container_width=True): zerar_luta(); st.rerun()
-
-# 2. Histórico
+     # 2. Histórico
 with abas_app[1]:
     st.markdown("### 📜 Histórico de Lutas & Treinos")
     with st.form("form_nova_luta"):
@@ -592,7 +645,7 @@ with abas_app[1]:
         </div>
         """, unsafe_allow_html=True)
 
-# 3. Nutrição
+       # 3. Nutrição
 with abas_app[2]:
     st.markdown("### 🥗 Nutrição & Corte de Peso")
     with st.form("form_nutri"):
@@ -698,7 +751,7 @@ with abas_app[7]:
                 st.rerun()
     st.divider()
     for f in st.session_state.get("flashcards_pressao", []):
-        st.markdown(f"<div class='card-item'>🛡️ <b>{esc(f['posicao'])}</b><br>{esc(f['detalhes'])}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='card-item'>🛡️ <b>{esc(f['posicao'])}</b><br>{esc(f.get('detalhe', ''))}</div>", unsafe_allow_html=True)
 
 # 9. Graduação
 with abas_app[8]:
@@ -747,6 +800,7 @@ with abas_app[10]:
         <p><b>Faixa:</b> {esc(st.session_state.get('perfil_faixa', ''))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>
         <p><b>Academia:</b> {esc(st.session_state.get('perfil_academia', ''))}</p>
         <p><b>Status:</b> {esc(st.session_state.get('perfil_status', ''))}</p>
+        <p><b>Perfil:</b> {esc(st.session_state.get('tipo_usuario', ''))}</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -844,4 +898,4 @@ with abas_app[14]:
                 st.rerun()
     st.divider()
     for rc in st.session_state.get("recuperacao_notas", []):
-        st.markdown(f"<div class='card-item'>🔄 <b>{esc(rc['data'])}</b><br>{esc(rc['nota'])}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='card-item'>🔄 <b>{esc(rc['data'])}</b><br>{esc(rc['nota'])}</div>", unsafe_allow_html=True) 
