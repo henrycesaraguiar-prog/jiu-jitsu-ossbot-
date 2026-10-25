@@ -149,7 +149,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# Tela de Login, Cadastro e Recuperação de Senha
+# Tela de Login, Cadastro e Recuperação Direta de Senha
 # ---------------------------------------------------------------------------
 if not st.session_state.autenticado:
     col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
@@ -157,7 +157,7 @@ if not st.session_state.autenticado:
         st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot Pro</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #cccccc;'>Plataforma Profissional de Gestão para Academias de BJJ</p>", unsafe_allow_html=True)
         
-        aba_login, aba_cadastro, aba_recuperar = st.tabs(["🔑 Entrar", "📝 Criar Conta", "🔄 Recuperar Senha"])
+        aba_login, aba_cadastro, aba_recuperar = st.tabs(["🔑 Entrar", "📝 Criar Conta", "🔄 Esqueci a Senha"])
         
         with aba_login:
             with st.form("form_login"):
@@ -225,9 +225,10 @@ if not st.session_state.autenticado:
 
         with aba_recuperar:
             with st.form("form_esqueci_senha"):
+                st.markdown("<p style='color: #cccccc; font-size: 13px;'>Digite seu e-mail cadastrado e defina uma nova senha instantaneamente:</p>", unsafe_allow_html=True)
                 email_recup = st.text_input("E-mail Cadastrado:")
                 nova_senha_recup = st.text_input("Nova Senha (mín. 6 caracteres):", type="password")
-                btn_resetar = st.form_submit_button("🔄 Redefinir Senha", use_container_width=True)
+                btn_resetar = st.form_submit_button("🔄 Atualizar Senha Agora", use_container_width=True)
                 
                 if btn_resetar:
                     email_limpo = email_recup.strip().lower()
@@ -238,7 +239,7 @@ if not st.session_state.autenticado:
                         else:
                             banco[email_limpo]["senha"] = nova_senha_recup
                             salvar_banco_usuarios(banco)
-                            st.success("✅ Senha redefinida com sucesso! Vá na aba 'Entrar' para acessar.")
+                            st.success("✅ Senha atualizada com sucesso! Vá na aba 'Entrar' para acessar.")
                     else:
                         st.error("❌ E-mail não encontrado no banco de dados.")
     st.stop()
