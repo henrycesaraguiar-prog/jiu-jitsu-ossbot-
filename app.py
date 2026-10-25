@@ -408,11 +408,11 @@ with st.sidebar:
             st.toast("✅ Carteirinha salva com sucesso!", icon="💾")
             st.rerun()
 
-    # PAINEL MASTER / ADMINISTRADOR COM EDIÇÃO DE LOGIN E SENHA
+    # PAINEL MASTER INTERATIVO - GESTÃO TOTAL DOS ALUNOS
     if st.session_state.is_admin:
         st.divider()
         st.markdown("## 👑 Painel Master")
-        with st.expander("🛠️ Gestão de Usuários e Academias (Dono)"):
+        with st.expander("🛠️ Gestão de Alunos e Academias"):
             banco = carregar_banco_usuarios()
             st.write(f"📊 **Total de Contas:** {len(banco)}")
             st.divider()
@@ -421,18 +421,32 @@ with st.sidebar:
                 dados_usr = carregar_dados_usuario(usr)
                 nome_usr = dados_usr.get("perfil_nome", "Sem Nome")
                 academia_usr = dados_usr.get("perfil_academia", "Academia Não Informada")
+                faixa_usr = dados_usr.get("perfil_faixa", "Branca")
+                graus_usr = dados_usr.get("perfil_graus", 0)
                 
                 st.markdown(f"🏛️ **Academia:** <span style='color: #ff1e27; font-size: 15px; font-weight: bold;'>{esc(academia_usr)}</span>", unsafe_allow_html=True)
-                st.markdown(f"👤 **Inscrito:** {esc(nome_usr)}")
+                st.markdown(f"👤 **Aluno:** {esc(nome_usr)} | Faixa {faixa_usr} ({graus_usr}º Grau)")
                 st.caption(f"📧 `{usr}` | 📅 Criado: {info.get('data_criacao', 'S/D')}")
                 
-                with st.expander(f"✏️ Editar Credenciais: {usr}"):
-                    with st.form(f"form_edit_{usr}"):
+                # PAINEL DE GESTÃO DO ALUNO AO CLICAR
+                with st.expander(f"⚙️ Gerenciar Aluno: {nome_usr}"):
+                    with st.form(f"form_gestao_aluno_{usr}"):
+                        st.markdown("### ✏️ Editar Credenciais")
                         novo_email_input = st.text_input("Novo E-mail (Login):", value=usr)
                         nova_senha_input = st.text_input("Nova Senha:", value=info.get("senha", ""), type="password")
-                        btn_salvar_edicao = st.form_submit_button("💾 Salvar Alterações", use_container_width=True)
                         
-                        if btn_salvar_edicao:
+                        st.markdown("### 🥋 Graduação e Perfil")
+                        novo_nome_input = st.text_input("Nome do Aluno:", value=nome_usr)
+                        nova_faixa_input = st.selectbox(
+                            "Nova Faixa:",
+                            ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"],
+                            index=["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"].index(faixa_usr) if faixa_usr in ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"] else 0
+                        )
+                        novos_graus_input = st.slider("Novos Graus:", 0, 11, int(graus_usr), key=f"slider_master_graus_{usr}")
+                        
+                        btn_salvar_gestao = st.form_submit_button("💾 Salvar Alterações do Aluno", use_container_width=True)
+                        
+                        if btn_salvar_gestao:
                             novo_email_limpo = novo_email_input.strip().lower()
                             if not novo_email_limpo or not nova_senha_input:
                                 st.warning("⚠️ Preencha o e-mail e a senha.")
@@ -443,11 +457,20 @@ with st.sidebar:
                                 if novo_email_limpo != usr and novo_email_limpo in banco_atualizado:
                                     st.error("❌ Este e-mail já está em uso por outra conta.")
                                 else:
+                                    # Atualiza credenciais no banco geral
                                     dados_antigos = banco_atualizado.pop(usr)
                                     dados_antigos["senha"] = nova_senha_input
                                     banco_atualizado[novo_email_limpo] = dados_antigos
                                     salvar_banco_usuarios(banco_atualizado)
                                     
+                                    # Atualiza os dados do perfil do aluno no arquivo JSON dele
+                                    dados_aluno_atual = carregar_dados_usuario(novo_email_limpo)
+                                    dados_aluno_atual["perfil_nome"] = novo_nome_input
+                                    dados_aluno_atual["perfil_faixa"] = nova_faixa_input
+                                    dados_aluno_atual["perfil_graus"] = novos_graus_input
+                                    salvar_dados_usuario(novo_email_limpo, dados_aluno_atual)
+                                    
+                                    # Renomeia o arquivo do usuário se o e-mail mudou
                                     caminho_antigo = obter_caminho_usuario(usr)
                                     caminho_novo = obter_caminho_usuario(novo_email_limpo)
                                     if os.path.exists(caminho_antigo) and caminho_antigo != caminho_novo:
@@ -456,7 +479,7 @@ with st.sidebar:
                                         except Exception:
                                             pass
                                             
-                                    st.toast("✅ Credenciais atualizadas com sucesso!", icon="🔑")
+                                    st.toast("✅ Aluno atualizado com sucesso pelo Mestre!", icon="👑")
                                     st.rerun()
                 st.markdown("---")
 
