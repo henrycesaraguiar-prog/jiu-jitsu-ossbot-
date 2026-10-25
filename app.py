@@ -16,7 +16,7 @@ st.set_page_config(
 
 # Constantes globais
 EMAIL_ADMIN_MASTER = "henry.cesaraguiar@gmail.com"
-SENHA_ADMIN_MASTER = "adminpassword"
+SENHA_ADMIN_MASTER = "BJJ980950"
 
 CAMPOS = [
     "perfil_nome", "perfil_faixa", "perfil_graus", "perfil_academia", 
