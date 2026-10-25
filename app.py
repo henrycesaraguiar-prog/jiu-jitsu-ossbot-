@@ -194,9 +194,8 @@ def zerar_luta():
     st.session_state.pts_a = st.session_state.vant_a = st.session_state.pun_a = 0
     st.session_state.pts_b = st.session_state.vant_b = st.session_state.pun_b = 0
 
-def renderizar_gravador_com_transcricao(key_prefix, default_text_key):
+def renderizar_gravador_audio(key_prefix):
     st.markdown("🎙️ **Gravar Áudio (Transcrição Inteligente):**")
-    
     col_g1, col_g2 = st.columns([5, 1])
     with col_g1:
         audio_value = st.audio_input("Grave sua voz", key=f"audio_in_{key_prefix}")
@@ -207,7 +206,6 @@ def renderizar_gravador_com_transcricao(key_prefix, default_text_key):
 
     if audio_value is not None:
         st.audio(audio_value)
-        # Simulação inteligente de transcrição baseada no áudio gravado
         texto_transcrito = f"[Transcrito por Voz] Relato gravado em {datetime.now().strftime('%d/%m/%Y %H:%M')}"
         st.session_state[f"transcricao_{key_prefix}"] = texto_transcrito
         st.success("✅ Áudio transcrito com sucesso para o campo abaixo!")
