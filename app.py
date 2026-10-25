@@ -408,7 +408,7 @@ with st.sidebar:
             st.toast("✅ Carteirinha salva com sucesso!", icon="💾")
             st.rerun()
 
-    # PAINEL MASTER INTERATIVO - GESTÃO TOTAL DOS ALUNOS
+    # PAINEL MASTER INTERATIVO - GESTÃO TOTAL POR ACADEMIA
     if st.session_state.is_admin:
         st.divider()
         st.markdown("## 👑 Painel Master")
@@ -417,16 +417,95 @@ with st.sidebar:
             st.write(f"📊 **Total de Contas:** {len(banco)}")
             st.divider()
             
-            for usr, info in list(banco.items()):
+            # Agrupa os alunos por academia automaticamente
+            academias_dict = {}
+            for usr, info in banco.items():
                 dados_usr = carregar_dados_usuario(usr)
-                nome_usr = dados_usr.get("perfil_nome", "Sem Nome")
-                academia_usr = dados_usr.get("perfil_academia", "Academia Não Informada")
-                faixa_usr = dados_usr.get("perfil_faixa", "Branca")
-                graus_usr = dados_usr.get("perfil_graus", 0)
+                acad = dados_usr.get("perfil_academia", "Academia Não Informada").strip()
+                if acad not in academias_dict:
+                    academias_dict[acad] = []
+                academias_dict[acad].append((usr, info, dados_usr))
+            
+            # Exibe por Academia
+            for acad_nome, lista_alunos in academias_dict.items():
+                st.markdown(f"🏛️ **Academia:** <span style='color: #ff1e27; font-size: 15px; font-weight: bold;'>{esc(acad_nome)}</span>", unsafe_allow_html=True)
+                st.write(f"👥 Alunos cadastrados: {len(lista_alunos)}")
                 
-                st.markdown(f"🏛️ **Academia:** <span style='color: #ff1e27; font-size: 15px; font-weight: bold;'>{esc(academia_usr)}</span>", unsafe_allow_html=True)
-                st.markdown(f"👤 **Aluno:** {esc(nome_usr)} | Faixa {faixa_usr} ({graus_usr}º Grau)")
-                st.caption(f"📧 `{usr}` | 📅 Criado: {info.get('data_criacao', 'S/D')}")
+                # Lista os alunos desta academia
+                for usr, info, dados_usr in lista_alunos:
+                    nome_usr = dados_usr.get("perfil_nome", "Sem Nome")
+                    faixa_usr = dados_usr.get("perfil_faixa", "Branca")
+                    graus_usr = dados_usr.get("perfil_graus", 0)
+                    
+                    st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;• **{esc(nome_usr)}** ({faixa_usr} - {graus_usr}º Grau)")
+                    
+                    # Painel de gestão individual ao clicar no aluno
+                    with st.expander(f"⚙️ Gerenciar: {nome_usr}"):
+                        with st.form(f"form_gestao_aluno_{usr}"):
+                            st.markdown("### ✏️ Editar Credenciais")
+                            novo_email_input = st.text_input("Novo E-mail (Login):", value=usr, key=f"nem_{usr}")
+                            nova_senha_input = st.text_input("Nova Senha:", value=info.get("senha", ""), type="password", key=f"nsem_{usr}")
+                            
+                            st.markdown("### 🥋 Graduação e Perfil")
+                            novo_nome_input = st.text_input("Nome do Aluno:", value=nome_usr, key=f"nnome_{usr}")
+                            nova_faixa_input = st.selectbox(
+                                "Nova Faixa:",
+                                ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"],
+                                index=["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"].index(faixa_usr) if faixa_usr in ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"] else 0,
+                                key=f"nfaixa_{usr}"
+                            )
+                            novos_graus_input = st.slider("Novos Graus:", 0, 11, int(graus_usr), key=f"slider_master_graus_{usr}")
+                            
+                            btn_salvar_gestao = st.form_submit_button("💾 Salvar Alterações do Aluno", use_container_width=True)
+                            
+                            if btn_salvar_gestao:
+                                novo_email_limpo = novo_email_input.strip().lower()
+                                if not novo_email_limpo or not nova_senha_input:
+                                    st.warning("⚠️ Preencha o e-mail e a senha.")
+                                elif len(nova_senha_input) < 6:
+                                    st.warning("⚠️ A senha deve ter no mínimo 6 caracteres.")
+                                else:
+                                    banco_atualizado = carregar_banco_usuarios()
+                                    if novo_email_limpo != usr and novo_email_limpo in banco_atualizado:
+                                        st.error("❌ Este e-mail já está em uso por outra conta.")
+                                    else:
+                                        dados_antigos = banco_atualizado.pop(usr)
+                                        dados_antigos["senha"] = nova_senha_input
+                                        banco_atualizado[novo_email_limpo] = dados_antigos
+                                        salvar_banco_usuarios(banco_atualizado)
+                                        
+                                        dados_aluno_atual = carregar_dados_usuario(novo_email_limpo)
+                                        dados_aluno_atual["perfil_nome"] = novo_nome_input
+                                        dados_aluno_atual["perfil_faixa"] = nova_faixa_input
+                                        dados_aluno_atual["perfil_graus"] = novos_graus_input
+                                        salvar_dados_usuario(novo_email_limpo, dados_aluno_atual)
+                                        
+                                        caminho_antigo = obter_caminho_usuario(usr)
+                                        caminho_novo = obter_caminho_usuario(novo_email_limpo)
+                                        if os.path.exists(caminho_antigo) and caminho_antigo != caminho_novo:
+                                            try:
+                                                os.replace(caminho_antigo, caminho_novo)
+                                            except Exception:
+                                                pass
+                                                
+                                        st.toast("✅ Aluno atualizado com sucesso!", icon="👑")
+                                        st.rerun()
+
+                # BOTÃO DE DASHBOARD EXCLUSIVO LOGO ABAIXO DOS ALUNOS DAQUELA ACADEMIA
+                with st.expander(f"📊 Ver Dashboard e Rendimento: {acad_nome}"):
+                    total_lutas_acad = sum(len(d[2].get("historico_lutas", [])) for d in lista_alunos)
+                    st.markdown(f"<p style='color: #00ffcc;'><b>Total de Lutas da Turma:</b> {total_lutas_acad}</p>", unsafe_allow_html=True)
+                    
+                    # Gráfico de faixas específico desta academia
+                    faixas_acad = {}
+                    for _, _, d_usr in lista_alunos:
+                        fx = d_usr.get("perfil_faixa", "Branca")
+                        faixas_acad[fx] = faixas_acad.get(fx, 0) + 1
+                    
+                    if faixas_acad:
+                        st.bar_chart(faixas_acad, color="#ff1e27")
+                
+                st.markdown("---")
                 
                 # PAINEL DE GESTÃO DO ALUNO AO CLICAR
                 with st.expander(f"⚙️ Gerenciar Aluno: {nome_usr}"):
