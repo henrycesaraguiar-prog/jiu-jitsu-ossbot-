@@ -4,6 +4,7 @@ from datetime import datetime, date
 import os
 import json
 import base64
+import pandas as pd
 
 # Configuração inicial da página
 st.set_page_config(
@@ -15,6 +16,7 @@ st.set_page_config(
 
 # Constantes globais
 EMAIL_ADMIN_MASTER = "henry.cesaraguiar@gmail.com"
+SENHA_ADMIN_MASTER = "adminpassword"
 
 CAMPOS = [
     "perfil_nome", "perfil_faixa", "perfil_graus", "perfil_academia", 
@@ -55,7 +57,7 @@ def carregar_banco_usuarios():
             return {}
     return {
         EMAIL_ADMIN_MASTER.lower(): {
-            "senha": "adminpassword",
+            "senha": SENHA_ADMIN_MASTER,
             "plano": "ativo",
             "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
         }
@@ -147,7 +149,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# Tela de Login e Cadastro
+# Tela de Login, Cadastro e Recuperação de Senha
 # ---------------------------------------------------------------------------
 if not st.session_state.autenticado:
     col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
@@ -155,7 +157,7 @@ if not st.session_state.autenticado:
         st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot Pro</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #cccccc;'>Plataforma Profissional de Gestão para Academias de BJJ</p>", unsafe_allow_html=True)
         
-        aba_login, aba_cadastro = st.tabs(["🔑 Entrar", "📝 Criar Conta"])
+        aba_login, aba_cadastro, aba_recuperar = st.tabs(["🔑 Entrar", "📝 Criar Conta", "🔄 Recuperar Senha"])
         
         with aba_login:
             with st.form("form_login"):
@@ -174,10 +176,19 @@ if not st.session_state.autenticado:
                     else:
                         st.error("❌ E-mail ou senha incorretos.")
                         
-            if st.button("👑 Acesso Rápido Master (Admin)", use_container_width=True):
-                carregar_usuario(EMAIL_ADMIN_MASTER)
-                st.session_state.autenticado = True
-                st.rerun()
+            # LOGIN ADMIN MASTER SEGURO POR SENHA
+            with st.expander("👑 Acesso Restrito Master (Admin)"):
+                with st.form("form_admin_login"):
+                    senha_master_input = st.text_input("Senha de Administrador Master:", type="password")
+                    btn_admin_entrar = st.form_submit_button("🔒 Entrar como Master", use_container_width=True)
+                    if btn_admin_entrar:
+                        if senha_master_input == SENHA_ADMIN_MASTER:
+                            carregar_usuario(EMAIL_ADMIN_MASTER)
+                            st.session_state.autenticado = True
+                            st.toast("✅ Acesso Master autorizado!", icon="👑")
+                            st.rerun()
+                        else:
+                            st.error("❌ Senha de administrador incorreta.")
 
         with aba_cadastro:
             with st.form("form_cadastro"):
@@ -211,6 +222,25 @@ if not st.session_state.autenticado:
                             salvar_dados_usuario(email_limpo, dados_novos)
                             
                             st.success("✅ Conta criada com sucesso! Vá na aba 'Entrar' para acessar.")
+
+        with aba_recuperar:
+            with st.form("form_esqueci_senha"):
+                email_recup = st.text_input("E-mail Cadastrado:")
+                nova_senha_recup = st.text_input("Nova Senha (mín. 6 caracteres):", type="password")
+                btn_resetar = st.form_submit_button("🔄 Redefinir Senha", use_container_width=True)
+                
+                if btn_resetar:
+                    email_limpo = email_recup.strip().lower()
+                    banco = carregar_banco_usuarios()
+                    if email_limpo in banco:
+                        if len(nova_senha_recup) < 6:
+                            st.warning("⚠️ A nova senha deve ter no mínimo 6 caracteres.")
+                        else:
+                            banco[email_limpo]["senha"] = nova_senha_recup
+                            salvar_banco_usuarios(banco)
+                            st.success("✅ Senha redefinida com sucesso! Vá na aba 'Entrar' para acessar.")
+                    else:
+                        st.error("❌ E-mail não encontrado no banco de dados.")
     st.stop()
 
 # ---------------------------------------------------------------------------
@@ -289,7 +319,7 @@ if "tempo_segundos" not in st.session_state: st.session_state.tempo_segundos = 3
 if "cronometro_rodando" not in st.session_state: st.session_state.cronometro_rodando = False
 
 # ---------------------------------------------------------------------------
-# BARRA LATERAL (SIDEBAR) & PAINEL MASTER
+# BARRA LATERAL (SIDEBAR) & PAINEL MASTER COM DASHBOARD EXPORTÁVEL
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("### 🥋 Carteirinha & Perfil")
@@ -307,9 +337,9 @@ with st.sidebar:
     renderizar_secao_gamificacao()
     st.divider()
     
-    # PAINEL MASTER POR ACADEMIA
+    # PAINEL MASTER EXCLUSIVO E BLINDADO POR SENHA
     if st.session_state.get("is_admin", False):
-        st.markdown("## 👑 Painel Master")
+        st.markdown("## 👑 Painel Master & Gestão")
         with st.expander("🛠️ Gestão de Alunos e Academias"):
             banco = carregar_banco_usuarios()
             st.write(f"📊 **Total de Contas:** {len(banco)}")
@@ -373,16 +403,34 @@ with st.sidebar:
                                         st.toast("✅ Atualizado com sucesso!", icon="👑")
                                         st.rerun()
 
-                # BOTÃO DE DASHBOARD LOGO ABAIXO DA ACADEMIA
-                with st.expander(f"📊 Ver Dashboard e Rendimento: {acad_nome}"):
+                # DASHBOARD EXECUTIVO EM FORMATO DE PLANILHA COM EXPORTAÇÃO
+                with st.expander(f"📊 Dashboard & Planilha: {acad_nome}"):
                     total_lutas_acad = sum(len(d[2].get("historico_lutas", [])) for d in lista_alunos)
                     st.markdown(f"<p style='color: #00ffcc;'><b>Total de Lutas da Turma:</b> {total_lutas_acad}</p>", unsafe_allow_html=True)
-                    faixas_acad = {}
+                    
+                    # Montando dados tabulares (Planilha) para o Professor
+                    dados_planilha = []
                     for _, _, d_usr in lista_alunos:
-                        fx = d_usr.get("perfil_faixa", "Branca")
-                        faixas_acad[fx] = faixas_acad.get(fx, 0) + 1
-                    if faixas_acad:
-                        st.bar_chart(faixas_acad, color="#ff1e27")
+                        dados_planilha.append({
+                            "Atleta": d_usr.get("perfil_nome", "Sem Nome"),
+                            "Faixa": d_usr.get("perfil_faixa", "Branca"),
+                            "Graus": d_usr.get("perfil_graus", 0),
+                            "Status": d_usr.get("perfil_status", "Atleta"),
+                            "Total Lutas": len(d_usr.get("historico_lutas", []))
+                        })
+                    
+                    df_academia = pd.DataFrame(dados_planilha)
+                    st.dataframe(df_academia, use_container_width=True)
+                    
+                    # Botão para baixar a planilha em CSV
+                    csv_export = df_academia.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label=f"📥 Baixar Planilha da Turma (.csv)",
+                        data=csv_export,
+                        file_name=f"dashboard_{acad_nome.lower().replace(' ', '_')}.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
                 st.markdown("---")
 
     if st.button("💾 Salvar Alterações Gerais", use_container_width=True):
