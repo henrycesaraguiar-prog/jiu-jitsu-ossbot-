@@ -72,15 +72,23 @@ def salvar_banco_usuarios(banco):
 
 def carregar_dados_usuario(email):
     caminho = obter_caminho_usuario(email)
+    
+    # Se for o fundador global, mantém o perfil padrão dele. Para novos utilizadores, inicia limpo/visitante!
+    is_master_global = (email.strip().lower() == EMAIL_ADMIN_MASTER.lower())
+    
+    nome_padrao = "Henry Cesar" if is_master_global else "Atleta Visitante"
+    academia_padrao = "GRACIE BARRA ALPHAVILLE ESPLANADA" if is_master_global else "Insira a sua Academia"
+    status_padrao = "Atleta Competidor 🏆" if is_master_global else "Visitante / Novo Atleta"
+    
     dados_padrao = {
-        "perfil_nome": "Henry Cesar",
+        "perfil_nome": nome_padrao,
         "perfil_faixa": "Branca",
-        "perfil_graus": 5,
-        "perfil_academia": "GRACIE BARRA ALPHAVILLE ESPLANADA",
+        "perfil_graus": 0 if not is_master_global else 5,
+        "perfil_academia": academia_padrao,
         "perfil_peso": "Médio",
-        "perfil_status": "Atleta Competidor 🏆",
+        "perfil_status": status_padrao,
         "perfil_foto_b64": "",
-        "tipo_usuario": "Master (Fundador)",
+        "tipo_usuario": "Master (Fundador)" if is_master_global else "Atleta",
         "historico_lutas": [],
         "cursos_interativos": [],
         "dinamic_kids_custom": [],
@@ -149,7 +157,6 @@ if "usuario_email" not in st.session_state: st.session_state.usuario_email = ""
 if "is_admin" not in st.session_state: st.session_state.is_admin = False
 if "tipo_usuario" not in st.session_state: st.session_state.tipo_usuario = "Atleta"
 
-# Garantia de inicialização blindada dos campos do Placar de Luta
 for p_key in ["pts_a", "vant_a", "pun_a", "pts_b", "vant_b", "pun_b"]:
     if p_key not in st.session_state:
         st.session_state[p_key] = 0
@@ -170,7 +177,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Função somar totalmente protegida contra KeyError
 def somar(lado, campo, valor):
     chave_completa = f"{campo}_{lado}"
     if chave_completa not in st.session_state:
@@ -323,8 +329,8 @@ try:
                 with st.form("form_cadastro"):
                     novo_email = st.text_input("O seu E-mail:")
                     nova_senha = st.text_input("Crie uma Palavra-passe (mín. 6 caracteres):", type="password")
-                    nome_inicial = st.text_input("O seu Nome Completo:", value="Henry Cesar")
-                    acad_inicial = st.text_input("A sua Academia:", value="GRACIE BARRA ALPHAVILLE ESPLANADA")
+                    nome_inicial = st.text_input("O seu Nome Completo:", value="Atleta Visitante")
+                    acad_inicial = st.text_input("A sua Academia:", value="Insira a sua Academia")
                     tipo_registo = st.selectbox("Perfil de Utilizador:", ["Atleta", "Professor / Instrutor"])
                     btn_cadastrar = st.form_submit_button("✨ Criar Conta Agora", use_container_width=True)
                     
@@ -350,8 +356,8 @@ try:
                                 salvar_banco_usuarios(banco)
                                 
                                 dados_novos = carregar_dados_usuario(email_limpo)
-                                dados_novos["perfil_nome"] = nome_inicial
-                                dados_novos["perfil_academia"] = acad_inicial
+                                dados_novos["perfil_nome"] = nome_inicial if nome_inicial else "Atleta Visitante"
+                                dados_novos["perfil_academia"] = acad_inicial if acad_inicial else "Insira a sua Academia"
                                 dados_novos["tipo_usuario"] = tipo_registo
                                 salvar_dados_usuario(email_limpo, dados_novos)
                                 
@@ -378,7 +384,7 @@ try:
                             st.error("❌ E-mail não encontrado na base de dados.")
         st.stop()
 
-    # Barra Lateral (Sidebar)
+    # Barra Lateral (Sidebar) com Atalho de Perfil Editável
     with st.sidebar:
         st.markdown("### 🥋 Carteirinha & Perfil")
         foto_b64 = st.session_state.get("perfil_foto_b64", "")
@@ -387,10 +393,17 @@ try:
         else:
             st.markdown('<div class="bolinha-padrao">🥋</div>', unsafe_allow_html=True)
             
-        st.markdown(f"<h4 style='text-align: center; color: #ff1e27; margin: 5px 0;'>{esc(st.session_state.get('perfil_nome', 'Atleta'))}</h4>", unsafe_allow_html=True)
+        st.markdown(f"<h4 style='text-align: center; color: #ff1e27; margin: 5px 0;'>{esc(st.session_state.get('perfil_nome', 'Atleta Visitante'))}</h4>", unsafe_allow_html=True)
         st.markdown(f"<p style='text-align: center; color: #cccccc; font-size: 13px; margin: 0;'>Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>", unsafe_allow_html=True)
-        st.markdown(f"<p style='text-align: center; color: #00ffcc; font-size: 12px; margin: 5px 0 5px 0;'>{esc(st.session_state.get('perfil_academia', 'Academia BJJ'))}</p>", unsafe_allow_html=True)
-        st.markdown(f"<p style='text-align: center; color: #fbbf24; font-size: 11px; margin: 0 0 15px 0;'>Perfil: <b>{esc(st.session_state.get('tipo_usuario', 'Atleta'))}</b></p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align: center; color: #00ffcc; font-size: 12px; margin: 5px 0 5px 0;'>{esc(st.session_state.get('perfil_academia', 'Clique na aba Perfil para Editar'))}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align: center; color: #fbbf24; font-size: 11px; margin: 0 0 10px 0;'>Perfil: <b>{esc(st.session_state.get('tipo_usuario', 'Atleta'))}</b></p>", unsafe_allow_html=True)
+        
+        # Aviso útil para novos utilizadores visitantes
+        st.markdown("""
+        <div style='background: #161616; border: 1px dashed #ff1e27; padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 15px;'>
+            <p style='color: #ffffff; font-size: 11px; margin: 0;'>💡 <i>Novo por aqui? Vá na aba <b>Perfil</b> para editar o seu nome e academia!</i></p>
+        </div>
+        """, unsafe_allow_html=True)
         
         st.divider()
         renderizar_secao_gamificacao()
@@ -563,7 +576,7 @@ try:
 
     # Ecrã Principal & 15 Abas Interativas
     st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot App Pro</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: #cccccc;'>Atleta: <b>{esc(st.session_state.get('perfil_nome', 'Atleta'))}</b> | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #cccccc;'>Atleta: <b>{esc(st.session_state.get('perfil_nome', 'Atleta Visitante'))}</b> | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>", unsafe_allow_html=True)
 
     with st.expander("📊 Painel de Analytics & Evolução Visual", expanded=False):
         lutas_list = st.session_state.get("historico_lutas", [])
@@ -857,8 +870,9 @@ try:
     # 12. Perfil
     with abas_app[11]:
         st.markdown("### 👥 O Meu Perfil & Configurações")
+        st.markdown("<p style='color: #00ffcc; font-size: 13px;'>Personalize aqui o seu nome, faixa, academia e foto de perfil para aparecer na carteirinha lateral!</p>", unsafe_allow_html=True)
         with st.form("form_edicao_perfil"):
-            novo_nome = st.text_input("Nome Completo:", value=st.session_state.get("perfil_nome", ""))
+            novo_nome = st.text_input("Nome Completo / Atleta:", value=st.session_state.get("perfil_nome", ""))
             
             faixas_p = ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"]
             fx_atual = st.session_state.get("perfil_faixa", "Branca")
@@ -872,10 +886,10 @@ try:
             arquivo_foto = st.file_uploader("Enviar Foto de Perfil (JPG/PNG):", type=["jpg", "png", "jpeg"])
             
             if st.form_submit_button("💾 Salvar Alterações do Perfil", use_container_width=True):
-                st.session_state["perfil_nome"] = novo_nome
+                st.session_state["perfil_nome"] = novo_nome if novo_nome else "Atleta Visitante"
                 st.session_state["perfil_faixa"] = nova_faixa
                 st.session_state["perfil_graus"] = novos_graus
-                st.session_state["perfil_academia"] = nova_academia
+                st.session_state["perfil_academia"] = nova_academia if nova_academia else "Insira a sua Academia"
                 st.session_state["perfil_status"] = novo_status
                 
                 if arquivo_foto is not None:
