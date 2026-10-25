@@ -1201,3 +1201,20 @@ def renderizar_botao_relatorio_pdf():
         use_container_width=True,
         help="Baixe o documento oficial resumido com todas as suas informações do tatame."
     )
+
+# ---------------------------------------------------------------------------
+# INTEGRAÇÃO VISUAL FINAL: Exibindo Badges, Dashboard e Relatórios na Tela
+# ---------------------------------------------------------------------------
+
+# 1. Adicionando as Badges na Barra Lateral (se o usuário estiver logado)
+if st.session_state.get("autenticado"):
+    with st.sidebar:
+        st.divider()
+        renderizar_secao_gamificacao()
+
+# 2. Adicionando o Dashboard Executivo e Relatório no Painel Master (para o Admin)
+if st.session_state.get("is_admin"):
+    st.divider()
+    renderizar_dashboard_academia()
+    st.divider()
+    renderizar_botao_relatorio_pdf()
