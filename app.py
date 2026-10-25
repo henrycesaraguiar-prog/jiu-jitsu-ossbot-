@@ -1022,3 +1022,182 @@ with aba_recuperacao:
             <p>⚠️ <b>Aviso Importante:</b> Se houver dor severa, deformidade visível ou incapacidade de se mover, procure um médico imediatamente!</p>
         </div>
         """)
+
+# ---------------------------------------------------------------------------
+# ETAPA 1: Sistema de Alertas Visuais & Notificações de Elite
+# ---------------------------------------------------------------------------
+def mostrar_alerta_tatame(tipo, mensagem):
+    """Exibe um card de alerta estilizado com a identidade visual do OssBot"""
+    cores = {
+        "sucesso": ("#00ffcc", "✅"),
+        "aviso": ("#fbbf24", "⚠️"),
+        "erro": ("#ff1e27", "❌"),
+        "info": ("#ffffff", "ℹ️")
+    }
+    cor, icone = cores.get(tipo, ("#ff1e27", "🥋"))
+    st.markdown(f"""
+    <div style='background-color: #121212; border-left: 5px solid {cor}; border: 1px solid {cor}; border-radius: 10px; padding: 14px 18px; margin-bottom: 15px; box-shadow: 0 4px 16px rgba(0,0,0,0.6);'>
+        <p style='color: #ffffff; margin: 0; font-size: 15px; font-weight: bold;'>{icone} {esc(mensagem)}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
+# ETAPA 2: Dashboard de Estatísticas & Gráficos da Academia (Painel Master)
+# ---------------------------------------------------------------------------
+def renderizar_dashboard_academia():
+    """Renderiza gráficos e métricas gerais de todos os alunos da academia"""
+    st.markdown("<h2 style='text-align: center; color: #ff1e27;'>📊 DASHBOARD EXECUTIVO DA ACADEMIA</h2>", unsafe_allow_html=True)
+    
+    banco = carregar_banco_usuarios()
+    total_alunos = len(banco)
+    
+    # Coleta dados de todos os alunos cadastrados
+    faixas_contagem = {
+        "Branca": 0, "Cinza": 0, "Amarela": 0, "Laranja": 0, 
+        "Verde": 0, "Azul": 0, "Roxa": 0, "Castanha": 0, "Preta": 0
+    }
+    
+    total_lutas_geral = 0
+    
+    for usr in banco.keys():
+        dados_usr = carregar_dados_usuario(usr)
+        f_atual = dados_usr.get("perfil_faixa", "Branca")
+        if f_atual in faixas_contagem:
+            faixas_contagem[f_atual] += 1
+        else:
+            faixas_contagem["Branca"] += 1
+            
+        total_lutas_geral += len(dados_usr.get("historico_lutas", []))
+
+    # Exibição de Métricas Principais (KPIs)
+    col_k1, col_k2, col_k3 = st.columns(3)
+    with col_k1:
+        mostrar_html(f"""
+        <div class='placar-box' style='padding: 15px;'>
+            <p style='color: #cccccc; margin: 0; font-size: 14px;'>TOTAL DE ATLETAS</p>
+            <h2 style='color: #ff1e27; margin: 5px 0 0 0; font-size: 38px;'>{total_alunos}</h2>
+        </div>
+        """)
+    with col_k2:
+        mostrar_html(f"""
+        <div class='placar-box' style='padding: 15px;'>
+            <p style='color: #cccccc; margin: 0; font-size: 14px;'>LUTAS REGISTRADAS</p>
+            <h2 style='color: #00ffcc; margin: 5px 0 0 0; font-size: 38px;'>{total_lutas_geral}</h2>
+        </div>
+        """)
+    with col_k3:
+        mostrar_html(f"""
+        <div class='placar-box' style='padding: 15px;'>
+            <p style='color: #cccccc; margin: 0; font-size: 14px;'>STATUS DO SISTEMA</p>
+            <h2 style='color: #fbbf24; margin: 5px 0 0 0; font-size: 28px;'>🟢 ATIVO</h2>
+        </div>
+        """)
+
+    st.divider()
+    st.markdown("### 📈 Distribuição de Faixas na Academia")
+    
+    # Exibe gráfico em barras nativo do Streamlit com as faixas
+    faixas_filtradas = {k: v for k, v in faixas_contagem.items() if v > 0}
+    if faixas_filtradas:
+        st.bar_chart(faixas_filtradas, color="#ff1e27")
+    else:
+        st.info("Nenhum dado de faixa registrado ainda.")
+
+# ---------------------------------------------------------------------------
+# ETAPA 3: Sistema de Gamificação & Badges de Conquista
+# ---------------------------------------------------------------------------
+def verificar_e_conceder_badges():
+    """Calcula e retorna as badges conquistadas com base na atividade do usuário"""
+    badges = []
+    
+    # Badge de Lutas
+    total_lutas = len(st.session_state.get("historico_lutas", []))
+    if total_lutas >= 1:
+        badges.append(("🤼 Guerreiro do Tatame", "Registrou a primeira luta no sistema!"))
+    if total_lutas >= 5:
+        badges.append(("🔥 Atleta Dedicado", "Já registrou 5 ou mais lutas de treino!"))
+        
+    # Badge de Cursos / Regras
+    total_cursos = len(st.session_state.get("cursos_interativos", []))
+    if total_cursos >= 1:
+        badges.append(("📚 Estudioso da Arte", "Cadastrou material ou regras de BJJ!"))
+        
+    # Badge de Competidor
+    if st.session_state.get("perfil_status") == "Atleta Competidor 🏆":
+        badges.append(("🏆 Competidor Elite", "Perfil configurado como Atleta de Competição!"))
+        
+    return badges
+
+
+def renderizar_secao_gamificacao():
+    """Exibe as conquistas e medalhas do usuário na interface"""
+    st.markdown("<h3 style='color: #fbbf24;'>🏅 Suas Conquistas & Badges</h3>", unsafe_allow_html=True)
+    conquistas = verificar_e_conceder_badges()
+    
+    if not conquistas:
+        st.info("Complete atividades no app (como registrar lutas ou adicionar estudos) para desbloquear badges!")
+    else:
+        cols_b = st.columns(len(conquistas) if len(conquistas) <= 3 else 3)
+        for idx, (titulo_badge, desc_badge) in enumerate(conquistas):
+            with cols_b[idx % len(cols_b)]:
+                mostrar_html(f"""
+                <div style='background-color: #161616; border: 1px solid #fbbf24; border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 10px;'>
+                    <h4 style='color: #fbbf24; margin: 0 0 5px 0; font-size: 14px;'>{esc(titulo_badge)}</h4>
+                    <p style='color: #cccccc; margin: 0; font-size: 12px;'>{esc(desc_badge)}</p>
+                </div>
+                """)
+
+# ---------------------------------------------------------------------------
+# ETAPA 4: Gerador de Relatórios Profissionais em PDF para Atletas
+# ---------------------------------------------------------------------------
+def gerar_relatorio_pdf_atleta():
+    """Gera um resumo formatado em texto simulando um relatório oficial para download"""
+    nome = st.session_state.get("perfil_nome", "Atleta")
+    faixa = st.session_state.get("perfil_faixa", "Branca")
+    graus = st.session_state.get("perfil_graus", 0)
+    academia = st.session_state.get("perfil_academia", "Academia BJJ")
+    status = st.session_state.get("perfil_status", "Atleta")
+    email = st.session_state.get("usuario_email", "")
+    total_lutas = len(st.session_state.get("historico_lutas", []))
+    
+    conteudo_relatorio = f"""
+=====================================================
+          OSSBOT PRO - RELATÓRIO OFICIAL DE ATLETA
+=====================================================
+Data de Emissão: {datetime.now().strftime('%d/%m/%Y - %H:%M')}
+
+[DADOS DO ATLETA]
+• Nome Completo: {nome}
+• E-mail de Contato: {email}
+• Academia / Equipe: {academia}
+• Graduação: Faixa {faixa} ({graus}º Grau)
+• Status Profissional: {status}
+
+[RESUMO DE ATIVIDADES]
+• Total de Lutas Registradas: {total_lutas}
+• Total de Dinâmicas Kids: {len(st.session_state.get("dinamic_kids_custom", []))}
+• Flashcards de Pressão Salvos: {len(st.session_state.get("flashcards_pressao", []))}
+• Materiais de Cursos Salvos: {len(st.session_state.get("cursos_interativos", []))}
+
+=====================================================
+OssBot Pro - Plataforma Inteligente de Gestão de BJJ
+=====================================================
+"""
+    return conteudo_relatorio
+
+
+def renderizar_botao_relatorio_pdf():
+    """Exibe o botão de download do relatório em formato de texto/documento"""
+    st.markdown("### 📄 Relatório Executivo & Prontuário")
+    st.markdown("<p style='color: #cccccc;'>Baixe o relatório completo com suas estatísticas e dados de graduação.</p>", unsafe_allow_html=True)
+    
+    relatorio_texto = gerar_relatorio_pdf_atleta()
+    
+    st.download_button(
+        "📥 Baixar Relatório Oficial (.txt / Relatório)",
+        data=relatorio_texto,
+        file_name=f"relatorio_ossbot_{st.session_state.get('perfil_nome', 'atleta').lower().replace(' ', '_')}.txt",
+        mime="text/plain",
+        use_container_width=True,
+        help="Baixe o documento oficial resumido com todas as suas informações do tatame."
+    )
