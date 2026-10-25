@@ -28,7 +28,6 @@ CAMPOS = [
 ]
 
 def esc(texto):
-    """Escapa caracteres especiais para segurança em HTML"""
     if not isinstance(texto, str):
         texto = str(texto)
     return (texto.replace("&", "&amp;")
@@ -40,7 +39,6 @@ def esc(texto):
 def mostrar_html(html_code):
     st.markdown(html_code, unsafe_allow_html=True)
 
-# Gerenciamento de arquivos e banco de dados por usuário
 def obter_caminho_usuarios():
     return "usuarios_banco.json"
 
@@ -144,15 +142,12 @@ def fazer_logout():
     st.session_state.tipo_usuario = "Atleta"
     st.rerun()
 
-# Inicialização de estados de sessão
 if "autenticado" not in st.session_state: st.session_state.autenticado = False
 if "usuario_email" not in st.session_state: st.session_state.usuario_email = ""
 if "is_admin" not in st.session_state: st.session_state.is_admin = False
 if "tipo_usuario" not in st.session_state: st.session_state.tipo_usuario = "Atleta"
 
-# ---------------------------------------------------------------------------
-# Estilização CSS Glow UI (Tema Preto & Vermelho)
-# ---------------------------------------------------------------------------
+# Estilização CSS Glow UI
 st.markdown("""
 <style>
     .stApp { background-color: #0b0b0b; color: #ffffff; }
@@ -164,9 +159,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------------------------------------------------------
-# Ecrã de Login, Registo, Recuperação e Criação Protegida de Admin
-# ---------------------------------------------------------------------------
+# Autenticação e Gestão de Login
 if not st.session_state.autenticado:
     col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
     with col_l2:
@@ -192,7 +185,6 @@ if not st.session_state.autenticado:
                     else:
                         st.error("❌ E-mail ou palavra-passe incorretos.")
                         
-            # LOGIN ADMIN MASTER E CRIADOR SEGURO DE NOVOS ADMINS COM A PALAVRA-PASSE DO FUNDADOR
             with st.expander("👑 Acesso Restrito Master (Admin)"):
                 with st.form("form_admin_login"):
                     senha_master_input = st.text_input("Palavra-passe de Administrador Master:", type="password")
@@ -302,9 +294,7 @@ if not st.session_state.autenticado:
                         st.error("❌ E-mail não encontrado na base de dados.")
     st.stop()
 
-# ---------------------------------------------------------------------------
-# Funções de Gamificação, Relatórios e Cronómetro
-# ---------------------------------------------------------------------------
+# Funções auxiliares
 def verificar_e_conceder_badges():
     badges = []
     total_lutas = len(st.session_state.get("historico_lutas", []))
@@ -378,9 +368,7 @@ if "pun_b" not in st.session_state: st.session_state.pun_b = 0
 if "tempo_segundos" not in st.session_state: st.session_state.tempo_segundos = 300
 if "cronometro_rodando" not in st.session_state: st.session_state.cronometro_rodando = False
 
-# ---------------------------------------------------------------------------
-# BARRA LATERAL (SIDEBAR) & PAINEL MASTER / COACH COM RBAC, QR CODE E PLANILHA
-# ---------------------------------------------------------------------------
+# Barra Lateral (Sidebar)
 with st.sidebar:
     st.markdown("### 🥋 Carteirinha & Perfil")
     foto_b64 = st.session_state.get("perfil_foto_b64", "")
@@ -398,11 +386,9 @@ with st.sidebar:
     renderizar_secao_gamificacao()
     st.divider()
     
-    # PAINEL DE GESTÃO (MASTER OU PROFESSOR - RBAC)
     if st.session_state.get("is_admin", False) or st.session_state.get("tipo_usuario") in ["Professor / Instrutor", "Master (Fundador)"]:
         st.markdown("## 👑 Painel de Gestão & Coach")
         
-        # MÓDULO CHECK-IN QR CODE (IDEIA 3)
         with st.expander("📱 Check-in de Presença (QR Code)"):
             st.markdown("<p style='font-size: 12px; color: #cccccc;'>Simule a leitura do QR Code da academia para registar a presença de hoje:</p>", unsafe_allow_html=True)
             if st.button("📍 Fazer Check-in na Aula Hoje", use_container_width=True):
@@ -431,7 +417,6 @@ with st.sidebar:
                 dados_usr = carregar_dados_usuario(usr)
                 acad = dados_usr.get("perfil_academia", "Academia Não Informada").strip()
                 
-                # Se for Professor (não Master global), filtra apenas a sua academia
                 if tipo_atual == "Professor / Instrutor" and acad.lower() != academia_atual:
                     continue
                     
@@ -452,7 +437,6 @@ with st.sidebar:
                     graus_usr = dados_usr.get("perfil_graus", 0)
                     presencas_aluno = len(dados_usr.get("historico_presencas", []))
                     
-                    # ALERTA AUTOMÁTICO DE GRADUAÇÃO (IDEIA 4)
                     status_grad = "🟢 Ritmo Normal"
                     if presencas_aluno >= 15 and graus_usr < 4:
                         status_grad = "🔥 APTO PARA GRAU!"
@@ -518,7 +502,6 @@ with st.sidebar:
                                     st.toast("✅ Aluno excluído com sucesso!", icon="🗑️")
                                     st.rerun()
 
-                # DASHBOARD EXECUTIVO EM FORMATO DE PLANILHA COM EXPORTAÇÃO
                 with st.expander(f"📊 Dashboard & Planilha: {acad_nome}"):
                     total_lutas_acad = sum(len(d[2].get("historico_lutas", [])) for d in lista_alunos)
                     st.markdown(f"<p style='color: #00ffcc;'><b>Total de Lutas da Turma:</b> {total_lutas_acad}</p>", unsafe_allow_html=True)
@@ -557,27 +540,22 @@ with st.sidebar:
     if st.button("🚪 Sair da Conta (Logout)", use_container_width=True):
         fazer_logout()
 
-# ---------------------------------------------------------------------------
-# ECRÃ PRINCIPAL, ANALYTICS & 15 ABAS INTERATIVAS
-# ---------------------------------------------------------------------------
+# Ecrã Principal & 15 Abas Interativas
 st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot App Pro</h1>", unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center; color: #cccccc;'>Atleta: <b>{esc(st.session_state.get('perfil_nome', 'Atleta'))}</b> | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>", unsafe_allow_html=True)
 
-# MÓDULO VISUAL DE ANALYTICS & DESEMPENHO (IDEIA 1)
 with st.expander("📊 Painel de Analytics & Evolução Visual", expanded=False):
     lutas_list = st.session_state.get("historico_lutas", [])
     if not lutas_list:
         st.info("💡 Registe as suas lutas na aba 'Histórico' para visualizar os seus gráficos de desempenho em tempo real!")
     else:
         col_g1, col_g2 = st.columns(2)
-        
         with col_g1:
             st.markdown("##### 📈 Distribuição de Resultados")
             resultados_count = {}
             for l in lutas_list:
                 res = l.get("resultado", "Outro")
                 resultados_count[res] = resultados_count.get(res, 0) + 1
-            
             df_res = pd.DataFrame(list(resultados_count.items()), columns=["Resultado", "Quantidade"])
             st.bar_chart(df_res.set_index("Resultado"))
             
@@ -616,9 +594,43 @@ with abas_app[0]:
             if st.button("+3 Pts (A)", use_container_width=True): somar("a", "pts_a", 3); st.rerun()
         with c2:
             if st.button("+4 Pts (A)", use_container_width=True): somar("a", "pts_a", 4); st.rerun()
-            if st.button("Vantagem (A)", use_container_width=True): somar("a", "vant_a
+            if st.button("Vantagem (A)", use_container_width=True): somar("a", "vant_a", 1); st.rerun()
+        with c3:
+            if st.button("Punição (A)", use_container_width=True): somar("a", "pun_a", 1); st.rerun()
+            
+    with col_p2:
+        mostrar_html(f"""
+        <div class='placar-box'>
+            <p style='color: #cccccc; margin: 0;'>ATLETA 2 (Branco):</p>
+            <h3 style='color: #ffffff; margin: 5px 0;'>Atleta Branco</h3>
+            <div class='placar-numero'>{st.session_state.pts_b}</div>
+            <p style='color: #ffffff; margin: 5px 0;'>Vantagens: {st.session_state.vant_b} | Punições: {st.session_state.pun_b}</p>
+        </div>
+        """)
+        cb1, cb2, cb3 = st.columns(3)
+        with cb1:
+            if st.button("+2 Pts (B)", use_container_width=True): somar("b", "pts_b", 2); st.rerun()
+            if st.button("+3 Pts (B)", use_container_width=True): somar("b", "pts_b", 3); st.rerun()
+        with cb2:
+            if st.button("+4 Pts (B)", use_container_width=True): somar("b", "pts_b", 4); st.rerun()
+            if st.button("Vantagem (B)", use_container_width=True): somar("b", "vant_b", 1); st.rerun()
+        with cb3:
+            if st.button("Punição (B)", use_container_width=True): somar("b", "pun_b", 1); st.rerun()
 
-     # 2. Histórico
+    st.divider()
+    ct1, ct2, ct3 = st.columns(3)
+    with ct1: st.selectbox("Tempo do Rola:", [1, 2, 3, 5, 6, 10], key="select_tempo", on_change=definir_tempo)
+    with ct2:
+        mr, sr = st.session_state.tempo_segundos // 60, st.session_state.tempo_segundos % 60
+        st.markdown(f"<h2 style='text-align: center; color: #ff1e27; margin: 0;'>⏱️ {mr:02d}:{sr:02d}</h2>", unsafe_allow_html=True)
+    with ct3:
+        if not st.session_state.cronometro_rodando:
+            if st.button("▶️ Iniciar", use_container_width=True): iniciar_cronometro(); st.rerun()
+        else:
+            if st.button("⏸️ Pausar", use_container_width=True): pausar_cronometro(); st.rerun()
+        if st.button("🔄 Zerar Luta", use_container_width=True): zerar_luta(); st.rerun()
+
+# 2. Histórico
 with abas_app[1]:
     st.markdown("### 📜 Histórico de Lutas & Treinos")
     with st.form("form_nova_luta"):
@@ -645,7 +657,7 @@ with abas_app[1]:
         </div>
         """, unsafe_allow_html=True)
 
-       # 3. Nutrição
+# 3. Nutrição
 with abas_app[2]:
     st.markdown("### 🥗 Nutrição & Corte de Peso")
     with st.form("form_nutri"):
@@ -814,7 +826,7 @@ with abas_app[10]:
         use_container_width=True
     )
 
-# 12. Perfil (Edição Completa)
+# 12. Perfil
 with abas_app[11]:
     st.markdown("### 👥 O Meu Perfil & Configurações")
     with st.form("form_edicao_perfil"):
@@ -898,4 +910,4 @@ with abas_app[14]:
                 st.rerun()
     st.divider()
     for rc in st.session_state.get("recuperacao_notas", []):
-        st.markdown(f"<div class='card-item'>🔄 <b>{esc(rc['data'])}</b><br>{esc(rc['nota'])}</div>", unsafe_allow_html=True) 
+        st.markdown(f"<div class='card-item'>🔄 <b>{esc(rc['data'])}</b><br>{esc(rc['nota'])}</div>", unsafe_allow_html=True)
