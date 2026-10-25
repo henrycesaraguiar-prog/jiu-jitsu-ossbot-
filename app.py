@@ -5,6 +5,7 @@ import os
 import json
 import base64
 import traceback
+import time
 import pandas as pd
 
 # Configuração inicial da página
@@ -72,7 +73,6 @@ def salvar_banco_usuarios(banco):
 
 def carregar_dados_usuario(email):
     caminho = obter_caminho_usuario(email)
-    
     is_master_global = (email.strip().lower() == EMAIL_ADMIN_MASTER.lower())
     
     nome_padrao = "Henry Cesar" if is_master_global else "Atleta Visitante"
@@ -148,26 +148,30 @@ def fazer_logout():
     st.session_state.usuario_email = ""
     st.session_state.is_admin = False
     st.session_state.tipo_usuario = "Atleta"
-    # Limpa completamente os campos da sessão para o próximo utilizador entrar limpo
     for c in CAMPOS:
         if c in st.session_state:
             del st.session_state[c]
     st.rerun()
 
-# Inicialização segura dos estados de sessão
+# Inicialização de Estados
 if "autenticado" not in st.session_state: st.session_state.autenticado = False
 if "usuario_email" not in st.session_state: st.session_state.usuario_email = ""
 if "is_admin" not in st.session_state: st.session_state.is_admin = False
 if "tipo_usuario" not in st.session_state: st.session_state.tipo_usuario = "Atleta"
 
-for p_key in ["pts_a", "vant_a", "pun_a", "pts_b", "vant_b", "pun_b"]:
-    if p_key not in st.session_state:
-        st.session_state[p_key] = 0
+if "pts_a" not in st.session_state: st.session_state.pts_a = 0
+if "vant_a" not in st.session_state: st.session_state.vant_a = 0
+if "pun_a" not in st.session_state: st.session_state.pun_a = 0
+if "pts_b" not in st.session_state: st.session_state.pts_b = 0
+if "vant_b" not in st.session_state: st.session_state.vant_b = 0
+if "pun_b" not in st.session_state: st.session_state.pun_b = 0
 
 if "tempo_segundos" not in st.session_state: st.session_state.tempo_segundos = 300
+if "tempo_inicial" not in st.session_state: st.session_state.tempo_inicial = 300
 if "cronometro_rodando" not in st.session_state: st.session_state.cronometro_rodando = False
+if "ultimo_tick" not in st.session_state: st.session_state.ultimo_tick = time.time()
 
-# Estilização CSS Glow UI
+# Estilos CSS
 st.markdown("""
 <style>
     .stApp { background-color: #0b0b0b; color: #ffffff; }
@@ -180,27 +184,30 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-def somar(lado, campo, valor):
-    chave_completa = f"{campo}_{lado}"
-    if chave_completa not in st.session_state:
-        st.session_state[chave_completa] = 0
-    st.session_state[chave_completa] += valor
+def somar_placar(var_nome, valor):
+    if var_nome in st.session_state:
+        st.session_state[var_nome] = max(0, st.session_state[var_nome] + valor)
 
-def definir_tempo(): st.session_state.tempo_segundos = st.session_state.get("select_tempo", 5) * 60
-def iniciar_cronometro(): st.session_state.cronometro_rodando = True
-def pausar_cronometro(): st.session_state.cronometro_rodando = False
 def zerar_luta():
     st.session_state.cronometro_rodando = False
-    st.session_state.tempo_segundos = st.session_state.get("select_tempo", 5) * 60
+    st.session_state.tempo_segundos = st.session_state.tempo_inicial
     st.session_state.pts_a = st.session_state.vant_a = st.session_state.pun_a = 0
     st.session_state.pts_b = st.session_state.vant_b = st.session_state.pun_b = 0
+
+def renderizar_gravador_audio(key_prefix):
+    st.markdown("🎙️ **Gravar por Áudio / Voz:**")
+    audio_file = st.file_uploader("Envie ou grave o seu áudio (WAV/MP3/M4A):", type=["wav", "mp3", "m4a"], key=f"audio_up_{key_prefix}")
+    if audio_file is not None:
+        st.audio(audio_file, format="audio/wav")
+        st.caption("✅ Áudio carregado com sucesso!")
+    return audio_file
 
 def verificar_e_conceder_badges():
     badges = []
     total_lutas = len(st.session_state.get("historico_lutas", []))
     if total_lutas >= 1: badges.append(("🤼 Guerreiro do Tatame", "Registou a primeira luta!"))
-    if total_lutas >= 5: badges.append(("🔥 Atleta Dedicado", "5+ lutas registadas!"))
-    if len(st.session_state.get("cursos_interativos", [])) >= 1: badges.append(("📚 Estudioso da Arte", "Registo de material de BJJ!"))
+    if total_lutas >= 5: badges.append(("🔥 Atleta Dedicado", "5+ lutas registradas!"))
+    if len(st.session_state.get("cursos_interativos", [])) >= 1: badges.append(("📚 Estudioso da Arte", "Registro de estudo de BJJ!"))
     if st.session_state.get("perfil_status") == "Atleta Competidor 🏆": badges.append(("🏆 Competidor Elite", "Perfil de Competição ativo!"))
     return badges
 
@@ -208,7 +215,7 @@ def renderizar_secao_gamificacao():
     st.markdown("<h3 style='color: #fbbf24;'>🏅 Conquistas & Badges</h3>", unsafe_allow_html=True)
     conquistas = verificar_e_conceder_badges()
     if not conquistas:
-        st.info("Complete atividades para desbloquear badges!")
+        st.info("Complete atividades no app para desbloquear badges!")
     else:
         for titulo, desc in conquistas:
             mostrar_html(f"""
@@ -245,13 +252,11 @@ Data: {datetime.now().strftime('%d/%m/%Y - %H:%M')}
 • Cursos/Técnicas: {len(st.session_state.get("cursos_interativos", []))}
 • Dinâmicas Kids: {len(st.session_state.get("dinamic_kids_custom", []))}
 • Flashcards de Pressão: {len(st.session_state.get("flashcards_pressao", []))}
-• Presenças Registadas: {len(st.session_state.get("historico_presencas", []))}
+• Presenças Registradas: {len(st.session_state.get("historico_presencas", []))}
 =====================================================
 """
 
-# ---------------------------------------------------------------------------
-# BLOCO PRINCIPAL DO APLICATIVO COM CAPTURA INTELIGENTE DE ERROS DA OSSBOT IA
-# ---------------------------------------------------------------------------
+# Bloco Principal com Tratamento de Erros da OssBot IA
 try:
     if not st.session_state.autenticado:
         col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
@@ -259,18 +264,12 @@ try:
             st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot Pro</h1>", unsafe_allow_html=True)
             st.markdown("<p style='text-align: center; color: #cccccc;'>Plataforma Profissional de Gestão para Academias de BJJ</p>", unsafe_allow_html=True)
             
-            st.markdown("""
-            <div style='background: #161616; border: 1px dashed #ff1e27; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px;'>
-                <p style='color: #00ffcc; font-size: 12px; margin: 0;'><b>💡 Novo utilizador / Visitante?</b><br>Vá na aba <i>'Criar Conta'</i> e registe um novo e-mail para começar com o perfil limpo!</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
             aba_login, aba_cadastro, aba_recuperar = st.tabs(["🔑 Entrar", "📝 Criar Conta", "🔄 Esqueci a Senha"])
             
             with aba_login:
                 with st.form("form_login"):
                     email_input = st.text_input("E-mail de Acesso:")
-                    senha_input = st.text_input("Palavra-passe:", type="password")
+                    senha_input = st.text_input("Senha:", type="password")
                     btn_entrar = st.form_submit_button("🚀 Entrar no Sistema", use_container_width=True)
                     
                     if btn_entrar:
@@ -282,11 +281,11 @@ try:
                             st.toast("✅ Login realizado com sucesso!", icon="🥋")
                             st.rerun()
                         else:
-                            st.error("❌ E-mail ou palavra-passe incorretos.")
+                            st.error("❌ E-mail ou senha incorretos.")
                             
                 with st.expander("👑 Acesso Restrito Master (Admin)"):
                     with st.form("form_admin_login"):
-                        senha_master_input = st.text_input("Palavra-passe de Administrador Master:", type="password")
+                        senha_master_input = st.text_input("Senha Master:", type="password")
                         btn_admin_entrar = st.form_submit_button("🔒 Entrar como Master", use_container_width=True)
                         if btn_admin_entrar:
                             if senha_master_input == SENHA_ADMIN_MASTER:
@@ -295,27 +294,27 @@ try:
                                 st.toast("✅ Acesso Master autorizado!", icon="👑")
                                 st.rerun()
                             else:
-                                st.error("❌ Palavra-passe de administrador incorreta.")
+                                st.error("❌ Senha master incorreta.")
                     
                     st.divider()
                     st.markdown("<p style='color: #ff1e27; font-weight: bold;'>➕ Adicionar Novo Administrador</p>", unsafe_allow_html=True)
                     with st.form("form_criar_novo_admin_master"):
-                        senha_fundador_check = st.text_input("Palavra-passe Mestre do Fundador (Sua Palavra-passe):", type="password", key="s_fund_novo")
+                        senha_fundador_check = st.text_input("Senha Mestre do Fundador:", type="password", key="s_fund_novo")
                         novo_admin_email = st.text_input("E-mail do Novo Admin:", key="n_adm_email")
-                        novo_admin_senha = st.text_input("Palavra-passe do Novo Admin (mín. 6):", type="password", key="n_adm_senha")
+                        novo_admin_senha = st.text_input("Senha do Novo Admin (mín. 6):", type="password", key="n_adm_senha")
                         novo_admin_nome = st.text_input("Nome do Novo Admin:", value="", key="n_adm_nome")
                         tipo_novo_admin = st.selectbox("Nível de Acesso:", ["Professor / Instrutor", "Master (Fundador)"], key="n_adm_tipo")
                         btn_criar_admin = st.form_submit_button("✨ Criar Novo Acesso Master", use_container_width=True)
                         
                         if btn_criar_admin:
                             if senha_fundador_check != SENHA_ADMIN_MASTER:
-                                st.error("❌ Palavra-passe mestre do fundador incorreta! Acesso negado.")
+                                st.error("❌ Senha mestre do fundador incorreta!")
                             else:
                                 email_limpo_adm = novo_admin_email.strip().lower()
                                 if not email_limpo_adm or not novo_admin_senha:
-                                    st.warning("⚠️ Preencha o e-mail e a palavra-passe do novo admin.")
+                                    st.warning("⚠️ Preencha e-mail e senha.")
                                 elif len(novo_admin_senha) < 6:
-                                    st.warning("⚠️ A palavra-passe deve ter no mínimo 6 caracteres.")
+                                    st.warning("⚠️ A senha deve ter no mínimo 6 caracteres.")
                                 else:
                                     banco = carregar_banco_usuarios()
                                     banco[email_limpo_adm] = {
@@ -326,33 +325,32 @@ try:
                                         "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
                                     }
                                     salvar_banco_usuarios(banco)
-                                    
                                     du = carregar_dados_usuario(email_limpo_adm)
                                     if novo_admin_nome.strip():
                                         du["perfil_nome"] = novo_admin_nome.strip()
                                     du["tipo_usuario"] = tipo_novo_admin
                                     salvar_dados_usuario(email_limpo_adm, du)
-                                    st.success(f"✅ Novo administrador '{email_limpo_adm}' criado com sucesso!")
+                                    st.success(f"✅ Novo admin '{email_limpo_adm}' criado com sucesso!")
 
             with aba_cadastro:
                 with st.form("form_cadastro"):
-                    novo_email = st.text_input("O seu E-mail:")
-                    nova_senha = st.text_input("Crie uma Palavra-passe (mín. 6 caracteres):", type="password")
-                    nome_inicial = st.text_input("O seu Nome Completo:", value="Atleta Visitante")
-                    acad_inicial = st.text_input("A sua Academia:", value="Insira a sua Academia")
-                    tipo_registo = st.selectbox("Perfil de Utilizador:", ["Atleta", "Professor / Instrutor"])
+                    novo_email = st.text_input("Seu E-mail:")
+                    nova_senha = st.text_input("Crie uma Senha (mín. 6 caracteres):", type="password")
+                    nome_inicial = st.text_input("Seu Nome Completo:", value="Atleta Visitante")
+                    acad_inicial = st.text_input("Sua Academia:", value="Insira a sua Academia")
+                    tipo_registo = st.selectbox("Perfil de Usuário:", ["Atleta", "Professor / Instrutor"])
                     btn_cadastrar = st.form_submit_button("✨ Criar Conta Agora", use_container_width=True)
                     
                     if btn_cadastrar:
                         email_limpo = novo_email.strip().lower()
                         if not email_limpo or not nova_senha:
-                            st.warning("⚠️ Preencha o e-mail e a palavra-passe.")
+                            st.warning("⚠️ Preencha e-mail e senha.")
                         elif len(nova_senha) < 6:
-                            st.warning("⚠️ A palavra-passe deve ter no mínimo 6 caracteres.")
+                            st.warning("⚠️ A senha deve ter no mínimo 6 caracteres.")
                         else:
                             banco = carregar_banco_usuarios()
                             if email_limpo in banco:
-                                st.error("❌ Este e-mail já está registado.")
+                                st.error("❌ E-mail já cadastrado.")
                             else:
                                 is_adm_flag = (tipo_registo == "Professor / Instrutor")
                                 banco[email_limpo] = {
@@ -363,37 +361,30 @@ try:
                                     "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
                                 }
                                 salvar_banco_usuarios(banco)
-                                
                                 dados_novos = carregar_dados_usuario(email_limpo)
                                 dados_novos["perfil_nome"] = nome_inicial if nome_inicial else "Atleta Visitante"
                                 dados_novos["perfil_academia"] = acad_inicial if acad_inicial else "Insira a sua Academia"
                                 dados_novos["tipo_usuario"] = tipo_registo
                                 salvar_dados_usuario(email_limpo, dados_novos)
-                                
-                                st.success("✅ Conta criada com sucesso! Vá na aba 'Entrar' para aceder.")
+                                st.success("✅ Conta criada com sucesso! Acesse a aba 'Entrar'.")
 
             with aba_recuperar:
                 with st.form("form_esqueci_senha"):
-                    st.markdown("<p style='color: #cccccc; font-size: 13px;'>Digite o seu e-mail registado e defina uma nova palavra-passe instantaneamente:</p>", unsafe_allow_html=True)
-                    email_recup = st.text_input("E-mail Registado:")
-                    nova_senha_recup = st.text_input("Nova Palavra-passe (mín. 6 caracteres):", type="password")
-                    btn_resetar = st.form_submit_button("🔄 Atualizar Palavra-passe Agora", use_container_width=True)
-                    
+                    email_recup = st.text_input("E-mail Cadastrado:")
+                    nova_senha_recup = st.text_input("Nova Senha (mín. 6 caracteres):", type="password")
+                    btn_resetar = st.form_submit_button("🔄 Atualizar Senha", use_container_width=True)
                     if btn_resetar:
                         email_limpo = email_recup.strip().lower()
                         banco = carregar_banco_usuarios()
                         if email_limpo in banco:
-                            if len(nova_senha_recup) < 6:
-                                st.warning("⚠️ A nova palavra-passe deve ter no mínimo 6 caracteres.")
-                            else:
-                                banco[email_limpo]["senha"] = nova_senha_recup
-                                salvar_banco_usuarios(banco)
-                                st.success("✅ Palavra-passe atualizada com sucesso! Vá na aba 'Entrar' para aceder.")
+                            banco[email_limpo]["senha"] = nova_senha_recup
+                            salvar_banco_usuarios(banco)
+                            st.success("✅ Senha atualizada com sucesso!")
                         else:
-                            st.error("❌ E-mail não encontrado na base de dados.")
+                            st.error("❌ E-mail não encontrado.")
         st.stop()
 
-    # Barra Lateral (Sidebar) com Edição de Perfil Integrada
+    # Barra Lateral
     with st.sidebar:
         st.markdown("### 🥋 Carteirinha & Perfil")
         foto_b64 = st.session_state.get("perfil_foto_b64", "")
@@ -405,35 +396,22 @@ try:
         st.markdown(f"<h4 style='text-align: center; color: #ff1e27; margin: 5px 0;'>{esc(st.session_state.get('perfil_nome', 'Atleta Visitante'))}</h4>", unsafe_allow_html=True)
         st.markdown(f"<p style='text-align: center; color: #cccccc; font-size: 13px; margin: 0;'>Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>", unsafe_allow_html=True)
         st.markdown(f"<p style='text-align: center; color: #00ffcc; font-size: 12px; margin: 5px 0 5px 0;'>{esc(st.session_state.get('perfil_academia', 'Insira a sua Academia'))}</p>", unsafe_allow_html=True)
-        st.markdown(f"<p style='text-align: center; color: #fbbf24; font-size: 11px; margin: 0 0 10px 0;'>Perfil: <b>{esc(st.session_state.get('tipo_usuario', 'Atleta'))}</b></p>", unsafe_allow_html=True)
         
-        # Expander direto na barra lateral para edição rápida do perfil
-        with st.expander("✏️ Editar o Meu Perfil"):
+        with st.expander("✏️ Editar Perfil na Sidebar"):
             with st.form("form_edicao_perfil_sidebar"):
                 novo_nome = st.text_input("Nome / Atleta:", value=st.session_state.get("perfil_nome", ""))
-                
-                faixas_p = ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"]
+                faixas_p = ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha"]
                 fx_atual = st.session_state.get("perfil_faixa", "Branca")
                 idx_fx = faixas_p.index(fx_atual) if fx_atual in faixas_p else 0
                 nova_faixa = st.selectbox("Faixa:", faixas_p, index=idx_fx)
-                
                 novos_graus = st.slider("Graus:", 0, 11, int(st.session_state.get("perfil_graus", 0)))
                 nova_academia = st.text_input("Academia:", value=st.session_state.get("perfil_academia", ""))
-                novo_status = st.selectbox("Status:", ["Atleta Competidor 🏆", "Praticante / Hobby", "Professor / Instrutor"], index=0 if "Competidor" in st.session_state.get("perfil_status", "") else 1)
-                
-                arquivo_foto = st.file_uploader("Foto (JPG/PNG):", type=["jpg", "png", "jpeg"])
                 
                 if st.form_submit_button("💾 Salvar Perfil", use_container_width=True):
                     st.session_state["perfil_nome"] = novo_nome if novo_nome else "Atleta Visitante"
                     st.session_state["perfil_faixa"] = nova_faixa
                     st.session_state["perfil_graus"] = novos_graus
                     st.session_state["perfil_academia"] = nova_academia if nova_academia else "Insira a sua Academia"
-                    st.session_state["perfil_status"] = novo_status
-                    
-                    if arquivo_foto is not None:
-                        bytes_foto = arquivo_foto.read()
-                        st.session_state["perfil_foto_b64"] = base64.b64encode(bytes_foto).decode("utf-8")
-                        
                     salvar_tudo()
                     st.toast("✅ Perfil atualizado!", icon="🥋")
                     st.rerun()
@@ -442,200 +420,114 @@ try:
         renderizar_secao_gamificacao()
         st.divider()
         
+        # Painel Master / Professor Integrado na Sidebar
         if st.session_state.get("is_admin", False) or st.session_state.get("tipo_usuario") in ["Professor / Instrutor", "Master (Fundador)"]:
             st.markdown("## 👑 Painel de Gestão & Coach")
             
             with st.expander("📱 Check-in de Presença (QR Code)"):
-                st.markdown("<p style='font-size: 12px; color: #cccccc;'>Aponte a câmara para o QR Code do dia para fazer o check-in:</p>", unsafe_allow_html=True)
-                
+                st.markdown("<p style='font-size: 12px; color: #cccccc;'>Aponte a câmara para o QR Code do dia:</p>", unsafe_allow_html=True)
                 data_hoje_str = datetime.now().strftime("%d/%m/%Y")
                 data_api_str = datetime.now().strftime("%Y-%m-%d")
-                qr_url_dia = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=OssBot-Checkin-{data_api_str}"
-                
+                qr_url_dia = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=OssBot-Checkin-{data_api_str}"
                 st.markdown(f"""
-                <div style='text-align: center; background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #ff1e27; margin-bottom: 10px;'>
-                    <img src='{qr_url_dia}' style='border-radius: 6px; width: 140px; height: 140px; border: 2px solid #ffffff;'/>
-                    <p style='color: #00ffcc; font-size: 12px; margin-top: 8px; font-weight: bold;'>📅 QR Code de Hoje: {data_hoje_str}</p>
+                <div style='text-align: center; background: #161616; padding: 10px; border-radius: 8px; border: 1px solid #ff1e27; margin-bottom: 8px;'>
+                    <img src='{qr_url_dia}' style='width: 130px; height: 130px; border-radius: 4px;'/>
+                    <p style='color: #00ffcc; font-size: 11px; margin-top: 6px;'>📅 {data_hoje_str}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                if st.button("📍 Fazer Check-in na Aula Hoje", use_container_width=True):
+                if st.button("📍 Fazer Check-in Hoje", use_container_width=True):
                     presencas = st.session_state.get("historico_presencas", [])
                     if data_hoje_str not in presencas:
                         presencas.append(data_hoje_str)
                         st.session_state["historico_presencas"] = presencas
                         salvar_tudo()
-                        st.success(f"✅ Presença registada para hoje ({data_hoje_str})!")
+                        st.success(f"✅ Check-in registrado!")
                         st.rerun()
                     else:
                         st.info("ℹ️ Já fez check-in hoje!")
-                st.write(f"Total de presenças: **{len(st.session_state.get('historico_presencas', []))}**")
 
-            with st.expander("🛠️ Gestão de Alunos e Academias"):
+            with st.expander("🛠️ Gestão de Alunos e Turmas"):
                 banco = carregar_banco_usuarios()
                 tipo_atual = st.session_state.get("tipo_usuario")
                 academia_atual = st.session_state.get("perfil_academia", "").strip().lower()
-                
-                st.write(f"📊 **Total de Contas no Sistema:** {len(banco)}")
+                st.write(f"📊 **Total de Contas:** {len(banco)}")
                 st.divider()
                 
                 academias_dict = {}
                 for usr, info in banco.items():
-                    dados_usr = carregar_dados_usuario(usr)
-                    acad = dados_usr.get("perfil_academia", "Academia Não Informada").strip()
-                    
+                    d_usr = carregar_dados_usuario(usr)
+                    acad = d_usr.get("perfil_academia", "Academia Não Informada").strip()
                     if tipo_atual == "Professor / Instrutor" and acad.lower() != academia_atual:
                         continue
-                        
                     if acad not in academias_dict:
                         academias_dict[acad] = []
-                    academias_dict[acad].append((usr, info, dados_usr))
-                
-                if not academias_dict:
-                    st.info("Nenhum aluno encontrado na sua academia.")
+                    academias_dict[acad].append((usr, info, d_usr))
                 
                 for acad_nome, lista_alunos in academias_dict.items():
-                    st.markdown(f"🏛️ **Academia:** <span style='color: #ff1e27; font-size: 15px; font-weight: bold;'>{esc(acad_nome)}</span>", unsafe_allow_html=True)
-                    st.write(f"👥 Alunos cadastrados: {len(lista_alunos)}")
-                    
-                    for usr, info, dados_usr in lista_alunos:
-                        nome_usr = dados_usr.get("perfil_nome", "Sem Nome")
-                        faixa_usr = dados_usr.get("perfil_faixa", "Branca")
-                        graus_usr = dados_usr.get("perfil_graus", 0)
-                        presencas_aluno = len(dados_usr.get("historico_presencas", []))
-                        
-                        status_grad = "🟢 Ritmo Normal"
-                        if presencas_aluno >= 15 and graus_usr < 4:
-                            status_grad = "🔥 APTO PARA GRAU!"
-                        elif presencas_aluno >= 50:
-                            status_grad = "🏆 APTO PARA FAIXA!"
-                        
-                        st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;• **{esc(nome_usr)}** ({faixa_usr} - {graus_usr}º Grau) | *{status_grad}*")
-                        
-                        with st.expander(f"⚙️ Gerir: {nome_usr} ({usr})"):
-                            with st.form(key=f"form_gestao_aluno_unico_{usr}"):
-                                novo_email_input = st.text_input("Novo E-mail:", value=usr, key=f"nem_u_{usr}")
-                                nova_senha_input = st.text_input("Nova Palavra-passe:", value=info.get("senha", ""), type="password", key=f"nsem_u_{usr}")
-                                novo_nome_input = st.text_input("Nome:", value=nome_usr, key=f"nnome_u_{usr}")
+                    st.markdown(f"🏛️ <b>{esc(acad_nome)}</b> ({len(lista_alunos)} alunos)", unsafe_allow_html=True)
+                    for usr, info, d_usr in lista_alunos:
+                        n_usr = d_usr.get("perfil_nome", "Sem Nome")
+                        with st.expander(f"⚙️ {n_usr}"):
+                            with st.form(key=f"form_g_{usr}"):
+                                novo_em = st.text_input("E-mail:", value=usr, key=f"nem_{usr}")
+                                nova_sen = st.text_input("Senha:", value=info.get("senha", ""), type="password", key=f"nsen_{usr}")
+                                novo_no = st.text_input("Nome:", value=n_usr, key=f"nno_{usr}")
+                                fs = ["Branca", "Azul", "Roxa", "Castanha", "Preta"]
+                                f_atual = d_usr.get("perfil_faixa", "Branca")
+                                idx_fx = fs.index(f_atual) if f_atual in fs else 0
+                                nova_fx = st.selectbox("Faixa:", fs, index=idx_fx, key=f"nfx_{usr}")
+                                n_graus = st.slider("Graus:", 0, 4, int(d_usr.get("perfil_graus", 0)), key=f"ngr_{usr}")
                                 
-                                faixas_possiveis = ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha e Preta", "Vermelha e Branca", "Vermelha"]
-                                idx_f = faixas_possiveis.index(faixa_usr) if faixa_usr in faixas_possiveis else 0
-                                nova_faixa_input = st.selectbox("Faixa:", faixas_possiveis, index=idx_f, key=f"nfaixa_u_{usr}")
-                                novos_graus_input = st.slider("Graus:", 0, 11, int(graus_usr), key=f"slider_mg_u_{usr}")
+                                c_b1, c_b2 = st.columns(2)
+                                with c_b1: btn_s = st.form_submit_button("💾 Salvar")
+                                with c_b2: btn_d = st.form_submit_button("🗑️ Excluir")
                                 
-                                col_b1, col_b2 = st.columns(2)
-                                with col_b1:
-                                    btn_salvar_aluno = st.form_submit_button("💾 Salvar Aluno", use_container_width=True)
-                                with col_b2:
-                                    btn_excluir_aluno = st.form_submit_button("🗑️ Excluir Aluno", use_container_width=True)
-                                
-                                if btn_salvar_aluno:
-                                    novo_email_limpo = novo_email_input.strip().lower()
-                                    if not novo_email_limpo or not nova_senha_input:
-                                        st.warning("⚠️ Preencha o e-mail e a palavra-passe.")
+                                if btn_s:
+                                    b_atual = carregar_banco_usuarios()
+                                    if novo_em != usr and novo_em in b_atual:
+                                        st.error("❌ E-mail em uso.")
                                     else:
-                                        banco_atual = carregar_banco_usuarios()
-                                        if novo_email_limpo != usr and novo_email_limpo in banco_atual:
-                                            st.error("❌ E-mail já em uso.")
-                                        else:
-                                            dados_antigos = banco_atual.pop(usr)
-                                            dados_antigos["senha"] = nova_senha_input
-                                            banco_atual[novo_email_limpo] = dados_antigos
-                                            salvar_banco_usuarios(banco_atual)
-                                            
-                                            du = carregar_dados_usuario(novo_email_limpo)
-                                            du["perfil_nome"] = novo_nome_input
-                                            du["perfil_faixa"] = nova_faixa_input
-                                            du["perfil_graus"] = novos_graus_input
-                                            salvar_dados_usuario(novo_email_limpo, du)
-                                            
-                                            ca = obter_caminho_usuario(usr)
-                                            cn = obter_caminho_usuario(novo_email_limpo)
-                                            if os.path.exists(ca) and ca != cn:
-                                                try: os.replace(ca, cn)
-                                                except: pass
-                                            st.toast("✅ Atualizado com sucesso!", icon="👑")
-                                            st.rerun()
-                                            
-                                if btn_excluir_aluno:
-                                    banco_atual = carregar_banco_usuarios()
-                                    if usr in banco_atual:
-                                        del banco_atual[usr]
-                                        salvar_banco_usuarios(banco_atual)
-                                        caminho_arq_aluno = obter_caminho_usuario(usr)
-                                        if os.path.exists(caminho_arq_aluno):
-                                            try: os.remove(caminho_arq_aluno)
-                                            except: pass
-                                        st.toast("✅ Aluno excluído com sucesso!", icon="🗑️")
+                                        d_ant = b_atual.pop(usr)
+                                        d_ant["senha"] = nova_sen
+                                        b_atual[novo_em] = d_ant
+                                        salvar_banco_usuarios(b_atual)
+                                        du = carregar_dados_usuario(novo_em)
+                                        du["perfil_nome"] = novo_no
+                                        du["perfil_faixa"] = nova_fx
+                                        du["perfil_graus"] = n_graus
+                                        salvar_dados_usuario(novo_em, du)
+                                        st.toast("✅ Atualizado!")
+                                        st.rerun()
+                                if btn_d:
+                                    b_atual = carregar_banco_usuarios()
+                                    if usr in b_atual:
+                                        del b_atual[usr]
+                                        salvar_banco_usuarios(b_atual)
+                                        st.toast("✅ Excluído!")
                                         st.rerun()
 
-                    with st.expander(f"📊 Dashboard & Planilha: {acad_nome}"):
-                        total_lutas_acad = sum(len(d[2].get("historico_lutas", [])) for d in lista_alunos)
-                        st.markdown(f"<p style='color: #00ffcc;'><b>Total de Lutas da Turma:</b> {total_lutas_acad}</p>", unsafe_allow_html=True)
-                        
-                        dados_planilha = []
-                        for _, _, d_usr in lista_alunos:
-                            pres_count = len(d_usr.get("historico_presencas", []))
-                            status_apto = "Normal"
-                            if pres_count >= 15: status_apto = "Apto p/ Grau"
-                            dados_planilha.append({
-                                "Atleta": d_usr.get("perfil_nome", "Sem Nome"),
-                                "Faixa": d_usr.get("perfil_faixa", "Branca"),
-                                "Graus": d_usr.get("perfil_graus", 0),
-                                "Status": d_usr.get("perfil_status", "Atleta"),
-                                "Presenças": pres_count,
-                                "Avaliação Graduação": status_apto,
-                                "Total Lutas": len(d_usr.get("historico_lutas", []))
-                            })
-                        
-                        df_academia = pd.DataFrame(dados_planilha)
-                        st.dataframe(df_academia, use_container_width=True)
-                        
-                        csv_export = df_academia.to_csv(index=False).encode('utf-8')
-                        st.download_button(
-                            label=f"📥 Descarregar Planilha da Turma (.csv)",
-                            data=csv_export,
-                            file_name=f"dashboard_{acad_nome.lower().replace(' ', '_')}.csv",
-                            mime="text/csv",
-                            use_container_width=True
-                        )
-                    st.markdown("---")
+                    # Planilha CSV Export
+                    dados_plan = [{
+                        "Atleta": d[2].get("perfil_nome"),
+                        "Faixa": d[2].get("perfil_faixa"),
+                        "Graus": d[2].get("perfil_graus"),
+                        "Presenças": len(d[2].get("historico_presencas", []))
+                    } for d in lista_alunos]
+                    df_ac = pd.DataFrame(dados_plan)
+                    csv_ex = df_ac.to_csv(index=False).encode('utf-8')
+                    st.download_button(f"📥 Baixar Planilha ({acad_nome})", data=csv_ex, file_name=f"turma_{acad_nome}.csv", mime="text/csv", use_container_width=True)
 
+        st.divider()
         if st.button("💾 Salvar Alterações Gerais", use_container_width=True):
             salvar_tudo()
             st.toast("✅ Dados salvos com sucesso!", icon="💾")
         if st.button("🚪 Sair da Conta (Logout)", use_container_width=True):
             fazer_logout()
 
-    # Ecrã Principal & 14 Abas Interativas (Aba Perfil integrada na Sidebar)
+    # Ecrã Principal & Abas
     st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot App Pro</h1>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; color: #cccccc;'>Atleta: <b>{esc(st.session_state.get('perfil_nome', 'Atleta Visitante'))}</b> | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>", unsafe_allow_html=True)
-
-    with st.expander("📊 Painel de Analytics & Evolução Visual", expanded=False):
-        lutas_list = st.session_state.get("historico_lutas", [])
-        if not lutas_list:
-            st.info("💡 Registe as suas lutas na aba 'Histórico' para visualizar os seus gráficos de desempenho em tempo real!")
-        else:
-            col_g1, col_g2 = st.columns(2)
-            with col_g1:
-                st.markdown("##### 📈 Distribuição de Resultados")
-                resultados_count = {}
-                for l in lutas_list:
-                    res = l.get("resultado", "Outro")
-                    resultados_count[res] = resultados_count.get(res, 0) + 1
-                df_res = pd.DataFrame(list(resultados_count.items()), columns=["Resultado", "Quantidade"])
-                st.bar_chart(df_res.set_index("Resultado"))
-                
-            with col_g2:
-                st.markdown("##### 🗓️ Frequência de Presenças nas Aulas")
-                presencas_list = st.session_state.get("historico_presencas", [])
-                if presencas_list:
-                    df_pres = pd.DataFrame({"Data": presencas_list, "Presença": [1]*len(presencas_list)})
-                    st.line_chart(df_pres.set_index("Data"))
-                else:
-                    st.write("Nenhuma presença registada via QR Code ainda.")
-
-    st.divider()
 
     abas_app = st.tabs([
         "🤼 Luta", "📜 Histórico", "🥗 Nutrição", "🏆 Camp", "📚 Cursos", 
@@ -643,66 +535,84 @@ try:
         "📇 Card", "🔑 Chaves", "⏱️ Cronograma", "🔄 Recuperação"
     ])
 
-    # 1. Luta & Placar
+    # 1. Luta & Placar Interativo com Cronômetro em Tempo Real
     with abas_app[0]:
         col_p1, col_p2 = st.columns(2)
         with col_p1:
-            pts_a_val = st.session_state.get("pts_a", 0)
-            vant_a_val = st.session_state.get("vant_a", 0)
-            pun_a_val = st.session_state.get("pun_a", 0)
             mostrar_html(f"""
             <div class='placar-box'>
                 <p style='color: #cccccc; margin: 0;'>ATLETA 1 (Azul/Preto):</p>
                 <h3 style='color: #00ffcc; margin: 5px 0;'>Atleta Azul</h3>
-                <div class='placar-numero'>{pts_a_val}</div>
-                <p style='color: #ffffff; margin: 5px 0;'>Vantagens: {vant_a_val} | Punições: {pun_a_val}</p>
+                <div class='placar-numero'>{st.session_state.pts_a}</div>
+                <p style='color: #ffffff; margin: 5px 0;'>Vantagens: {st.session_state.vant_a} | Punições: {st.session_state.pun_a}</p>
             </div>
             """)
             c1, c2, c3 = st.columns(3)
             with c1:
-                if st.button("+2 Pts (A)", use_container_width=True): somar("a", "pts_a", 2); st.rerun()
-                if st.button("+3 Pts (A)", use_container_width=True): somar("a", "pts_a", 3); st.rerun()
+                if st.button("+2 Pts (A)", key="p2a", use_container_width=True): somar_placar("pts_a", 2); st.rerun()
+                if st.button("+3 Pts (A)", key="p3a", use_container_width=True): somar_placar("pts_a", 3); st.rerun()
             with c2:
-                if st.button("+4 Pts (A)", use_container_width=True): somar("a", "pts_a", 4); st.rerun()
-                if st.button("Vantagem (A)", use_container_width=True): somar("a", "vant_a", 1); st.rerun()
+                if st.button("+4 Pts (A)", key="p4a", use_container_width=True): somar_placar("pts_a", 4); st.rerun()
+                if st.button("Vantagem (A)", key="v1a", use_container_width=True): somar_placar("vant_a", 1); st.rerun()
             with c3:
-                if st.button("Punição (A)", use_container_width=True): somar("a", "pun_a", 1); st.rerun()
+                if st.button("Punição (A)", key="pu1a", use_container_width=True): somar_placar("pun_a", 1); st.rerun()
                 
         with col_p2:
-            pts_b_val = st.session_state.get("pts_b", 0)
-            vant_b_val = st.session_state.get("vant_b", 0)
-            pun_b_val = st.session_state.get("pun_b", 0)
             mostrar_html(f"""
             <div class='placar-box'>
                 <p style='color: #cccccc; margin: 0;'>ATLETA 2 (Branco):</p>
                 <h3 style='color: #ffffff; margin: 5px 0;'>Atleta Branco</h3>
-                <div class='placar-numero'>{pts_b_val}</div>
-                <p style='color: #ffffff; margin: 5px 0;'>Vantagens: {vant_b_val} | Punições: {pun_b_val}</p>
+                <div class='placar-numero'>{st.session_state.pts_b}</div>
+                <p style='color: #ffffff; margin: 5px 0;'>Vantagens: {st.session_state.vant_b} | Punições: {st.session_state.pun_b}</p>
             </div>
             """)
             cb1, cb2, cb3 = st.columns(3)
             with cb1:
-                if st.button("+2 Pts (B)", use_container_width=True): somar("b", "pts_b", 2); st.rerun()
-                if st.button("+3 Pts (B)", use_container_width=True): somar("b", "pts_b", 3); st.rerun()
+                if st.button("+2 Pts (B)", key="p2b", use_container_width=True): somar_placar("pts_b", 2); st.rerun()
+                if st.button("+3 Pts (B)", key="p3b", use_container_width=True): somar_placar("pts_b", 3); st.rerun()
             with cb2:
-                if st.button("+4 Pts (B)", use_container_width=True): somar("b", "pts_b", 4); st.rerun()
-                if st.button("Vantagem (B)", use_container_width=True): somar("b", "vant_b", 1); st.rerun()
+                if st.button("+4 Pts (B)", key="p4b", use_container_width=True): somar_placar("pts_b", 4); st.rerun()
+                if st.button("Vantagem (B)", key="v1b", use_container_width=True): somar_placar("vant_b", 1); st.rerun()
             with cb3:
-                if st.button("Punição (B)", use_container_width=True): somar("b", "pun_b", 1); st.rerun()
+                if st.button("Punição (B)", key="pu1b", use_container_width=True): somar_placar("pun_b", 1); st.rerun()
 
         st.divider()
         ct1, ct2, ct3 = st.columns(3)
-        with ct1: st.selectbox("Tempo do Rola:", [1, 2, 3, 5, 6, 10], key="select_tempo", on_change=definir_tempo)
+        with ct1:
+            tempo_sel = st.selectbox("Tempo do Rola (Minutos):", [1, 2, 3, 5, 6, 10], index=3)
+            st.session_state.tempo_inicial = tempo_sel * 60
+
         with ct2:
-            ts = st.session_state.get("tempo_segundos", 300)
+            if st.session_state.cronometro_rodando:
+                agora = time.time()
+                delta = agora - st.session_state.ultimo_tick
+                if delta >= 1.0:
+                    st.session_state.tempo_segundos = max(0, st.session_state.tempo_segundos - int(delta))
+                    st.session_state.ultimo_tick = agora
+                    if st.session_state.tempo_segundos == 0:
+                        st.session_state.cronometro_rodando = False
+
+            ts = st.session_state.tempo_segundos
             mr, sr = ts // 60, ts % 60
             st.markdown(f"<h2 style='text-align: center; color: #ff1e27; margin: 0;'>⏱️ {mr:02d}:{sr:02d}</h2>", unsafe_allow_html=True)
+
         with ct3:
-            if not st.session_state.get("cronometro_rodando", False):
-                if st.button("▶️ Iniciar", use_container_width=True): iniciar_cronometro(); st.rerun()
+            if not st.session_state.cronometro_rodando:
+                if st.button("▶️ Iniciar Cronômetro", use_container_width=True):
+                    st.session_state.cronometro_rodando = True
+                    st.session_state.ultimo_tick = time.time()
+                    st.rerun()
             else:
-                if st.button("⏸️ Pausar", use_container_width=True): pausar_cronometro(); st.rerun()
-            if st.button("🔄 Zerar Luta", use_container_width=True): zerar_luta(); st.rerun()
+                if st.button("⏸️ Pausar Cronômetro", use_container_width=True):
+                    st.session_state.cronometro_rodando = False
+                    st.rerun()
+            if st.button("🔄 Zerar Luta Completa", use_container_width=True):
+                zerar_luta()
+                st.rerun()
+
+        if st.session_state.cronometro_rodando and st.session_state.tempo_segundos > 0:
+            time.sleep(1)
+            st.rerun()
 
     # 2. Histórico
     with abas_app[1]:
@@ -717,62 +627,72 @@ try:
                     lutas.append({"data": datetime.now().strftime("%d/%m/%Y"), "adversario": adv, "resultado": res, "detalhes": det})
                     st.session_state["historico_lutas"] = lutas
                     salvar_tudo()
-                    st.toast("✅ Luta registada!", icon="🥋")
+                    st.toast("✅ Luta registrada!", icon="🥋")
                     st.rerun()
-                else:
-                    st.warning("⚠️ Insira o nome do oponente.")
         st.divider()
         for l in reversed(st.session_state.get("historico_lutas", [])):
+            st.markdown(f"<div class='card-item'><b>{esc(l['data'])}</b> - {esc(l['resultado'])} | Oponente: <b>{esc(l['adversario'])}</b><br>{esc(l['detalhes'])}</div>", unsafe_allow_html=True)
+
+    # 3. Nutrição & Macros (com Áudio)
+    with abas_app[2]:
+        st.markdown("### 🥗 Nutrição & Calculadora de Macros")
+        renderizar_gravador_audio("nutri")
+        with st.form("form_nutri"):
+            refeicao = st.text_input("Qual refeição você consumiu? (Ex: Lasanha de Frango):")
+            detalhes_nutri = st.text_area("Observações adicionais:")
+            if st.form_submit_button("Calcular & Salvar Refeição", use_container_width=True):
+                if refeicao:
+                    nutri = st.session_state.get("dicas_nutricao", [])
+                    nutri.append({"refeicao": refeicao, "detalhes": detalhes_nutri, "data": datetime.now().strftime("%d/%m/%Y")})
+                    st.session_state["dicas_nutricao"] = nutri
+                    salvar_tudo()
+                    st.toast("✅ Refeição registrada!")
+                    st.rerun()
+        
+        if st.session_state.get("dicas_nutricao"):
+            st.markdown("#### 📊 Tabela de Estimativa Nutricional")
+            for n in reversed(st.session_state.get("dicas_nutricao", [])):
+                st.markdown(f"""
+                <div class='card-item'>
+                    🥗 <b>Refeição:</b> {esc(n['refeicao'])} ({esc(n['data'])})<br>
+                    💡 <i>Macros Estimados:</i> Proteínas: ~35g | Carboidratos: ~45g | Gorduras: ~12g | <b>Calorias:</b> ~430 kcal
+                </div>
+                """, unsafe_allow_html=True)
+
+    # 4. Camp de Competição
+    with abas_app[3]:
+        st.markdown("### 🏆 Camp de Competição & Estratégia")
+        with st.form("form_camp"):
+            evento = st.text_input("Nome do Campeonato / Torneio:")
+            data_camp = st.date_input("Data do Torneio:", value=date.today())
+            faixa_camp = st.text_input("Faixa/Categoria:", value=st.session_state.get("perfil_faixa", "Branca"))
+            estilo_jogo = st.text_area("Fale um pouco do seu jogo e o que devemos treinar para este campeonato:")
+            if st.form_submit_button("Salvar Estratégia de Camp", use_container_width=True):
+                if evento:
+                    camps = st.session_state.get("camp_competicao", [])
+                    camps.append({"evento": evento, "data": data_camp.strftime("%d/%m/%Y"), "faixa": faixa_camp, "estilo": estilo_jogo})
+                    st.session_state["camp_competicao"] = camps
+                    salvar_tudo()
+                    st.toast("✅ Plano de Camp salvo!")
+                    st.rerun()
+        st.divider()
+        for c in reversed(st.session_state.get("camp_competicao", [])):
             st.markdown(f"""
             <div class='card-item'>
-                <p style='color: #00ffcc; margin: 0;'><b>{esc(l['data'])}</b> - {esc(l['resultado'])}</p>
-                <p style='color: #ffffff; margin: 5px 0 0 0;'>Oponente: <b>{esc(l['adversario'])}</b></p>
-                <p style='color: #cccccc; margin: 3px 0 0 0; font-size: 13px;'>{esc(l['detalhes'])}</p>
+                🏆 <b>{esc(c['evento'])}</b> ({esc(c['data'])}) - Categoria: {esc(c['faixa'])}<br>
+                🎯 <b>Estratégia:</b> {esc(c['estilo'])}
             </div>
             """, unsafe_allow_html=True)
 
-    # 3. Nutrição
-    with abas_app[2]:
-        st.markdown("### 🥗 Nutrição & Corte de Peso")
-        with st.form("form_nutri"):
-            refeicao = st.text_input("Refeição / Dieta:")
-            kcal = st.text_input("Calorias / Hidratação:")
-            if st.form_submit_button("Adicionar Registo Nutricional", use_container_width=True):
-                if refeicao:
-                    nutri = st.session_state.get("dicas_nutricao", [])
-                    nutri.append({"refeicao": refeicao, "kcal": kcal})
-                    st.session_state["dicas_nutricao"] = nutri
-                    salvar_tudo()
-                    st.toast("✅ Nutrição salva!")
-                    st.rerun()
-        st.divider()
-        for n in st.session_state.get("dicas_nutricao", []):
-            st.markdown(f"<div class='card-item'><b>{esc(n['refeicao'])}</b> - {esc(n['kcal'])}</div>", unsafe_allow_html=True)
-
-    # 4. Camp
-    with abas_app[3]:
-        st.markdown("### 🏆 Camp de Competição")
-        with st.form("form_camp"):
-            evento = st.text_input("Nome do Campeonato / Meta:")
-            objetivo = st.text_area("Foco de Treino:")
-            if st.form_submit_button("Salvar Camp", use_container_width=True):
-                if evento:
-                    camps = st.session_state.get("camp_competicao", [])
-                    camps.append({"evento": evento, "objetivo": objetivo})
-                    st.session_state["camp_competicao"] = camps
-                    salvar_tudo()
-                    st.toast("✅ Camp salvo!")
-                    st.rerun()
-        st.divider()
-        for c in st.session_state.get("camp_competicao", []):
-            st.markdown(f"<div class='card-item'>🏆 <b>{esc(c['evento'])}</b>: {esc(c['objetivo'])}</div>", unsafe_allow_html=True)
-
-    # 5. Cursos
+    # 5. Cursos & Regras (com Foto/Arquivo e Áudio)
     with abas_app[4]:
-        st.markdown("### 📚 Cursos & Regras IBJJF")
+        st.markdown("### 📚 Cursos, Estudos & Análise de Imagens/Apostilas")
+        st.info("💡 Envie fotos de posições, apostilas ou tire dúvidas por áudio e texto!")
+        arquivo_curso = st.file_uploader("Upload de Apostila / Foto (PNG, JPG, PDF):", type=["png", "jpg", "jpeg", "pdf"], key="up_curso")
+        renderizar_gravador_audio("curso")
         with st.form("form_curso"):
-            titulo_curso = st.text_input("Nome da Posição / Regra:")
-            desc_curso = st.text_area("Explicação / Anotação:")
+            titulo_curso = st.text_input("Nome do Curso / Posição / Regra IBJJF:")
+            desc_curso = st.text_area("Descreva a sua dúvida ou anotação do estudo:")
             if st.form_submit_button("Salvar Estudo", use_container_width=True):
                 if titulo_curso:
                     cursos = st.session_state.get("cursos_interativos", [])
@@ -782,120 +702,129 @@ try:
                     st.toast("✅ Estudo salvo!")
                     st.rerun()
         st.divider()
-        for cur in st.session_state.get("cursos_interativos", []):
+        for cur in reversed(st.session_state.get("cursos_interativos", [])):
             st.markdown(f"<div class='card-item'>📚 <b>{esc(cur['titulo'])}</b><br>{esc(cur['desc'])}</div>", unsafe_allow_html=True)
 
-    # 6. Kids
+    # 6. Dinâmicas Kids (com Áudio)
     with abas_app[5]:
-        st.markdown("### 👶 Dinâmicas para Turmas Kids")
+        st.markdown("### 👶 Dinâmicas Pedagógicas para Turmas Kids")
+        renderizar_gravador_audio("kids")
         with st.form("form_kids"):
-            nome_dinamica = st.text_input("Nome da Brincadeira / Dinâmica:")
-            regra_kids = st.text_area("Como aplicar na aula infantil:")
-            if st.form_submit_button("Salvar Dinâmica", use_container_width=True):
-                if nome_dinamica:
+            foco_kids = st.text_input("Qual posição quer trabalhar? (Ex: Guarda Tartaruga, Fuga de Quadril):")
+            regra_kids = st.text_area("Como aplicar a brincadeira na aula infantil:")
+            if st.form_submit_button("Salvar Dinâmica Kids", use_container_width=True):
+                if foco_kids:
                     kids = st.session_state.get("dinamic_kids_custom", [])
-                    kids.append({"nome": nome_dinamica, "regra": regra_kids})
+                    kids.append({"foco": foco_kids, "regra": regra_kids})
                     st.session_state["dinamic_kids_custom"] = kids
                     salvar_tudo()
-                    st.toast("✅ Dinâmica kids salva!")
+                    st.toast("✅ Dinâmica infantil salva!")
                     st.rerun()
         st.divider()
-        for k in st.session_state.get("dinamic_kids_custom", []):
-            st.markdown(f"<div class='card-item'>👶 <b>{esc(k['nome'])}</b><br>{esc(k['regra'])}</div>", unsafe_allow_html=True)
+        for k in reversed(st.session_state.get("dinamic_kids_custom", [])):
+            st.markdown(f"<div class='card-item'>👶 <b>Foco: {esc(k['foco'])}</b><br>{esc(k['regra'])}</div>", unsafe_allow_html=True)
 
-    # 7. Drills
+    # 7. Drills Específicos (com Áudio)
     with abas_app[6]:
-        st.markdown("### ⚡ Drills de Repetição & Velocidade")
+        st.markdown("### ⚡ Drills de Repetição por Posição Alvo")
+        renderizar_gravador_audio("drills")
         with st.form("form_drill"):
-            nome_drill = st.text_input("Movimento / Posição do Drill:")
+            posicao_drill = st.text_input("Qual posição quer trabalhar? (Ex: Costas, Quatro Apoios):")
             reps = st.text_input("Repetições / Tempo:")
             if st.form_submit_button("Salvar Drill", use_container_width=True):
-                if nome_drill:
+                if posicao_drill:
                     drills = st.session_state.get("drills_treino", [])
-                    drills.append({"drill": nome_drill, "reps": reps})
+                    drills.append({"posicao": posicao_drill, "reps": reps})
                     st.session_state["drills_treino"] = drills
                     salvar_tudo()
                     st.toast("✅ Drill salvo!")
                     st.rerun()
         st.divider()
-        for d in st.session_state.get("drills_treino", []):
-            st.markdown(f"<div class='card-item'>⚡ <b>{esc(d['drill'])}</b> ({esc(d['reps'])})</div>", unsafe_allow_html=True)
+        for d in reversed(st.session_state.get("drills_treino", [])):
+            st.markdown(f"<div class='card-item'>⚡ <b>Drill de {esc(d['posicao'])}</b> ({esc(d['reps'])})</div>", unsafe_allow_html=True)
 
-    # 8. Pressão
+    # 8. Flashcards de Pressão & Jogo (com Áudio)
     with abas_app[7]:
-        st.markdown("### 🛡️ Flashcards de Controlo & Pressão")
+        st.markdown("### 🛡️ Flashcards Táticos de Pressão & Jogo")
+        renderizar_gravador_audio("pressao")
         with st.form("form_pressao"):
-            posicao_p = st.text_input("Posição (Ex: Cem-Quilos):")
-            detalhe_p = st.text_area("Detalhe de Ajuste de Peso/Pegada:")
-            if st.form_submit_button("Salvar Flashcard", use_container_width=True):
-                if posicao_p:
+            estilo_proprio = st.text_area("Descreva o seu jogo (Ex: Sou guardeiro e gosto de raspagem de gancho):")
+            if st.form_submit_button("Gerar Flashcard Tático", use_container_width=True):
+                if estilo_proprio:
                     fp = st.session_state.get("flashcards_pressao", [])
-                    fp.append({"posicao": posicao_p, "detalhe": detalhe_p})
+                    fp.append({"estilo": estilo_proprio})
                     st.session_state["flashcards_pressao"] = fp
                     salvar_tudo()
-                    st.toast("✅ Flashcard salvo!")
+                    st.toast("✅ Flashcard gerado!")
                     st.rerun()
         st.divider()
-        for f in st.session_state.get("flashcards_pressao", []):
-            st.markdown(f"<div class='card-item'>🛡️ <b>{esc(f['posicao'])}</b><br>{esc(f.get('detalhe', ''))}</div>", unsafe_allow_html=True)
+        for f in reversed(st.session_state.get("flashcards_pressao", [])):
+            st.markdown(f"""
+            <div class='card-item'>
+                🛡️ <b>Seu Estilo:</b> {esc(f['estilo'])}<br>
+                ❓ <b>Desafio:</b> Se o oponente passar sua guarda e colar no cem-quilos, qual sua reação imediata?
+            </div>
+            """, unsafe_allow_html=True)
 
     # 9. Graduação
     with abas_app[8]:
-        st.markdown("### 🥋 Controlo de Graduação")
+        st.markdown("### 🥋 Controle de Graduação & Evolução")
         with st.form("form_grad"):
             aluno_g = st.text_input("Nome do Aluno:")
-            faixa_g = st.selectbox("Faixa:", ["Branca", "Azul", "Roxa", "Castanha", "Preta"])
-            grau_g = st.slider("Grau:", 0, 4)
-            if st.form_submit_button("Salvar Aluno Graduação", use_container_width=True):
+            faixa_g = st.selectbox("Faixa Alvo:", ["Branca", "Azul", "Roxa", "Castanha", "Preta"])
+            grau_g = st.slider("Graus Atuais:", 0, 4)
+            observacao_grad = st.text_area("Critérios técnicos para o próximo grau/faixa:")
+            if st.form_submit_button("Registrar Graduação", use_container_width=True):
                 if aluno_g:
                     grad = st.session_state.get("alunos_graduacao", [])
-                    grad.append({"aluno": aluno_g, "faixa": faixa_g, "grau": grau_g})
+                    grad.append({"aluno": aluno_g, "faixa": faixa_g, "grau": grau_g, "obs": observacao_grad})
                     st.session_state["alunos_graduacao"] = grad
                     salvar_tudo()
-                    st.toast("✅ Graduação salva!")
+                    st.toast("✅ Graduação registrada!")
                     st.rerun()
         st.divider()
-        for ag in st.session_state.get("alunos_graduacao", []):
-            st.markdown(f"<div class='card-item'>🥋 <b>{esc(ag['aluno'])}</b> - Faixa {esc(ag['faixa'])} ({ag['grau']}º Grau)</div>", unsafe_allow_html=True)
+        for ag in reversed(st.session_state.get("alunos_graduacao", [])):
+            st.markdown(f"<div class='card-item'>🥋 <b>{esc(ag['aluno'])}</b> - Faixa {esc(ag['faixa'])} ({ag['grau']}º Grau)<br>📝 <i>{esc(ag.get('obs', ''))}</i></div>", unsafe_allow_html=True)
 
-    # 10. Kimono
+    # 10. Guia de Cuidado com Kimonos (com Áudio)
     with abas_app[9]:
-        st.markdown("### 🥋 Notas de Kimonos & Equipamentos")
+        st.markdown("### 🥋 Guia de Cuidado e Higienização do Kimono")
+        renderizar_gravador_audio("kimono")
         with st.form("form_kimono"):
-            item_k = st.text_input("Marca / Modelo do Kimono:")
-            estado_k = st.text_input("Estado / Medida / Observação:")
-            if st.form_submit_button("Salvar Kimono", use_container_width=True):
-                if item_k:
+            sujeira_k = st.text_area("Descreva como o kimono ficou sujo (Ex: Suor pesado, mofo, mancha):")
+            if st.form_submit_button("Obter Dica de Lavagem", use_container_width=True):
+                if sujeira_k:
                     kims = st.session_state.get("notas_kimono", [])
-                    kims.append({"item": item_k, "estado": estado_k})
+                    kims.append({"sujeira": sujeira_k})
                     st.session_state["notas_kimono"] = kims
                     salvar_tudo()
-                    st.toast("✅ Kimono salvo!")
+                    st.toast("✅ Dica gerada!")
                     st.rerun()
         st.divider()
-        for km in st.session_state.get("notas_kimono", []):
-            st.markdown(f"<div class='card-item'>🥋 <b>{esc(km['item'])}</b>: {esc(km['estado'])}</div>", unsafe_allow_html=True)
+        for km in reversed(st.session_state.get("notas_kimono", [])):
+            st.markdown(f"""
+            <div class='card-item'>
+                🥋 <b>Estado:</b> {esc(km['sujeira'])}<br>
+                💡 <b>Dica:</b> Deixe de molho no vinagre de álcool branco por 30 min e lave com sabão neutro. Nunca use cloro!
+            </div>
+            """, unsafe_allow_html=True)
 
-    # 11. Card & Relatório
+    # 11. Cartão Digital
     with abas_app[10]:
-        st.markdown("### 📇 Cartão Digital & Relatório Oficial")
+        st.markdown("### 📇 Cartão Digital de Atleta")
         st.markdown(f"""
-        <div class='placar-box' style='text-align: left; max-width: 400px; margin: 0 auto 20px auto;'>
-            <h3 style='color: #ff1e27; margin-top: 0;'>🥋 CARTÃO OFICIAL</h3>
-            <p><b>Nome:</b> {esc(st.session_state.get('perfil_nome', ''))}</p>
-            <p><b>Faixa:</b> {esc(st.session_state.get('perfil_faixa', ''))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>
-            <p><b>Academia:</b> {esc(st.session_state.get('perfil_academia', ''))}</p>
-            <p><b>Status:</b> {esc(st.session_state.get('perfil_status', ''))}</p>
-            <p><b>Perfil:</b> {esc(st.session_state.get('tipo_usuario', ''))}</p>
+        <div class='placar-box' style='text-align: left; max-width: 420px; margin: 0 auto 20px auto;'>
+            <h3 style='color: #ff1e27; margin-top: 0;'>🥋 OSSBOT - CARTÃO OFICIAL</h3>
+            <p><b>Nome:</b> {esc(st.session_state.get('perfil_nome', 'Atleta'))}</p>
+            <p><b>Faixa:</b> {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>
+            <p><b>Academia:</b> {esc(st.session_state.get('perfil_academia', 'Nenhum'))}</p>
+            <p><b>Status:</b> {esc(st.session_state.get('perfil_status', 'Atleta'))}</p>
         </div>
         """, unsafe_allow_html=True)
-        
-        st.divider()
-        st.markdown("### 📄 Relatório Executivo & Prontuário")
         st.download_button(
-            "📥 Descarregar Relatório Oficial (.txt)",
+            "📥 Baixar Carteirinha em TXT",
             data=gerar_relatorio_pdf_atleta(),
-            file_name=f"relatorio_ossbot_{st.session_state.get('perfil_nome', 'atleta').lower().replace(' ', '_')}.txt",
+            file_name="carteirinha_ossbot.txt",
             mime="text/plain",
             use_container_width=True
         )
@@ -916,7 +845,7 @@ try:
                     st.toast("✅ Chave gerada!")
                     st.rerun()
         st.divider()
-        for ch in st.session_state.get("chaves_luta", []):
+        for ch in reversed(st.session_state.get("chaves_luta", [])):
             st.markdown(f"<div class='card-item'>🔑 <b>{esc(ch['torneio'])}</b><br>Atletas: {', '.join(ch['atletas'])}</div>", unsafe_allow_html=True)
 
     # 13. Cronograma
@@ -934,29 +863,28 @@ try:
                     st.toast("✅ Cronograma salvo!")
                     st.rerun()
         st.divider()
-        for cr in st.session_state.get("cronogramas_aulas", []):
+        for cr in reversed(st.session_state.get("cronogramas_aulas", [])):
             st.markdown(f"<div class='card-item'>⏱️ <b>{esc(cr['dia'])}</b>: {esc(cr['detalhe'])}</div>", unsafe_allow_html=True)
 
-    # 14. Recuperação
+    # 14. Recuperação & Lesões (com Áudio)
     with abas_app[13]:
-        st.markdown("### 🔄 Recuperação, Sono & Lesões")
+        st.markdown("### 🔄 Registro de Recuperação, Dores e Lesões")
+        st.caption("Descreva ou grave um áudio informando a sua dor (Ex: Torci o pé ontem / Armlock no ombro):")
+        renderizar_gravador_audio("recuperacao")
         with st.form("form_recup"):
-            nota_r = st.text_area("Anotações de descanso, sono ou cuidados com lesões:")
+            nota_r = st.text_area("Descreva suas dores, lesões ou tempo de descanso:")
             if st.form_submit_button("Salvar Nota de Recuperação", use_container_width=True):
                 if nota_r:
                     recup = st.session_state.get("recuperacao_notas", [])
                     recup.append({"nota": nota_r, "data": datetime.now().strftime("%d/%m/%Y")})
                     st.session_state["recuperacao_notas"] = recup
                     salvar_tudo()
-                    st.toast("✅ Nota salva!")
+                    st.toast("✅ Nota de lesão registrada!")
                     st.rerun()
         st.divider()
-        for rc in st.session_state.get("recuperacao_notas", []):
+        for rc in reversed(st.session_state.get("recuperacao_notas", [])):
             st.markdown(f"<div class='card-item'>🔄 <b>{esc(rc['data'])}</b><br>{esc(rc['nota'])}</div>", unsafe_allow_html=True)
 
-# ---------------------------------------------------------------------------
-# CAPTURA DE ERROS COM MENSAGEM INTELIGENTE DA IA DO JIU-JITSU (OSSBOT IA)
-# ---------------------------------------------------------------------------
 except Exception as e:
     nome_usr_erro = st.session_state.get("perfil_nome", "Usuário")
     is_adm_erro = st.session_state.get("is_admin", False) or (st.session_state.get("usuario_email", "").lower() == EMAIL_ADMIN_MASTER.lower())
@@ -968,30 +896,22 @@ except Exception as e:
     if is_adm_erro:
         st.markdown(f"""
         <p style='color: #ffffff; font-size: 15px;'>
-            <b>Olha só, {esc(nome_usr_erro)}!</b> Ocorreu um imprevisto técnico na execução do seu código. 
-            Como você é o <b>Administrador/Fundador</b>, aqui está o diagnóstico detalhado para você ajustar no Python:
+            <b>Olha só, {esc(nome_usr_erro)}!</b> Ocorreu um imprevisto técnico no seu código. 
+            Como você é o <b>Administrador/Fundador</b>, aqui está o diagnóstico:
         </p>
         <div style='background: #0b0b0b; padding: 12px; border-radius: 6px; border: 1px solid #444; color: #ff6b6b; font-family: monospace; font-size: 13px;'>
             <b>Tipo de Erro:</b> {esc(type(e).__name__)}<br>
             <b>Descrição:</b> {esc(str(e))}<br><br>
-            <b>Caminho e Linha da Falha:</b><br>
             <pre style='color: #cccccc;'>{esc(detalhes_erro_str)}</pre>
         </div>
-        <p style='color: #00ffcc; font-size: 14px; margin-top: 10px;'>
-            💡 <b>Como Resolver:</b> Acesse o seu repositório no GitHub, abra o arquivo <code>app.py</code> e verifique a linha indicada no relatório acima para ajustar a sintaxe ou inicialização da variável.
-        </p>
         """, unsafe_allow_html=True)
     else:
         st.markdown(f"""
         <p style='color: #ffffff; font-size: 15px;'>
-            <b>Olha só, {esc(nome_usr_erro)}!</b> Ocorreu uma pequena instabilidade temporária nesta função do sistema.
+            <b>Olha só, {esc(nome_usr_erro)}!</b> Ocorreu uma pequena instabilidade nesta função.
         </p>
-        <div style='background: #0b0b0b; padding: 12px; border-radius: 6px; border: 1px solid #ff1e27; color: #cccccc; font-size: 13px;'>
-            <b>Motivo informado pela IA:</b> {esc(str(e))}
-        </div>
-        <p style='color: #fbbf24; font-size: 14px; margin-top: 10px;'>
-            📣 <b>Orientação:</b> Por favor, informe ao dono da academia ou ao administrador da plataforma para que eles realizem essa pequena melhoria no código do sistema!
+        <p style='color: #fbbf24; font-size: 14px;'>
+            📣 Informe ao administrador do sistema para realizar esse ajuste no código!
         </p>
         """, unsafe_allow_html=True)
-        
     st.markdown("</div>", unsafe_allow_html=True)
