@@ -18,7 +18,7 @@ st.set_page_config(
 
 # Constantes globais do Fundador
 EMAIL_ADMIN_MASTER = "henry.cesaraguiar@gmail.com"
-SENHA_ADMIN_MASTER = "BJJ980950"
+SENHA_ADMIN_MASTER = "adminpassword"
 
 CAMPOS = [
     "perfil_nome", "perfil_faixa", "perfil_graus", "perfil_academia", 
@@ -195,7 +195,7 @@ def zerar_luta():
     st.session_state.pts_b = st.session_state.vant_b = st.session_state.pun_b = 0
 
 def renderizar_gravador_audio(key_prefix):
-    st.markdown("🎙️ **Gravar Áudio (Transcrição Inteligente):**")
+    st.markdown("🎙️ **Gravar Áudio (ou digite manualmente abaixo):**")
     col_g1, col_g2 = st.columns([5, 1])
     with col_g1:
         audio_value = st.audio_input("Grave sua voz", key=f"audio_in_{key_prefix}")
@@ -641,12 +641,12 @@ try:
         for l in reversed(st.session_state.get("historico_lutas", [])):
             st.markdown(f"<div class='card-item'><b>{esc(l['data'])}</b> - {esc(l['resultado'])} | Oponente: <b>{esc(l['adversario'])}</b><br>{esc(l['detalhes'])}</div>", unsafe_allow_html=True)
 
-    # 3. Nutrição & Macros (com Transcrição e Botão Limpar)
+    # 3. Nutrição & Macros (Áudio ou Escrita Direta)
     with abas_app[2]:
         st.markdown("### 🥗 Nutrição & Calculadora de Macros")
         trans_nutri = renderizar_gravador_audio("nutri")
         with st.form("form_nutri"):
-            refeicao = st.text_input("Qual refeição você consumiu?:", value=trans_nutri)
+            refeicao = st.text_input("Qual refeição você consumiu? (Ou grave áudio acima):", value=trans_nutri)
             detalhes_nutri = st.text_area("Observações adicionais:")
             if st.form_submit_button("Calcular & Salvar Refeição", use_container_width=True):
                 if refeicao:
@@ -692,14 +692,14 @@ try:
             </div>
             """, unsafe_allow_html=True)
 
-    # 5. Cursos & Regras (com Transcrição e Botão Limpar)
+    # 5. Cursos & Regras (Áudio ou Escrita Direta)
     with abas_app[4]:
-        st.markdown("### 📚 Cursos, Regras & Anotações por Voz")
+        st.markdown("### 📚 Cursos, Regras & Anotações por Voz ou Escrita")
         trans_curso = renderizar_gravador_audio("curso")
         
         with st.form("form_curso"):
             titulo_curso = st.text_input("Nome do Curso / Posição / Regra IBJJF:")
-            desc_curso = st.text_area("Descreva a anotação ou explicação:", value=trans_curso)
+            desc_curso = st.text_area("Descreva a anotação ou explicação (ou grave acima):", value=trans_curso)
             if st.form_submit_button("Salvar Estudo", use_container_width=True):
                 if titulo_curso:
                     cursos = st.session_state.get("cursos_interativos", [])
@@ -712,12 +712,12 @@ try:
         for cur in reversed(st.session_state.get("cursos_interativos", [])):
             st.markdown(f"<div class='card-item'>📚 <b>{esc(cur['titulo'])}</b><br>{esc(cur['desc'])}</div>", unsafe_allow_html=True)
 
-    # 6. Dinâmicas Kids (com Transcrição e Botão Limpar)
+    # 6. Dinâmicas Kids (Áudio ou Escrita Direta)
     with abas_app[5]:
         st.markdown("### 👶 Dinâmicas Pedagógicas para Turmas Kids")
         trans_kids = renderizar_gravador_audio("kids")
         with st.form("form_kids"):
-            foco_kids = st.text_input("Qual posição quer trabalhar? (Ex: Guarda Tartaruga):", value=trans_kids)
+            foco_kids = st.text_input("Qual posição quer trabalhar? (Ou grave acima):", value=trans_kids)
             regra_kids = st.text_area("Como aplicar a brincadeira na aula infantil:")
             if st.form_submit_button("Salvar Dinâmica Kids", use_container_width=True):
                 if foco_kids:
@@ -731,12 +731,12 @@ try:
         for k in reversed(st.session_state.get("dinamic_kids_custom", [])):
             st.markdown(f"<div class='card-item'>👶 <b>Foco: {esc(k['foco'])}</b><br>{esc(k['regra'])}</div>", unsafe_allow_html=True)
 
-    # 7. Drills Específicos (com Transcrição e Botão Limpar)
+    # 7. Drills Específicos (Áudio ou Escrita Direta)
     with abas_app[6]:
         st.markdown("### ⚡ Drills de Repetição por Posição Alvo")
         trans_drill = renderizar_gravador_audio("drills")
         with st.form("form_drill"):
-            posicao_drill = st.text_input("Qual posição quer trabalhar?:", value=trans_drill)
+            posicao_drill = st.text_input("Qual posição quer trabalhar? (Ou grave acima):", value=trans_drill)
             reps = st.text_input("Repetições / Tempo:")
             if st.form_submit_button("Salvar Drill", use_container_width=True):
                 if posicao_drill:
@@ -750,12 +750,12 @@ try:
         for d in reversed(st.session_state.get("drills_treino", [])):
             st.markdown(f"<div class='card-item'>⚡ <b>Drill de {esc(d['posicao'])}</b> ({esc(d['reps'])})</div>", unsafe_allow_html=True)
 
-    # 8. Flashcards de Pressão & Jogo (com Transcrição e Botão Limpar)
+    # 8. Flashcards de Pressão & Jogo (Áudio ou Escrita Direta)
     with abas_app[7]:
         st.markdown("### 🛡️ Flashcards Táticos de Pressão & Jogo")
         trans_pressao = renderizar_gravador_audio("pressao")
         with st.form("form_pressao"):
-            estilo_proprio = st.text_area("Descreva o seu jogo:", value=trans_pressao)
+            estilo_proprio = st.text_area("Descreva o seu jogo (Ou grave acima):", value=trans_pressao)
             if st.form_submit_button("Gerar Flashcard Tático", use_container_width=True):
                 if estilo_proprio:
                     fp = st.session_state.get("flashcards_pressao", [])
@@ -793,12 +793,12 @@ try:
         for ag in reversed(st.session_state.get("alunos_graduacao", [])):
             st.markdown(f"<div class='card-item'>🥋 <b>{esc(ag['aluno'])}</b> - Faixa {esc(ag['faixa'])} ({ag['grau']}º Grau)<br>📝 <i>{esc(ag.get('obs', ''))}</i></div>", unsafe_allow_html=True)
 
-    # 10. Guia de Cuidado com Kimonos (com Transcrição e Botão Limpar)
+    # 10. Guia de Cuidado com Kimonos (Áudio ou Escrita Direta)
     with abas_app[9]:
         st.markdown("### 🥋 Guia de Cuidado e Higienização do Kimono")
         trans_kimono = renderizar_gravador_audio("kimono")
         with st.form("form_kimono"):
-            sujeira_k = st.text_area("Descreva como o kimono ficou sujo:", value=trans_kimono)
+            sujeira_k = st.text_area("Descreva como o kimono ficou sujo (Ou grave acima):", value=trans_kimono)
             if st.form_submit_button("Obter Dica de Lavagem", use_container_width=True):
                 if sujeira_k:
                     kims = st.session_state.get("notas_kimono", [])
@@ -873,13 +873,13 @@ try:
         for cr in reversed(st.session_state.get("cronogramas_aulas", [])):
             st.markdown(f"<div class='card-item'>⏱️ <b>{esc(cr['dia'])}</b>: {esc(cr['detalhe'])}</div>", unsafe_allow_html=True)
 
-    # 14. Recuperação & Lesões (com Transcrição e Botão Limpar)
+    # 14. Recuperação & Lesões (Áudio ou Escrita Direta)
     with abas_app[13]:
         st.markdown("### 🔄 Registro de Recuperação, Dores e Lesões")
         trans_recup = renderizar_gravador_audio("recuperacao")
         
         with st.form("form_recup"):
-            nota_r = st.text_area("Descreva suas dores, lesões ou tempo de descanso:", value=trans_recup)
+            nota_r = st.text_area("Descreva suas dores, lesões ou tempo de descanso (Ou grave acima):", value=trans_recup)
             if st.form_submit_button("Salvar Nota de Recuperação", use_container_width=True):
                 if nota_r:
                     recup = st.session_state.get("recuperacao_notas", [])
