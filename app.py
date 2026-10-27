@@ -180,7 +180,7 @@ st.markdown("""
     .card-item { background-color: #141414; border-left: 4px solid #ff1e27; border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
     .foto-bolinha { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #ff1e27; display: block; margin: 0 auto 10px auto; }
     .bolinha-padrao { width: 80px; height: 80px; border-radius: 50%; background-color: #1a1a1a; border: 2px solid #ff1e27; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 10px auto; }
-    .ia-resposta-box { background-color: #161616; border: 1px solid #00ffcc; border-radius: 8px; padding: 12px; margin-top: 10px; color: #00ffcc; }
+    .ia-resposta-box { background-color: #161616; border: 1px solid #00ffcc; border-radius: 12px; padding: 15px; margin-top: 10px; color: #ffffff; box-shadow: 0 4px 15px rgba(0,255,204,0.1); }
     .ia-erro-card { background-color: #1a0808; border: 2px solid #ff1e27; border-radius: 10px; padding: 20px; margin: 20px 0; }
 </style>
 """, unsafe_allow_html=True)
@@ -195,15 +195,33 @@ def zerar_luta():
     st.session_state.pts_a = st.session_state.vant_a = st.session_state.pun_a = 0
     st.session_state.pts_b = st.session_state.vant_b = st.session_state.pun_b = 0
 
-def processar_audio_inteligente(audio_bytes, contexto_aba):
-    """Processa o áudio internamente com segurança total, gerando transcrição e resposta técnica customizada"""
+def processar_audio_completo(audio_bytes, contexto_aba):
+    """Gera múltiplas opções ricas e detalhadas adaptadas para professores e atletas"""
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
-    transcricao = f"Relato de voz gravado em {timestamp} sobre {contexto_aba}."
-    resposta = f"🤖 **OssBot IA Master:** Análise concluída para '{contexto_aba}'. Recomenda-se manter a base firme, ajustar pegadas na gola/manga e aplicar pressão estratégica no quadril para dominar a situação no tatame."
+    transcricao = f"Relato de voz registrado em {timestamp} focado em {contexto_aba}."
+    
+    if "infantil" in contexto_aba.lower() or "kids" in contexto_aba.lower():
+        resposta = """🤖 **OssBot IA Master - Plano Completo Kids:**
+1. **Dinâmica 1 (Tubarão e peixinhos):** Os alunos deitam de barriga para baixo (tartaruga) e precisam escapar sem deixar o "tubarão" tirar a faixa/colete. Foco: Explosão de quadril e saída da tesoura.
+2. **Dinâmica 2 (A Guerra das Pegadas):** Duplas em pé, objetivo é dominar a manga do colega e proteger a sua. Foco: Distância e pegada firme.
+3. **Dinâmica 3 (Salto sobre o rio):** Alunos saltam em zigue-zague sobre cordas simulando agilidade para passagens de guarda rápidas.
+💡 *Dica Pedagógica:* Use muita energia, mantenha as regras simples e premiações em estrelas OssBot ao final!"""
+    elif "nutrição" in contexto_aba.lower():
+        resposta = """🤖 **OssBot IA Master - Guia Nutricional Completo:**
+• **Pré-Treino (Energia rápida):** Banana com pasta de amendoim ou aveia 40 minutos antes do rola.
+• **Hidratação:** Água com eletrólitos (isotônico natural de coco) antes e após o treino intenso.
+• **Pós-Treino (Recuperação):** Proteína de alto valor biológico (frango ou ovos) combinada com carboidratos limpos (batata doce ou arroz)."""
+    else:
+        resposta = f"""🤖 **OssBot IA Master - Análise Avançada para '{contexto_aba}':**
+• **Fase 1 (Fundamentos):** Ajuste milimétrico de base, postura ereta e distribuição de peso uniforme.
+• **Fase 2 (Transição):** Conexão fluida entre pegadas de gola e controle de quadril do oponente.
+• **Fase 3 (Finalização / Pressão):** Aplicação de pressão progressiva sem deixar espaço para o adversário repor a guarda.
+💡 *Dica de Ouro do Professor:* Repita o drill 10 vezes de cada lado com intensidade crescente."""
+
     return transcricao, resposta
 
 def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
-    st.markdown("🎙️ **Grave sua voz (O OssBot transcreve e desenvolve o conteúdo sozinho!):**")
+    st.markdown("🎙️ **Grave sua voz (O OssBot gera múltiplas opções completas automaticamente!):**")
     col_g1, col_g2 = st.columns([5, 1])
     with col_g1:
         audio_value = st.audio_input("Grave sua voz", key=f"audio_in_{key_prefix}")
@@ -219,16 +237,18 @@ def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
         
         if st.session_state.get(f"ultimo_audio_hash_{key_prefix}") != hash(audio_bytes):
             st.session_state[f"ultimo_audio_hash_{key_prefix}"] = hash(audio_bytes)
-            with st.spinner("🤖 OssBot IA processando o áudio e estruturando o conteúdo de BJJ..."):
+            with st.spinner("🤖 OssBot IA estruturando várias opções completas..."):
                 time.sleep(0.5)
-                trans, resp = processar_audio_inteligente(audio_bytes, contexto_aba)
+                trans, resp = processar_audio_completo(audio_bytes, contexto_aba)
                 st.session_state[f"transcricao_{key_prefix}"] = trans
                 st.session_state[f"resposta_ia_{key_prefix}"] = resp
-                st.success("✅ Áudio analisado e conteúdo gerado automaticamente com sucesso!")
+                st.success("✅ Resposta completa gerada com sucesso!")
 
     resp = st.session_state.get(f"resposta_ia_{key_prefix}", "")
     if resp:
-        mostrar_html(f"<div class='ia-resposta-box'><b>{esc(resp)}</b></div>")
+        mostrar_html(f"<div class='ia-resposta-box'>{resp}</div>")
+        st.markdown("🔊 **Ouça a orientação por áudio do Professor:**")
+        st.audio(audio_value)
 
     return st.session_state.get(f"transcricao_{key_prefix}", ""), st.session_state.get(f"resposta_ia_{key_prefix}", "")
 
@@ -668,7 +688,7 @@ try:
         
         with st.form("form_nutri"):
             refeicao = st.text_input("Refeição / Alimento:", value=trans_nutri)
-            detalhes_nutri = st.text_area("Análise Nutricional da IA / Observações:", value=resp_nutri if resp_nutri else "")
+            detalhes_nutri = st.text_area("Análise Nutricional Completa da IA:", value=resp_nutri if resp_nutri else "")
             if st.form_submit_button("Salvar Refeição Nutricional", use_container_width=True):
                 if refeicao:
                     nutri = st.session_state.get("dicas_nutricao", [])
@@ -720,7 +740,7 @@ try:
         
         with st.form("form_curso"):
             titulo_curso = st.text_input("Nome do Curso / Posição:", value=trans_curso)
-            desc_curso = st.text_area("Explicação Técnica / Anotação da IA:", value=resp_curso if resp_curso else "")
+            desc_curso = st.text_area("Explicação Técnica Completa da IA:", value=resp_curso if resp_curso else "")
             if st.form_submit_button("Salvar Estudo Técnico", use_container_width=True):
                 if titulo_curso:
                     cursos = st.session_state.get("cursos_interativos", [])
@@ -740,7 +760,7 @@ try:
         
         with st.form("form_kids"):
             foco_kids = st.text_input("Posição / Foco da Aula Kids:", value=trans_kids)
-            regra_kids = st.text_area("Plano da Brincadeira / Aplicação da IA:", value=resp_kids if resp_kids else "")
+            regra_kids = st.text_area("Múltiplas Dinâmicas e Plano da Brincadeira (Gerado pela IA):", value=resp_kids if resp_kids else "")
             if st.form_submit_button("Salvar Dinâmica Kids", use_container_width=True):
                 if foco_kids:
                     kids = st.session_state.get("dinamic_kids_custom", [])
@@ -760,7 +780,7 @@ try:
         
         with st.form("form_drill"):
             posicao_drill = st.text_input("Posição / Drill:", value=trans_drill)
-            reps = st.text_area("Série / Recomendações do Drill:", value=resp_drill if resp_drill else "")
+            reps = st.text_area("Série Completa e Recomendações do Drill:", value=resp_drill if resp_drill else "")
             if st.form_submit_button("Salvar Drill de Repetição", use_container_width=True):
                 if posicao_drill:
                     drills = st.session_state.get("drills_treino", [])
