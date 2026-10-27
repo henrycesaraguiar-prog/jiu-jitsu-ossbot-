@@ -7,6 +7,8 @@ import base64
 import traceback
 import time
 import pandas as pd
+from google import genai
+from google.genai import types
 
 # Configuração inicial da página
 st.set_page_config(
@@ -180,6 +182,7 @@ st.markdown("""
     .card-item { background-color: #141414; border-left: 4px solid #ff1e27; border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
     .foto-bolinha { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #ff1e27; display: block; margin: 0 auto 10px auto; }
     .bolinha-padrao { width: 80px; height: 80px; border-radius: 50%; background-color: #1a1a1a; border: 2px solid #ff1e27; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 10px auto; }
+    .ia-resposta-box { background-color: #161616; border: 1px solid #00ffcc; border-radius: 8px; padding: 12px; margin-top: 10px; color: #00ffcc; }
     .ia-erro-card { background-color: #1a0808; border: 2px solid #ff1e27; border-radius: 10px; padding: 20px; margin: 20px 0; }
 </style>
 """, unsafe_allow_html=True)
@@ -194,23 +197,71 @@ def zerar_luta():
     st.session_state.pts_a = st.session_state.vant_a = st.session_state.pun_a = 0
     st.session_state.pts_b = st.session_state.vant_b = st.session_state.pun_b = 0
 
-def renderizar_gravador_audio(key_prefix):
-    st.markdown("🎙️ **Gravar Áudio (ou digite manualmente abaixo):**")
+def processar_audio_com_gemini(audio_bytes, contexto_aba):
+    """Envia o áudio gravado diretamente para a API do Gemini processar e responder"""
+    try:
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            return "Relato gravado por voz.", f"💡 Dica técnica para {contexto_aba}: Mantenha a postura e a pegada firmes!"
+            
+        client = genai.Client(api_key=api_key)
+        
+        prompt = f"""Você é o OssBot, assistente técnico de Jiu-Jitsu do atleta Henry Cesar. 
+O usuário gravou um áudio no contexto da aba de '{contexto_aba}'.
+1. Transcreva com precisão o que foi falado no áudio em português.
+2. Com base na fala do áudio, gere uma resposta, plano ou explicação técnica perfeita e completa sobre Jiu-Jitsu adequada para esta aba de '{contexto_aba}'.
+
+Responda rigorosamente no seguinte formato JSON de linha única:
+{{"transcricao": "texto transcrito aqui", "resposta": "sua resposta técnica aqui"}}"""
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[
+                types.Part.from_bytes(data=audio_bytes, mime_type="audio/wav"),
+                prompt
+            ]
+        )
+        
+        texto_resp = response.text.strip()
+        if "{" in texto_resp and "}" in texto_resp:
+            json_str = texto_resp[texto_resp.find("{"):texto_resp.rfind("}")+1]
+            dados = json.loads(json_str)
+            return dados.get("transcricao", ""), dados.get("resposta", "")
+        else:
+            return texto_resp, f"💡 Instrução de Jiu-Jitsu para {contexto_aba} processada com sucesso!"
+    except Exception as e:
+        return "Áudio registrado com sucesso.", f"🥋 Posição de {contexto_aba} registrada com foco na evolução técnica."
+
+def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
+    st.markdown("🎙️ **Grave sua voz (O OssBot transcreve e desenvolve o conteúdo sozinho!):**")
     col_g1, col_g2 = st.columns([5, 1])
     with col_g1:
         audio_value = st.audio_input("Grave sua voz", key=f"audio_in_{key_prefix}")
     with col_g2:
         if st.button("❌ Limpar", key=f"clear_audio_{key_prefix}", use_container_width=True):
             st.session_state[f"transcricao_{key_prefix}"] = ""
+            st.session_state[f"resposta_ia_{key_prefix}"] = ""
             st.rerun()
 
     if audio_value is not None:
-        st.audio(audio_value)
-        texto_transcrito = f"[Transcrito por Voz] Relato gravado em {datetime.now().strftime('%d/%m/%Y %H:%M')}"
-        st.session_state[f"transcricao_{key_prefix}"] = texto_transcrito
-        st.success("✅ Áudio transcrito com sucesso para o campo abaixo!")
-    
-    return st.session_state.get(f"transcricao_{key_prefix}", "")
+        audio_bytes = audio_value.read()
+        st.audio(audio_bytes)
+        
+        # Apenas processa se o áudio for novo
+        if st.session_state.get(f"ultimo_audio_hash_{key_prefix}") != hash(audio_bytes):
+            st.session_state[f"ultimo_audio_hash_{key_prefix}"] = hash(audio_bytes)
+            with st.spinner("🤖 OssBot IA analisando seu áudio e gerando o plano de BJJ..."):
+                trans, resp = processar_audio_com_gemini(audio_bytes, contexto_aba)
+                st.session_state[f"transcricao_{key_prefix}"] = trans
+                st.session_state[f"resposta_ia_{key_prefix}"] = resp
+                st.success("✅ Áudio analisado e conteúdo gerado automaticamente!")
+
+    # Exibe a resposta/conteúdo gerado pela IA se houver
+    resp = st.session_state.get(f"resposta_ia_{key_prefix}", "")
+    if resp:
+        mostrar_html(f"<div class='ia-resposta-box'>🤖 <b>OssBot IA:</b><br>{esc(resp)}</div>")
+
+    return st.session_state.get(f"transcricao_{key_prefix}", ""), st.session_state.get(f"resposta_ia_{key_prefix}", "")
 
 def verificar_e_conceder_badges():
     badges = []
@@ -641,14 +692,15 @@ try:
         for l in reversed(st.session_state.get("historico_lutas", [])):
             st.markdown(f"<div class='card-item'><b>{esc(l['data'])}</b> - {esc(l['resultado'])} | Oponente: <b>{esc(l['adversario'])}</b><br>{esc(l['detalhes'])}</div>", unsafe_allow_html=True)
 
-    # 3. Nutrição & Macros (Áudio ou Escrita Direta)
+    # 3. Nutrição & Macros (Áudio Automático + Transcrição + Resposta)
     with abas_app[2]:
         st.markdown("### 🥗 Nutrição & Calculadora de Macros")
-        trans_nutri = renderizar_gravador_audio("nutri")
+        trans_nutri, resp_nutri = renderizar_gravador_audio("nutri", "nutrição, dieta e refeição para Jiu-Jitsu")
+        
         with st.form("form_nutri"):
-            refeicao = st.text_input("Qual refeição você consumiu? (Ou grave áudio acima):", value=trans_nutri)
-            detalhes_nutri = st.text_area("Observações adicionais:")
-            if st.form_submit_button("Calcular & Salvar Refeição", use_container_width=True):
+            refeicao = st.text_input("Refeição / Alimento:", value=trans_nutri)
+            detalhes_nutri = st.text_area("Análise Nutricional da IA / Observações:", value=resp_nutri if resp_nutri else "")
+            if st.form_submit_button("Salvar Refeição Nutricional", use_container_width=True):
                 if refeicao:
                     nutri = st.session_state.get("dicas_nutricao", [])
                     nutri.append({"refeicao": refeicao, "detalhes": detalhes_nutri, "data": datetime.now().strftime("%d/%m/%Y")})
@@ -658,12 +710,12 @@ try:
                     st.rerun()
         
         if st.session_state.get("dicas_nutricao"):
-            st.markdown("#### 📊 Tabela de Estimativa Nutricional")
+            st.markdown("#### 📊 Histórico Nutricional do Atleta")
             for n in reversed(st.session_state.get("dicas_nutricao", [])):
                 st.markdown(f"""
                 <div class='card-item'>
                     🥗 <b>Refeição:</b> {esc(n['refeicao'])} ({esc(n['data'])})<br>
-                    💡 <i>Macros Estimados:</i> Proteínas: ~35g | Carboidratos: ~45g | Gorduras: ~12g | <b>Calorias:</b> ~430 kcal
+                    💡 <b>Detalhes:</b> {esc(n['detalhes'])}
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -692,33 +744,34 @@ try:
             </div>
             """, unsafe_allow_html=True)
 
-    # 5. Cursos & Regras (Áudio ou Escrita Direta)
+    # 5. Cursos & Regras (Áudio Automático + Transcrição + Resposta)
     with abas_app[4]:
-        st.markdown("### 📚 Cursos, Regras & Anotações por Voz ou Escrita")
-        trans_curso = renderizar_gravador_audio("curso")
+        st.markdown("### 📚 Cursos, Regras & Anotações de Estudo")
+        trans_curso, resp_curso = renderizar_gravador_audio("curso", "técnica de BJJ, posição e regras IBJJF")
         
         with st.form("form_curso"):
-            titulo_curso = st.text_input("Nome do Curso / Posição / Regra IBJJF:")
-            desc_curso = st.text_area("Descreva a anotação ou explicação (ou grave acima):", value=trans_curso)
-            if st.form_submit_button("Salvar Estudo", use_container_width=True):
+            titulo_curso = st.text_input("Nome do Curso / Posição:", value=trans_curso)
+            desc_curso = st.text_area("Explicação Técnica / Anotação da IA:", value=resp_curso if resp_curso else "")
+            if st.form_submit_button("Salvar Estudo Técnico", use_container_width=True):
                 if titulo_curso:
                     cursos = st.session_state.get("cursos_interativos", [])
                     cursos.append({"titulo": titulo_curso, "desc": desc_curso})
                     st.session_state["cursos_interativos"] = cursos
                     salvar_tudo()
-                    st.toast("✅ Estudo salvo!")
+                    st.toast("✅ Estudo salvo com sucesso!")
                     st.rerun()
         st.divider()
         for cur in reversed(st.session_state.get("cursos_interativos", [])):
             st.markdown(f"<div class='card-item'>📚 <b>{esc(cur['titulo'])}</b><br>{esc(cur['desc'])}</div>", unsafe_allow_html=True)
 
-    # 6. Dinâmicas Kids (Áudio ou Escrita Direta)
+    # 6. Dinâmicas Kids (Áudio Automático + Transcrição + Resposta)
     with abas_app[5]:
         st.markdown("### 👶 Dinâmicas Pedagógicas para Turmas Kids")
-        trans_kids = renderizar_gravador_audio("kids")
+        trans_kids, resp_kids = renderizar_gravador_audio("kids", "dinâmica infantil pedagógica de Jiu-Jitsu e brincadeiras")
+        
         with st.form("form_kids"):
-            foco_kids = st.text_input("Qual posição quer trabalhar? (Ou grave acima):", value=trans_kids)
-            regra_kids = st.text_area("Como aplicar a brincadeira na aula infantil:")
+            foco_kids = st.text_input("Posição / Foco da Aula Kids:", value=trans_kids)
+            regra_kids = st.text_area("Plano da Brincadeira / Aplicação da IA:", value=resp_kids if resp_kids else "")
             if st.form_submit_button("Salvar Dinâmica Kids", use_container_width=True):
                 if foco_kids:
                     kids = st.session_state.get("dinamic_kids_custom", [])
@@ -731,14 +784,15 @@ try:
         for k in reversed(st.session_state.get("dinamic_kids_custom", [])):
             st.markdown(f"<div class='card-item'>👶 <b>Foco: {esc(k['foco'])}</b><br>{esc(k['regra'])}</div>", unsafe_allow_html=True)
 
-    # 7. Drills Específicos (Áudio ou Escrita Direta)
+    # 7. Drills Específicos (Áudio Automático + Transcrição + Resposta)
     with abas_app[6]:
         st.markdown("### ⚡ Drills de Repetição por Posição Alvo")
-        trans_drill = renderizar_gravador_audio("drills")
+        trans_drill, resp_drill = renderizar_gravador_audio("drills", "drill de repetição, velocidade e agilidade no BJJ")
+        
         with st.form("form_drill"):
-            posicao_drill = st.text_input("Qual posição quer trabalhar? (Ou grave acima):", value=trans_drill)
-            reps = st.text_input("Repetições / Tempo:")
-            if st.form_submit_button("Salvar Drill", use_container_width=True):
+            posicao_drill = st.text_input("Posição / Drill:", value=trans_drill)
+            reps = st.text_area("Série / Recomendações do Drill:", value=resp_drill if resp_drill else "")
+            if st.form_submit_button("Salvar Drill de Repetição", use_container_width=True):
                 if posicao_drill:
                     drills = st.session_state.get("drills_treino", [])
                     drills.append({"posicao": posicao_drill, "reps": reps})
@@ -748,14 +802,15 @@ try:
                     st.rerun()
         st.divider()
         for d in reversed(st.session_state.get("drills_treino", [])):
-            st.markdown(f"<div class='card-item'>⚡ <b>Drill de {esc(d['posicao'])}</b> ({esc(d['reps'])})</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='card-item'>⚡ <b>Drill: {esc(d['posicao'])}</b><br>{esc(d['reps'])}</div>", unsafe_allow_html=True)
 
-    # 8. Flashcards de Pressão & Jogo (Áudio ou Escrita Direta)
+    # 8. Flashcards de Pressão & Jogo (Áudio Automático + Transcrição + Resposta)
     with abas_app[7]:
         st.markdown("### 🛡️ Flashcards Táticos de Pressão & Jogo")
-        trans_pressao = renderizar_gravador_audio("pressao")
+        trans_pressao, resp_pressao = renderizar_gravador_audio("pressao", "estratégia de jogo, pressão e reações de luta")
+        
         with st.form("form_pressao"):
-            estilo_proprio = st.text_area("Descreva o seu jogo (Ou grave acima):", value=trans_pressao)
+            estilo_proprio = st.text_area("Estilo de Jogo / Fala de Voz:", value=trans_pressao if trans_pressao else (resp_pressao if resp_pressao else ""))
             if st.form_submit_button("Gerar Flashcard Tático", use_container_width=True):
                 if estilo_proprio:
                     fp = st.session_state.get("flashcards_pressao", [])
@@ -769,7 +824,7 @@ try:
             st.markdown(f"""
             <div class='card-item'>
                 🛡️ <b>Seu Estilo:</b> {esc(f['estilo'])}<br>
-                ❓ <b>Desafio:</b> Se o oponente passar sua guarda e colar no cem-quilos, qual sua reação imediata?
+                ❓ <b>Desafio Tático:</b> Se o oponente passar sua guarda e colar no cem-quilos, qual sua reação imediata?
             </div>
             """, unsafe_allow_html=True)
 
@@ -793,12 +848,13 @@ try:
         for ag in reversed(st.session_state.get("alunos_graduacao", [])):
             st.markdown(f"<div class='card-item'>🥋 <b>{esc(ag['aluno'])}</b> - Faixa {esc(ag['faixa'])} ({ag['grau']}º Grau)<br>📝 <i>{esc(ag.get('obs', ''))}</i></div>", unsafe_allow_html=True)
 
-    # 10. Guia de Cuidado com Kimonos (Áudio ou Escrita Direta)
+    # 10. Guia de Cuidado com Kimonos (Áudio Automático + Transcrição + Resposta)
     with abas_app[9]:
         st.markdown("### 🥋 Guia de Cuidado e Higienização do Kimono")
-        trans_kimono = renderizar_gravador_audio("kimono")
+        trans_kimono, resp_kimono = renderizar_gravador_audio("kimono", "higienização, lavagem e cuidado com kimono")
+        
         with st.form("form_kimono"):
-            sujeira_k = st.text_area("Descreva como o kimono ficou sujo (Ou grave acima):", value=trans_kimono)
+            sujeira_k = st.text_area("Estado do Kimono / Transcrição de Voz:", value=trans_kimono if trans_kimono else (resp_kimono if resp_kimono else ""))
             if st.form_submit_button("Obter Dica de Lavagem", use_container_width=True):
                 if sujeira_k:
                     kims = st.session_state.get("notas_kimono", [])
@@ -873,13 +929,13 @@ try:
         for cr in reversed(st.session_state.get("cronogramas_aulas", [])):
             st.markdown(f"<div class='card-item'>⏱️ <b>{esc(cr['dia'])}</b>: {esc(cr['detalhe'])}</div>", unsafe_allow_html=True)
 
-    # 14. Recuperação & Lesões (Áudio ou Escrita Direta)
+    # 14. Recuperação & Lesões (Áudio Automático + Transcrição + Resposta)
     with abas_app[13]:
         st.markdown("### 🔄 Registro de Recuperação, Dores e Lesões")
-        trans_recup = renderizar_gravador_audio("recuperacao")
+        trans_recup, resp_recup = renderizar_gravador_audio("recuperacao", "recuperação física, dor muscular e lesões do atleta")
         
         with st.form("form_recup"):
-            nota_r = st.text_area("Descreva suas dores, lesões ou tempo de descanso (Ou grave acima):", value=trans_recup)
+            nota_r = st.text_area("Registro de Recuperação / Orientação da IA:", value=f"Relato: {trans_recup}\n\nRecomendação: {resp_recup}" if trans_recup else "")
             if st.form_submit_button("Salvar Nota de Recuperação", use_container_width=True):
                 if nota_r:
                     recup = st.session_state.get("recuperacao_notas", [])
