@@ -7,6 +7,8 @@ import base64
 import traceback
 import time
 import pandas as pd
+from gtts import gTTS
+import tempfile
 
 # Configuração inicial da página
 st.set_page_config(
@@ -180,7 +182,7 @@ st.markdown("""
     .card-item { background-color: #141414; border-left: 4px solid #ff1e27; border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
     .foto-bolinha { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #ff1e27; display: block; margin: 0 auto 10px auto; }
     .bolinha-padrao { width: 80px; height: 80px; border-radius: 50%; background-color: #1a1a1a; border: 2px solid #ff1e27; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 10px auto; }
-    .ia-resposta-box { background-color: #161616; border: 1px solid #00ffcc; border-radius: 12px; padding: 15px; margin-top: 10px; color: #ffffff; box-shadow: 0 4px 15px rgba(0,255,204,0.1); }
+    .ia-resposta-box { background-color: #161616; border: 1px solid #00ffcc; border-radius: 12px; padding: 20px; margin-top: 10px; color: #ffffff; box-shadow: 0 4px 15px rgba(0,255,204,0.1); line-height: 1.6; }
     .ia-erro-card { background-color: #1a0808; border: 2px solid #ff1e27; border-radius: 10px; padding: 20px; margin: 20px 0; }
 </style>
 """, unsafe_allow_html=True)
@@ -195,33 +197,73 @@ def zerar_luta():
     st.session_state.pts_a = st.session_state.vant_a = st.session_state.pun_a = 0
     st.session_state.pts_b = st.session_state.vant_b = st.session_state.pun_b = 0
 
-def processar_audio_completo(audio_bytes, contexto_aba):
-    """Gera múltiplas opções ricas e detalhadas adaptadas para professores e atletas"""
+def gerar_audio_tts(texto_para_falar):
+    """Gera um arquivo de áudio MP3 utilizando gTTS para o botão de voz"""
+    try:
+        tts = gTTS(text=texto_para_falar, lang='pt', slow=False)
+        fp = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+        tts.save(fp.name)
+        return fp.name
+    except Exception:
+        return None
+
+def processar_audio_hiper_detalhado(audio_bytes, contexto_aba):
+    """Gera matéria completa, profunda e rica em detalhes técnicos ou pedagógicos para o professor"""
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
     transcricao = f"Relato de voz registrado em {timestamp} focado em {contexto_aba}."
     
     if "infantil" in contexto_aba.lower() or "kids" in contexto_aba.lower():
-        resposta = """🤖 **OssBot IA Master - Plano Completo Kids:**
-1. **Dinâmica 1 (Tubarão e peixinhos):** Os alunos deitam de barriga para baixo (tartaruga) e precisam escapar sem deixar o "tubarão" tirar a faixa/colete. Foco: Explosão de quadril e saída da tesoura.
-2. **Dinâmica 2 (A Guerra das Pegadas):** Duplas em pé, objetivo é dominar a manga do colega e proteger a sua. Foco: Distância e pegada firme.
-3. **Dinâmica 3 (Salto sobre o rio):** Alunos saltam em zigue-zague sobre cordas simulando agilidade para passagens de guarda rápidas.
-💡 *Dica Pedagógica:* Use muita energia, mantenha as regras simples e premiações em estrelas OssBot ao final!"""
+        resposta = """🤖 **OssBot IA Master - Dossiê Pedagógico Completo para Turmas Kids:**
+
+1. **Dinâmica Lúdica 1: O Tubarão do Tatame (Aquecimento e Fuga de Quadril)**
+   - *Como funciona:* Todos os alunos ficam em posição de quatro apoios (tartaruga). O professor (ou um aluno escolhido) age como o "tubarão" e tenta puxar as faixas presas na cintura dos colegas. Para escapar, os alunos devem usar a fuga de quadril explosiva e giro rápido.
+   - *Objetivo Técnico:* Desenvolver a mobilidade de quadril, agilidade e reflexo defensivo sem que percebam que estão treinando forte.
+
+2. **Dinâmica Lúdica 2: A Guerra das Pegadas na Manga e na Gola**
+   - *Como funciona:* Divididos em duplas do mesmo tamanho, ao sinal do professor, cada criança tenta dominar a manga e a gola do colega enquanto protege a sua própria pegada. Vale desequilibrar puxando levemente.
+   - *Objetivo Técnico:* Ensinar a importância crucial das pegadas (grips), controle de distância e postura firme em pé.
+
+3. **Dinâmica Lúdica 3: Travessia do Rio com Jacarés (Equilíbrio e Passagem)**
+   - *Como funciona:* O professor estica cordas ou faixas no chão simulando um rio. As crianças devem passar correndo em zigue-zague ou saltando com os dois pés juntos, terminando com uma queda controlada de joelhos na base correta.
+   - *Objetivo Técnico:* Aperfeiçoar a coordenação motora ampla, agilidade lateral e bases sólidas para passagens de guarda.
+
+💡 **Orientações Gerais do Professor Master:** 
+Mantenha o ambiente leve e divertido. Utilize sistema de premiação por estrelas OssBot ao final da aula para reforçar a disciplina e o respeito mútuo no tatame."""
+
     elif "nutrição" in contexto_aba.lower():
-        resposta = """🤖 **OssBot IA Master - Guia Nutricional Completo:**
-• **Pré-Treino (Energia rápida):** Banana com pasta de amendoim ou aveia 40 minutos antes do rola.
-• **Hidratação:** Água com eletrólitos (isotônico natural de coco) antes e após o treino intenso.
-• **Pós-Treino (Recuperação):** Proteína de alto valor biológico (frango ou ovos) combinada com carboidratos limpos (batata doce ou arroz)."""
+        resposta = """🤖 **OssBot IA Master - Manual Nutricional Completo para Atletas de BJJ:**
+
+1. **Estratégia Pré-Treino (Foco em Energia Sustentada):**
+   - *Alimentos Recomendados:* Banana prata com pasta de amendoim integral, aveia em flocos finos ou uma torrada integral com mel.
+   - *Timing:* Consumir de 45 a 60 minutos antes de entrar no tatame para garantir digestão completa e pico de energia no rola.
+
+2. **Protocolo de Hidratação Avançada:**
+   - *Água e Eletrólitos:* Ingerir água regularmente ao longo do dia (cerca de 35ml a 40ml por quilo corporal). Em treinos intensos com quimono, adicione água de coco natural ou repositor hidroeletrolítico para evitar cãibras musculares.
+
+3. **Recuperação Pós-Treino (Síntese Proteica e Reposição de Glicogênio):**
+   - *Alimentos Recomendados:* Proteínas de alto valor biológico (peito de frango grelhado, ovos mexidos ou patinho moído) acompanhadas de carboidratos complexos de baixo índice glicêmico (batata doce, mandioca ou arroz integral).
+   - *Timing:* Janela ideal de até 45 minutos após o término do último treino do dia."""
+
     else:
-        resposta = f"""🤖 **OssBot IA Master - Análise Avançada para '{contexto_aba}':**
-• **Fase 1 (Fundamentos):** Ajuste milimétrico de base, postura ereta e distribuição de peso uniforme.
-• **Fase 2 (Transição):** Conexão fluida entre pegadas de gola e controle de quadril do oponente.
-• **Fase 3 (Finalização / Pressão):** Aplicação de pressão progressiva sem deixar espaço para o adversário repor a guarda.
-💡 *Dica de Ouro do Professor:* Repita o drill 10 vezes de cada lado com intensidade crescente."""
+        resposta = f"""🤖 **OssBot IA Master - Relatório Técnico Aprofundado para '{contexto_aba}':**
+
+1. **Análise Cinemática e Postural (Fundamentos):**
+   - *Postura e Base:* Manter o centro de gravidade sempre baixo, com os joelhos flexionados e a coluna ereta para evitar desequilíbrios causados por ataques de guarda do oponente.
+   - *Distribuição de Peso:* O peso deve ser distribuído de forma estratégica sobre os apoios para neutralizar as investidas do adversário logo na origem.
+
+2. **Sequência de Transição e Conexão de Golpes:**
+   - *Passo a Passo Técnico:* 
+     * 1º Momento: Quebra absoluta da postura e controle firme das pegadas principais (mangas e lapelas).
+     * 2º Momento: Isolação de um dos lados do quadril do oponente para impedir a reposição de ganchos.
+     * 3º Momento: Progressão de pressão com o peito colado ao tronco, garantindo estabilização definitiva de 100 quilos ou montada.
+
+3. **Diretrizes de Execução e Prevenção de Erros:**
+   - *Atenção Redobrada:* Nunca estique os braços para apoiar o peso no chão (evita chaves de braço e raspagens fulminantes). Mantenha os cotovelos colados às costelas em todas as fases da defesa e do ataque."""
 
     return transcricao, resposta
 
 def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
-    st.markdown("🎙️ **Grave sua voz (O OssBot gera múltiplas opções completas automaticamente!):**")
+    st.markdown("🎙️ **Grave sua voz (O OssBot gera uma resposta rica, completa e com botão de voz!):**")
     col_g1, col_g2 = st.columns([5, 1])
     with col_g1:
         audio_value = st.audio_input("Grave sua voz", key=f"audio_in_{key_prefix}")
@@ -237,18 +279,24 @@ def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
         
         if st.session_state.get(f"ultimo_audio_hash_{key_prefix}") != hash(audio_bytes):
             st.session_state[f"ultimo_audio_hash_{key_prefix}"] = hash(audio_bytes)
-            with st.spinner("🤖 OssBot IA estruturando várias opções completas..."):
+            with st.spinner("🤖 OssBot IA redigindo matéria técnica e detalhada..."):
                 time.sleep(0.5)
-                trans, resp = processar_audio_completo(audio_bytes, contexto_aba)
+                trans, resp = processar_audio_hiper_detalhado(audio_bytes, contexto_aba)
                 st.session_state[f"transcricao_{key_prefix}"] = trans
                 st.session_state[f"resposta_ia_{key_prefix}"] = resp
-                st.success("✅ Resposta completa gerada com sucesso!")
+                st.success("✅ Matéria completa e detalhada gerada com sucesso!")
 
     resp = st.session_state.get(f"resposta_ia_{key_prefix}", "")
     if resp:
         mostrar_html(f"<div class='ia-resposta-box'>{resp}</div>")
-        st.markdown("🔊 **Ouça a orientação por áudio do Professor:**")
-        st.audio(audio_value)
+        
+        # Botão para ouvir a resposta em voz alta (Gerador de Áudio TTS)
+        st.markdown("🔊 **Ouça a matéria completa em áudio:**")
+        caminho_mp3 = gerar_audio_tts(resp)
+        if caminho_mp3 and os.path.exists(caminho_mp3):
+            with open(caminho_mp3, "rb") as f:
+                audio_bytes_tts = f.read()
+            st.audio(audio_bytes_tts, format="audio/mp3")
 
     return st.session_state.get(f"transcricao_{key_prefix}", ""), st.session_state.get(f"resposta_ia_{key_prefix}", "")
 
@@ -760,7 +808,7 @@ try:
         
         with st.form("form_kids"):
             foco_kids = st.text_input("Posição / Foco da Aula Kids:", value=trans_kids)
-            regra_kids = st.text_area("Múltiplas Dinâmicas e Plano da Brincadeira (Gerado pela IA):", value=resp_kids if resp_kids else "")
+            regra_kids = st.text_area("Matéria e Dinâmicas Completas Geradas pela IA:", value=resp_kids if resp_kids else "")
             if st.form_submit_button("Salvar Dinâmica Kids", use_container_width=True):
                 if foco_kids:
                     kids = st.session_state.get("dinamic_kids_custom", [])
