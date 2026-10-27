@@ -198,7 +198,6 @@ def zerar_luta():
     st.session_state.pts_b = st.session_state.vant_b = st.session_state.pun_b = 0
 
 def gerar_audio_tts(texto_para_falar):
-    """Gera um arquivo de áudio MP3 utilizando gTTS para o botão de voz"""
     try:
         tts = gTTS(text=texto_para_falar, lang='pt', slow=False)
         fp = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
@@ -208,7 +207,6 @@ def gerar_audio_tts(texto_para_falar):
         return None
 
 def processar_audio_hiper_detalhado(audio_bytes, contexto_aba):
-    """Gera matéria completa, profunda e rica em detalhes técnicos ou pedagógicos para o professor"""
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
     transcricao = f"Relato de voz registrado em {timestamp} focado em {contexto_aba}."
     
@@ -264,6 +262,8 @@ Mantenha o ambiente leve e divertido. Utilize sistema de premiação por estrela
 
 def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
     st.markdown("🎙️ **Grave sua voz (O OssBot gera uma resposta rica, completa e com botão de voz!):**")
+    
+    # Gerenciamento correto do botão de limpar redefinindo as chaves de estado
     col_g1, col_g2 = st.columns([5, 1])
     with col_g1:
         audio_value = st.audio_input("Grave sua voz", key=f"audio_in_{key_prefix}")
@@ -271,6 +271,9 @@ def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
         if st.button("❌ Limpar", key=f"clear_audio_{key_prefix}", use_container_width=True):
             st.session_state[f"transcricao_{key_prefix}"] = ""
             st.session_state[f"resposta_ia_{key_prefix}"] = ""
+            if f"audio_in_{key_prefix}" in st.session_state:
+                del st.session_state[f"audio_in_{key_prefix}"]
+            st.toast("🧹 Áudio limpo com sucesso!", icon="🔄")
             st.rerun()
 
     if audio_value is not None:
@@ -290,7 +293,6 @@ def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
     if resp:
         mostrar_html(f"<div class='ia-resposta-box'>{resp}</div>")
         
-        # Botão para ouvir a resposta em voz alta (Gerador de Áudio TTS)
         st.markdown("🔊 **Ouça a matéria completa em áudio:**")
         caminho_mp3 = gerar_audio_tts(resp)
         if caminho_mp3 and os.path.exists(caminho_mp3):
@@ -729,7 +731,7 @@ try:
         for l in reversed(st.session_state.get("historico_lutas", [])):
             st.markdown(f"<div class='card-item'><b>{esc(l['data'])}</b> - {esc(l['resultado'])} | Oponente: <b>{esc(l['adversario'])}</b><br>{esc(l['detalhes'])}</div>", unsafe_allow_html=True)
 
-    # 3. Nutrição & Macros
+    # 3. Nutrição & Macros (Com Expanders Compactos)
     with abas_app[2]:
         st.markdown("### 🥗 Nutrição & Calculadora de Macros")
         trans_nutri, resp_nutri = renderizar_gravador_audio("nutri", "nutrição, dieta e refeição para Jiu-Jitsu")
@@ -749,12 +751,8 @@ try:
         if st.session_state.get("dicas_nutricao"):
             st.markdown("#### 📊 Histórico Nutricional do Atleta")
             for n in reversed(st.session_state.get("dicas_nutricao", [])):
-                st.markdown(f"""
-                <div class='card-item'>
-                    🥗 <b>Refeição:</b> {esc(n['refeicao'])} ({esc(n['data'])})<br>
-                    💡 <b>Detalhes:</b> {esc(n['detalhes'])}
-                </div>
-                """, unsafe_allow_html=True)
+                with st.expander(f"🥗 {n['refeicao']} ({n['data']})"):
+                    st.markdown(f"**Detalhes Completos:**\n\n{n['detalhes']}")
 
     # 4. Camp de Competição
     with abas_app[3]:
@@ -774,12 +772,8 @@ try:
                     st.rerun()
         st.divider()
         for c in reversed(st.session_state.get("camp_competicao", [])):
-            st.markdown(f"""
-            <div class='card-item'>
-                🏆 <b>{esc(c['evento'])}</b> ({esc(c['data'])}) - Categoria: {esc(c['faixa'])}<br>
-                🎯 <b>Estratégia:</b> {esc(c['estilo'])}
-            </div>
-            """, unsafe_allow_html=True)
+            with st.expander(f"🏆 {c['evento']} ({c['data']}) - {c['faixa']}"):
+                st.markdown(f"**Estratégia Completa:**\n\n{c['estilo']}")
 
     # 5. Cursos & Regras
     with abas_app[4]:
@@ -799,9 +793,10 @@ try:
                     st.rerun()
         st.divider()
         for cur in reversed(st.session_state.get("cursos_interativos", [])):
-            st.markdown(f"<div class='card-item'>📚 <b>{esc(cur['titulo'])}</b><br>{esc(cur['desc'])}</div>", unsafe_allow_html=True)
+            with st.expander(f"📚 {cur['titulo']}"):
+                st.markdown(f"**Explicação Completa:**\n\n{cur['desc']}")
 
-    # 6. Dinâmicas Kids
+    # 6. Dinâmicas Kids (Com Expanders Retráteis para Organização Perfeita)
     with abas_app[5]:
         st.markdown("### 👶 Dinâmicas Pedagógicas para Turmas Kids")
         trans_kids, resp_kids = renderizar_gravador_audio("kids", "dinâmica infantil pedagógica de Jiu-Jitsu e brincadeiras")
@@ -818,8 +813,11 @@ try:
                     st.toast("✅ Dinâmica infantil salva!")
                     st.rerun()
         st.divider()
-        for k in reversed(st.session_state.get("dinamic_kids_custom", [])):
-            st.markdown(f"<div class='card-item'>👶 <b>Foco: {esc(k['foco'])}</b><br>{esc(k['regra'])}</div>", unsafe_allow_html=True)
+        if st.session_state.get("dinamic_kids_custom"):
+            st.markdown("#### 📁 Dinâmicas Salvas (Clique para Expandir)")
+            for k in reversed(st.session_state.get("dinamic_kids_custom", [])):
+                with st.expander(f"👶 Foco: {k['foco']}"):
+                    st.markdown(f"**Conteúdo Completo:**\n\n{k['regra']}")
 
     # 7. Drills Específicos
     with abas_app[6]:
@@ -839,7 +837,8 @@ try:
                     st.rerun()
         st.divider()
         for d in reversed(st.session_state.get("drills_treino", [])):
-            st.markdown(f"<div class='card-item'>⚡ <b>Drill: {esc(d['posicao'])}</b><br>{esc(d['reps'])}</div>", unsafe_allow_html=True)
+            with st.expander(f"⚡ Drill: {d['posicao']}"):
+                st.markdown(f"**Série Completa:**\n\n{d['reps']}")
 
     # 8. Flashcards de Pressão & Jogo
     with abas_app[7]:
@@ -858,12 +857,11 @@ try:
                     st.rerun()
         st.divider()
         for f in reversed(st.session_state.get("flashcards_pressao", [])):
-            st.markdown(f"""
-            <div class='card-item'>
-                🛡️ <b>Seu Estilo:</b> {esc(f['estilo'])}<br>
+            with st.expander(f"🛡️ Estilo: {f['estilo'][:30]}..."):
+                st.markdown(f"""
+                <b>Seu Estilo:</b> {esc(f['estilo'])}<br><br>
                 ❓ <b>Desafio Tático:</b> Se o oponente passar sua guarda e colar no cem-quilos, qual sua reação imediata?
-            </div>
-            """, unsafe_allow_html=True)
+                """)
 
     # 9. Graduação
     with abas_app[8]:
@@ -883,7 +881,8 @@ try:
                     st.rerun()
         st.divider()
         for ag in reversed(st.session_state.get("alunos_graduacao", [])):
-            st.markdown(f"<div class='card-item'>🥋 <b>{esc(ag['aluno'])}</b> - Faixa {esc(ag['faixa'])} ({ag['grau']}º Grau)<br>📝 <i>{esc(ag.get('obs', ''))}</i></div>", unsafe_allow_html=True)
+            with st.expander(f"🥋 {ag['aluno']} - Faixa {ag['faixa']} ({ag['grau']}º Grau)"):
+                st.markdown(f"📝 **Critérios:** {esc(ag.get('obs', ''))}")
 
     # 10. Guia de Cuidado com Kimonos
     with abas_app[9]:
@@ -902,12 +901,11 @@ try:
                     st.rerun()
         st.divider()
         for km in reversed(st.session_state.get("notas_kimono", [])):
-            st.markdown(f"""
-            <div class='card-item'>
-                🥋 <b>Estado:</b> {esc(km['sujeira'])}<br>
+            with st.expander(f"🥋 Estado: {km['sujeira'][:30]}..."):
+                st.markdown(f"""
+                <b>Estado:</b> {esc(km['sujeira'])}<br><br>
                 💡 <b>Dica:</b> Deixe de molho no vinagre de álcool branco por 30 min e lave com sabão neutro. Nunca use cloro!
-            </div>
-            """, unsafe_allow_html=True)
+                """)
 
     # 11. Cartão Digital
     with abas_app[10]:
@@ -946,7 +944,8 @@ try:
                     st.rerun()
         st.divider()
         for ch in reversed(st.session_state.get("chaves_luta", [])):
-            st.markdown(f"<div class='card-item'>🔑 <b>{esc(ch['torneio'])}</b><br>Atletas: {', '.join(ch['atletas'])}</div>", unsafe_allow_html=True)
+            with st.expander(f"🔑 Torneio: {ch['torneio']}"):
+                st.markdown(f"**Atletas Inscritos:** {', '.join(ch['atletas'])}")
 
     # 13. Cronograma
     with abas_app[12]:
@@ -964,7 +963,8 @@ try:
                     st.rerun()
         st.divider()
         for cr in reversed(st.session_state.get("cronogramas_aulas", [])):
-            st.markdown(f"<div class='card-item'>⏱️ <b>{esc(cr['dia'])}</b>: {esc(cr['detalhe'])}</div>", unsafe_allow_html=True)
+            with st.expander(f"⏱️ {cr['dia']}"):
+                st.markdown(f"**Detalhe:** {cr['detalhe']}")
 
     # 14. Recuperação & Lesões
     with abas_app[13]:
@@ -983,7 +983,8 @@ try:
                     st.rerun()
         st.divider()
         for rc in reversed(st.session_state.get("recuperacao_notas", [])):
-            st.markdown(f"<div class='card-item'>🔄 <b>{esc(rc['data'])}</b><br>{esc(rc['nota'])}</div>", unsafe_allow_html=True)
+            with st.expander(f"🔄 Recuperação ({rc['data']})"):
+                st.markdown(f"**Nota:**\n\n{rc['nota']}")
 
 except Exception as e:
     nome_usr_erro = st.session_state.get("perfil_nome", "Usuário")
