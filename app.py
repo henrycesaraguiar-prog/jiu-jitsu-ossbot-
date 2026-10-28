@@ -381,388 +381,272 @@ Data: {datetime.now().strftime('%d/%m/%Y - %H:%M')}
 =====================================================
 """
 
-import streamlit as st
-import streamlit.components.v1 as components
-from datetime import datetime, date
-import os
-import json
-import base64
-import traceback
-import time
-import pandas as pd
-from gtts import gTTS
-import tempfile
+# Bloco Principal com Tratamento de Erros
+try:
+    if not st.session_state.autenticado:
+        col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
+        with col_l2:
+            st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot Pro</h1>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: #cccccc;'>Plataforma Profissional de Gestão para Academias de BJJ</p>", unsafe_allow_html=True)
+            
+            aba_login, aba_cadastro, aba_recuperar = st.tabs(["🔑 Entrar", "📝 Criar Conta", "🔄 Esqueci a Senha"])
+            
+            with aba_login:
+                with st.form("form_login"):
+                    email_input = st.text_input("E-mail de Acesso:")
+                    senha_input = st.text_input("Senha:", type="password")
+                    btn_entrar = st.form_submit_button("🚀 Entrar no Sistema", use_container_width=True)
+                    
+                    if btn_entrar:
+                        email_limpo = email_input.strip().lower()
+                        banco = carregar_banco_usuarios()
+                        if email_limpo in banco and banco[email_limpo]["senha"] == senha_input:
+                            carregar_usuario(email_limpo)
+                            st.session_state.autenticado = True
+                            st.toast("✅ Login realizado com sucesso!", icon="🥋")
+                            st.rerun()
+                        else:
+                            st.error("❌ E-mail ou senha incorretos.")
+                            
+                with st.expander("👑 Acesso Restrito Master (Admin)"):
+                    with st.form("form_admin_login"):
+                        senha_master_input = st.text_input("Senha Master:", type="password")
+                        btn_admin_entrar = st.form_submit_button("🔒 Entrar como Master", use_container_width=True)
+                        if btn_admin_entrar:
+                            if senha_master_input == SENHA_ADMIN_MASTER:
+                                carregar_usuario(EMAIL_ADMIN_MASTER)
+                                st.session_state.autenticado = True
+                                st.toast("✅ Acesso Master autorizado!", icon="👑")
+                                st.rerun()
+                            else:
+                                st.error("❌ Senha master incorreta.")
+                    
+                    st.divider()
+                    st.markdown("<p style='color: #ff1e27; font-weight: bold;'>➕ Adicionar Novo Administrador</p>", unsafe_allow_html=True)
+                    with st.form("form_criar_novo_admin_master"):
+                        senha_fundador_check = st.text_input("Senha Mestre do Fundador:", type="password", key="s_fund_novo")
+                        novo_admin_email = st.text_input("E-mail do Novo Admin:", key="n_adm_email")
+                        novo_admin_senha = st.text_input("Senha do Novo Admin (mín. 6):", type="password", key="n_adm_senha")
+                        novo_admin_nome = st.text_input("Nome do Novo Admin:", value="", key="n_adm_nome")
+                        tipo_novo_admin = st.selectbox("Nível de Acesso:", ["Professor / Instrutor", "Master (Fundador)"], key="n_adm_tipo")
+                        btn_criar_admin = st.form_submit_button("✨ Criar Novo Acesso Master", use_container_width=True)
+                        
+                        if btn_criar_admin:
+                            if senha_fundador_check != SENHA_ADMIN_MASTER:
+                                st.error("❌ Senha mestre do fundador incorreta!")
+                            else:
+                                email_limpo_adm = novo_admin_email.strip().lower()
+                                if not email_limpo_adm or not novo_admin_senha:
+                                    st.warning("⚠️ Preencha e-mail e senha.")
+                                elif len(novo_admin_senha) < 6:
+                                    st.warning("⚠️ A senha deve ter no mínimo 6 caracteres.")
+                                else:
+                                    banco = carregar_banco_usuarios()
+                                    banco[email_limpo_adm] = {
+                                        "senha": novo_admin_senha,
+                                        "tipo_usuario": tipo_novo_admin,
+                                        "is_admin": True,
+                                        "plano": "ativo",
+                                        "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
+                                    }
+                                    salvar_banco_usuarios(banco)
+                                    du = carregar_dados_usuario(email_limpo_adm)
+                                    if novo_admin_nome.strip():
+                                        du["perfil_nome"] = novo_admin_nome.strip()
+                                    du["tipo_usuario"] = tipo_novo_admin
+                                    salvar_dados_usuario(email_limpo_adm, du)
+                                    st.success(f"✅ Novo admin '{email_limpo_adm}' criado com sucesso!")
 
-# Configuração inicial da página
-st.set_page_config(
-    page_title="OssBot Pro - Gestão Profissional de BJJ",
-    page_icon="🥋",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+            with aba_cadastro:
+                with st.form("form_cadastro"):
+                    novo_email = st.text_input("Seu E-mail:")
+                    nova_senha = st.text_input("Crie uma Senha (mín. 6 caracteres):", type="password")
+                    nome_inicial = st.text_input("Seu Nome Completo:", value="Atleta Visitante")
+                    acad_inicial = st.text_input("Sua Academia:", value="Insira a sua Academia")
+                    tipo_registo = st.selectbox("Perfil de Usuário:", ["Atleta", "Professor / Instrutor"])
+                    btn_cadastrar = st.form_submit_button("✨ Criar Conta Agora", use_container_width=True)
+                    
+                    if btn_cadastrar:
+                        email_limpo = novo_email.strip().lower()
+                        if not email_limpo or not nova_senha:
+                            st.warning("⚠️ Preencha e-mail e senha.")
+                        elif len(nova_senha) < 6:
+                            st.warning("⚠️ A senha deve ter no mínimo 6 caracteres.")
+                        else:
+                            banco = carregar_banco_usuarios()
+                            if email_limpo in banco:
+                                st.error("❌ E-mail já cadastrado.")
+                            else:
+                                is_adm_flag = (tipo_registo == "Professor / Instrutor")
+                                banco[email_limpo] = {
+                                    "senha": nova_senha,
+                                    "tipo_usuario": tipo_registo,
+                                    "is_admin": is_adm_flag,
+                                    "plano": "ativo",
+                                    "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
+                                }
+                                salvar_banco_usuarios(banco)
+                                dados_novos = carregar_dados_usuario(email_limpo)
+                                dados_novos["perfil_nome"] = nome_inicial if nome_inicial else "Atleta Visitante"
+                                dados_novos["perfil_academia"] = acad_inicial if acad_inicial else "Insira a sua Academia"
+                                dados_novos["tipo_usuario"] = tipo_registo
+                                salvar_dados_usuario(email_limpo, dados_novos)
+                                st.success("✅ Conta criada com sucesso! Acesse a aba 'Entrar'.")
 
-# Constantes globais do Fundador
-EMAIL_ADMIN_MASTER = "henry.cesaraguiar@gmail.com"
-SENHA_ADMIN_MASTER = "adminpassword"
+            with aba_recuperar:
+                with st.form("form_esqueci_senha"):
+                    email_recup = st.text_input("E-mail Cadastrado:")
+                    nova_senha_recup = st.text_input("Nova Senha (mín. 6 caracteres):", type="password")
+                    btn_resetar = st.form_submit_button("🔄 Atualizar Senha", use_container_width=True)
+                    if btn_resetar:
+                        email_limpo = email_recup.strip().lower()
+                        banco = carregar_banco_usuarios()
+                        if email_limpo in banco:
+                            banco[email_limpo]["senha"] = nova_senha_recup
+                            salvar_banco_usuarios(banco)
+                            st.success("✅ Senha atualizada com sucesso!")
+                        else:
+                            st.error("❌ E-mail não encontrado.")
+        st.stop()
 
-CAMPOS = [
-    "perfil_nome", "perfil_faixa", "perfil_graus", "perfil_academia", 
-    "perfil_peso", "perfil_status", "perfil_foto_b64", "historico_lutas", 
-    "cursos_interativos", "dinamic_kids_custom", "flashcards_pressao", 
-    "alunos_graduacao", "notas_kimono", "cronogramas_aulas", "dicas_nutricao",
-    "camp_competicao", "drills_treino", "chaves_luta", "recuperacao_notas",
-    "historico_presencas", "tipo_usuario"
-]
-
-def esc(texto):
-    if not isinstance(texto, str):
-        texto = str(texto)
-    return (texto.replace("&", "&amp;")
-                 .replace("<", "&lt;")
-                 .replace(">", "&gt;")
-                 .replace('"', "&quot;")
-                 .replace("'", "&#39;"))
-
-def mostrar_html(html_code):
-    st.markdown(html_code, unsafe_allow_html=True)
-
-def obter_caminho_usuarios():
-    return "usuarios_banco.json"
-
-def obter_caminho_usuario(email):
-    email_limpo = email.strip().lower().replace("@", "_at_").replace(".", "_")
-    return f"usuario_{email_limpo}.json"
-
-def carregar_banco_usuarios():
-    caminho = obter_caminho_usuarios()
-    if os.path.exists(caminho):
-        try:
-            with open(caminho, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {}
-    return {
-        EMAIL_ADMIN_MASTER.lower(): {
-            "senha": SENHA_ADMIN_MASTER,
-            "tipo_usuario": "Master (Fundador)",
-            "is_admin": True,
-            "plano": "ativo",
-            "data_criacao": datetime.now().strftime("%d/%m/%Y - %H:%M")
-        }
-    }
-
-def salvar_banco_usuarios(banco):
-    caminho = obter_caminho_usuarios()
-    with open(caminho, "w", encoding="utf-8") as f:
-        json.dump(banco, f, ensure_ascii=False, indent=2)
-
-def carregar_dados_usuario(email):
-    caminho = obter_caminho_usuario(email)
-    is_master_global = (email.strip().lower() == EMAIL_ADMIN_MASTER.lower())
-    
-    nome_padrao = "Henry Cesar" if is_master_global else "Atleta Visitante"
-    academia_padrao = "GRACIE BARRA ALPHAVILLE ESPLANADA" if is_master_global else "Insira a sua Academia"
-    status_padrao = "Atleta Competidor 🏆" if is_master_global else "Visitante / Novo Atleta"
-    
-    dados_padrao = {
-        "perfil_nome": nome_padrao,
-        "perfil_faixa": "Branca",
-        "perfil_graus": 5 if is_master_global else 0,
-        "perfil_academia": academia_padrao,
-        "perfil_peso": "Médio",
-        "perfil_status": status_padrao,
-        "perfil_foto_b64": "",
-        "tipo_usuario": "Master (Fundador)" if is_master_global else "Atleta",
-        "historico_lutas": [],
-        "cursos_interativos": [],
-        "dinamic_kids_custom": [],
-        "flashcards_pressao": [],
-        "alunos_graduacao": [],
-        "notas_kimono": [],
-        "cronogramas_aulas": [],
-        "dicas_nutricao": [],
-        "camp_competicao": [],
-        "drills_treino": [],
-        "chaves_luta": [],
-        "recuperacao_notas": [],
-        "historico_presencas": []
-    }
-    if os.path.exists(caminho):
-        try:
-            with open(caminho, "r", encoding="utf-8") as f:
-                dados_salvos = json.load(f)
-                for k, v in dados_padrao.items():
-                    if k not in dados_salvos:
-                        dados_salvos[k] = v
-                return dados_salvos
-        except Exception:
-            return dados_padrao
-    return dados_padrao
-
-def salvar_dados_usuario(email, dados):
-    caminho = obter_caminho_usuario(email)
-    with open(caminho, "w", encoding="utf-8") as f:
-        json.dump(dados, f, ensure_ascii=False, indent=2)
-
-def carregar_usuario(email):
-    email_l = email.lower()
-    st.session_state.usuario_email = email_l
-    banco = carregar_banco_usuarios()
-    
-    info_banco = banco.get(email_l, {})
-    is_master_global = (email_l == EMAIL_ADMIN_MASTER.lower())
-    is_admin_banco = info_banco.get("is_admin", False)
-    
-    st.session_state.is_admin = (is_master_global or is_admin_banco)
-    st.session_state.tipo_usuario = info_banco.get("tipo_usuario", "Atleta")
-    
-    dados = carregar_dados_usuario(email_l)
-    for c in CAMPOS:
-        st.session_state[c] = dados.get(c, {})
-
-def salvar_tudo():
-    email = st.session_state.get("usuario_email")
-    if email:
-        dados = {}
-        for c in CAMPOS:
-            dados[c] = st.session_state.get(c)
-        salvar_dados_usuario(email, dados)
-
-def fazer_logout():
-    st.session_state.autenticado = False
-    st.session_state.usuario_email = ""
-    st.session_state.is_admin = False
-    st.session_state.tipo_usuario = "Atleta"
-    for c in CAMPOS:
-        if c in st.session_state:
-            del st.session_state[c]
-    st.rerun()
-
-# Inicialização de Estados
-if "autenticado" not in st.session_state: st.session_state.autenticado = False
-if "usuario_email" not in st.session_state: st.session_state.usuario_email = ""
-if "is_admin" not in st.session_state: st.session_state.is_admin = False
-if "tipo_usuario" not in st.session_state: st.session_state.tipo_usuario = "Atleta"
-
-if "pts_a" not in st.session_state: st.session_state.pts_a = 0
-if "vant_a" not in st.session_state: st.session_state.vant_a = 0
-if "pun_a" not in st.session_state: st.session_state.pun_a = 0
-if "pts_b" not in st.session_state: st.session_state.pts_b = 0
-if "vant_b" not in st.session_state: st.session_state.vant_b = 0
-if "pun_b" not in st.session_state: st.session_state.pun_b = 0
-
-if "tempo_segundos" not in st.session_state: st.session_state.tempo_segundos = 300
-if "tempo_inicial" not in st.session_state: st.session_state.tempo_inicial = 300
-if "cronometro_rodando" not in st.session_state: st.session_state.cronometro_rodando = False
-if "ultimo_tick" not in st.session_state: st.session_state.ultimo_tick = time.time()
-
-# Estilos CSS Customizados
-st.markdown("""
-<style>
-    .stApp { background-color: #0b0b0b; color: #ffffff; }
-    .placar-box { background-color: #161616; border: 2px solid #ff1e27; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 4px 20px rgba(255, 30, 39, 0.2); }
-    .placar-numero { font-size: 50px; font-weight: bold; color: #ff1e27; }
-    .card-item { background-color: #141414; border-left: 4px solid #ff1e27; border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-    .foto-bolinha { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #ff1e27; display: block; margin: 0 auto 10px auto; }
-    .bolinha-padrao { width: 80px; height: 80px; border-radius: 50%; background-color: #1a1a1a; border: 2px solid #ff1e27; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 10px auto; }
-    .ia-resposta-box { background-color: #161616; border: 1px solid #00ffcc; border-radius: 12px; padding: 20px; margin-top: 10px; color: #ffffff; box-shadow: 0 4px 15px rgba(0,255,204,0.1); line-height: 1.6; }
-    .ia-erro-card { background-color: #1a0808; border: 2px solid #ff1e27; border-radius: 10px; padding: 20px; margin: 20px 0; }
-</style>
-""", unsafe_allow_html=True)
-
-def somar_placar(var_nome, valor):
-    if var_nome in st.session_state:
-        st.session_state[var_nome] = max(0, st.session_state[var_nome] + valor)
-
-def zerar_luta():
-    st.session_state.cronometro_rodando = False
-    st.session_state.tempo_segundos = st.session_state.tempo_inicial
-    st.session_state.pts_a = st.session_state.vant_a = st.session_state.pun_a = 0
-    st.session_state.pts_b = st.session_state.vant_b = st.session_state.pun_b = 0
-
-def gerar_audio_tts(texto_para_falar):
-    try:
-        tts = gTTS(text=texto_para_falar, lang='pt', slow=False)
-        fp = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
-        tts.save(fp.name)
-        return fp.name
-    except Exception:
-        return None
-
-def processar_audio_hiper_detalhado(audio_bytes, contexto_aba, nome_usuario):
-    timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
-    transcricao = f"Relato de voz registrado em {timestamp} focado em {contexto_aba}."
-    
-    if "drill" in contexto_aba.lower():
-        resposta = f"""🤖 **OssBot IA Master - Cardápio Amplo de Drills & Opções Estratégicas para {nome_usuario}:**
-
-Fala, {nome_usuario}! Analisei a sua ideia de drill e montei várias opções super completas para você escolher e aplicar diretamente no treino:
-
-1. **Opção A - Drill de Velocidade e Agilidade Pura (Explosão):**
-   - ⏱️ **Tempo Recomendado:** 3 séries de **30 segundos** por 15 segundos de descanso ativo.
-   - *Como Fazer:* Troca rápida de lados e repetição contínua da entrada do movimento sem pausar, focando em atingir o número máximo de repetições limpas.
-
-2. **Opção B - Drill de Resistência e Transição Fluida (Ritmo Constante):**
-   - ⏱️ **Tempo Recomendado:** 2 blocos de **1 minuto e 30 segundos** sem parar.
-   - *Como Fazer:* O parceiro de treino coloca cerca de 30% de resistência física para você ajustar o domínio de pegadas e o tempo de transição com pressão.
-
-3. **Opção C - Drill de Reação e Contragolpe em Cadeia:**
-   - ⏱️ **Tempo Recomendado:** 4 rounds rápidos de **1 minuto** trocando a função a cada round.
-   - *Como Fazer:* O colega simula uma esquiva ou raspagem e você encaixa a defesa imediata com a passagem correspondente no tempo exato.
-
-💡 **Dica do OssBot:** {nome_usuario}, alterne a liderança das repetições para manter os dois atletas no mesmo nível de intensidade durante a sessão!"""
-
-    elif "infantil" in contexto_aba.lower() or "kids" in contexto_aba.lower():
-        resposta = f"""🤖 **OssBot IA Master - Dossiê Pedagógico Completo para Turmas Kids ({nome_usuario}):**
-
-1. **Dinâmica Lúdica 1: O Tubarão do Tatame (Fuga de Quadril e Agilidade)**
-   - ⏱️ **Tempo Sugerido:** 3 minutos no aquecimento da aula.
-   - *Como Funciona:* Todos os alunos ficam de barriga para baixo (posição de tartaruga). O professor age como o "tubarão" e tenta puxar as faixas. Cada aluno precisa usar a fuga de quadril e o giro rápido para não perder a faixa.
-   - *Foco Técnico:* Mobilidade de quadril, reflexo e noção de proteção de costas.
-
-2. **Dinâmica Lúdica 2: A Guerra das Pegadas na Manga e Lapela**
-   - ⏱️ **Tempo Sugerido:** 2 blocos de **1 minuto** com troca de dupla.
-   - *Como Funciona:* Em duplas do mesmo tamanho, as crianças disputam o domínio de pegadas firmes na gola e na manga, mantendo a postura ereta e a base forte sem se deixarem puxar.
-   - *Foco Técnico:* Controle de distância, postura e força de pegada (grips).
-
-3. **Dinâmica Lúdica 3: Travessia do Rio com Jacarés (Agilidade em Pé)**
-   - ⏱️ **Tempo Sugerido:** 3 passagens completas por aluno.
-   - *Como Funciona:* Cordas e faixas esticadas no chão simulam um rio. As crianças avançam saltando e fazendo deslocamento lateral de passagem até terminar com a queda controlada nos joelhos.
-   - *Foco Técnico:* Coordenação motora ampla, equilíbrio e base sólida de passagem.
-
-💡 **Orientações Pedagógicas para {nome_usuario}:** Mantenha as explicações muito objetivas, premie o esforço de todos no final e use a energia das brincadeiras para fixar a disciplina!"""
-
-    elif "nutrição" in contexto_aba.lower():
-        resposta = f"""🤖 **OssBot IA Master - Manual Nutricional Completo para {nome_usuario}:**
-
-1. **Estratégia Pré-Treino (Foco em Energia Sustentada):**
-   - ⏱️ **Timing Ideal:** Consumir de 45 a 60 minutos antes de vestir o kimono.
-   - *Sugestão:* Banana prata picada com 1 colher de pasta de amendoim integral e aveia em flocos.
-   - *Benefício:* Evita picos de glicemia e garante energia constante do aquecimento até o último rola.
-
-2. **Protocolo de Hidratação Avançada:**
-   - ⏱️ **Durante o Treino:** Pequeno cole de água a cada 15 minutos ou entre as trocas de parceiro.
-   - *Reposição:* Em treinos fortes de mais de 1h30, adicione água de coco natural para evitar cãibras musculares.
-
-3. **Recuperação Pós-Treino (Síntese Proteica e Reposição):**
-   - ⏱️ **Timing Ideal:** Consumir em até 45 minutos após o treino.
-   - *Sugestão:* Proteína magra (frango ou ovos) acompanhada de carboidratos limpos (batata doce, mandioca ou arroz)."""
-
-    else:
-        resposta = f"""🤖 **OssBot IA Master - Relatório Técnico Aprofundado para '{contexto_aba}' ({nome_usuario}):**
-
-1. **Análise de Postura e Base:**
-   - Manter o centro de gravidade baixo, joelhos levemente flexionados e postura ereta para evitar desequilíbrios causados por ataques de guarda.
-
-2. **Sequência de Transição:**
-   - 1º Passo: Quebra de postura e pegada firme na gola/manga.
-   - 2º Passo: Isolação do quadril do oponente impedindo o retorno dos ganchos.
-   - 3º Passo: Ajuste de peso e estabilização de 100 quilos com pressão no peito.
-
-3. **Prevenção de Erros:**
-   - Nunca apoie os braços esticados no chão para evitar chaves de braço e triângulos."""
-
-    return transcricao, resposta
-
-def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
-    st.markdown("🎙️ **Grave sua voz (O OssBot gera uma resposta rica e detalhada com botão de voz!):**")
-    
-    if f"reset_counter_{key_prefix}" not in st.session_state:
-        st.session_state[f"reset_counter_{key_prefix}"] = 0
-    
-    current_key = f"audio_in_{key_prefix}_{st.session_state[f'reset_counter_{key_prefix}']}"
-    
-    col_g1, col_g2 = st.columns([5, 1])
-    with col_g1:
-        audio_value = st.audio_input("Grave sua voz", key=current_key)
-    with col_g2:
-        if st.button("❌ Limpar", key=f"clear_audio_{key_prefix}", use_container_width=True):
-            st.session_state[f"transcricao_{key_prefix}"] = ""
-            st.session_state[f"resposta_ia_{key_prefix}"] = ""
-            st.session_state[f"reset_counter_{key_prefix}"] += 1
-            st.toast("🧹 Áudio e formulário limpos com sucesso!", icon="🔄")
-            st.rerun()
-
-    if audio_value is not None:
-        audio_bytes = audio_value.read()
-        st.audio(audio_bytes)
+    # Barra Lateral
+    with st.sidebar:
+        st.markdown("### 🥋 Carteirinha & Perfil")
+        foto_b64 = st.session_state.get("perfil_foto_b64", "")
+        if foto_b64:
+            st.markdown(f'<img src="data:image/jpeg;base64,{foto_b64}" class="foto-bolinha">', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="bolinha-padrao">🥋</div>', unsafe_allow_html=True)
+            
+        st.markdown(f"<h4 style='text-align: center; color: #ff1e27; margin: 5px 0;'>{esc(st.session_state.get('perfil_nome', 'Atleta Visitante'))}</h4>", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align: center; color: #cccccc; font-size: 13px; margin: 0;'>Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align: center; color: #00ffcc; font-size: 12px; margin: 5px 0 5px 0;'>{esc(st.session_state.get('perfil_academia', 'Insira a sua Academia'))}</p>", unsafe_allow_html=True)
         
-        if st.session_state.get(f"ultimo_audio_hash_{key_prefix}") != hash(audio_bytes):
-            st.session_state[f"ultimo_audio_hash_{key_prefix}"] = hash(audio_bytes)
-            with st.spinner("🤖 OssBot IA analisando seu áudio e estruturando o conteúdo..."):
-                time.sleep(0.5)
-                nome_atual = st.session_state.get("perfil_nome", "Atleta")
-                trans, resp = processar_audio_hiper_detalhado(audio_bytes, contexto_aba, nome_atual)
-                st.session_state[f"transcricao_{key_prefix}"] = trans
-                st.session_state[f"resposta_ia_{key_prefix}"] = resp
-                st.success("✅ Conteúdo gerado com sucesso!")
+        with st.expander("✏️ Editar Perfil na Sidebar"):
+            with st.form("form_edicao_perfil_sidebar"):
+                novo_nome = st.text_input("Nome / Atleta:", value=st.session_state.get("perfil_nome", ""))
+                faixas_p = ["Branca", "Cinza", "Amarela", "Laranja", "Verde", "Azul", "Roxa", "Castanha", "Preta", "Vermelha"]
+                fx_atual = st.session_state.get("perfil_faixa", "Branca")
+                idx_fx = faixas_p.index(fx_atual) if fx_atual in faixas_p else 0
+                nova_faixa = st.selectbox("Faixa:", faixas_p, index=idx_fx)
+                novos_graus = st.slider("Graus:", 0, 11, int(st.session_state.get("perfil_graus", 0)))
+                nova_academia = st.text_input("Academia:", value=st.session_state.get("perfil_academia", ""))
+                
+                if st.form_submit_button("💾 Salvar Perfil", use_container_width=True):
+                    st.session_state["perfil_nome"] = novo_nome if novo_nome else "Atleta Visitante"
+                    st.session_state["perfil_faixa"] = nova_faixa
+                    st.session_state["perfil_graus"] = novos_graus
+                    st.session_state["perfil_academia"] = nova_academia if nova_academia else "Insira a sua Academia"
+                    salvar_tudo()
+                    st.toast("✅ Perfil atualizado!", icon="🥋")
+                    st.rerun()
 
-    resp = st.session_state.get(f"resposta_ia_{key_prefix}", "")
-    if resp:
-        mostrar_html(f"<div class='ia-resposta-box'>{resp}</div>")
+        st.divider()
+        renderizar_secao_gamificacao()
+        st.divider()
         
-        st.markdown("🔊 **Ouça o conteúdo gerado por áudio:**")
-        caminho_mp3 = gerar_audio_tts(resp)
-        if caminho_mp3 and os.path.exists(caminho_mp3):
-            with open(caminho_mp3, "rb") as f:
-                audio_bytes_tts = f.read()
-            st.audio(audio_bytes_tts, format="audio/mp3")
+        if st.session_state.get("is_admin", False) or st.session_state.get("tipo_usuario") in ["Professor / Instrutor", "Master (Fundador)"]:
+            st.markdown("## 👑 Painel de Gestão & Coach")
+            
+            with st.expander("📱 Check-in de Presença (QR Code)"):
+                st.markdown("<p style='font-size: 12px; color: #cccccc;'>Aponte a câmara para o QR Code do dia:</p>", unsafe_allow_html=True)
+                data_hoje_str = datetime.now().strftime("%d/%m/%Y")
+                data_api_str = datetime.now().strftime("%Y-%m-%d")
+                qr_url_dia = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=OssBot-Checkin-{data_api_str}"
+                st.markdown(f"""
+                <div style='text-align: center; background: #161616; padding: 10px; border-radius: 8px; border: 1px solid #ff1e27; margin-bottom: 8px;'>
+                    <img src='{qr_url_dia}' style='width: 130px; height: 130px; border-radius: 4px;'/>
+                    <p style='color: #00ffcc; font-size: 11px; margin-top: 6px;'>📅 {data_hoje_str}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button("📍 Fazer Check-in Hoje", use_container_width=True):
+                    presencas = st.session_state.get("historico_presencas", [])
+                    if data_hoje_str not in presencas:
+                        presencas.append(data_hoje_str)
+                        st.session_state["historico_presencas"] = presencas
+                        salvar_tudo()
+                        st.success(f"✅ Check-in registrado!")
+                        st.rerun()
+                    else:
+                        st.info("ℹ️ Já fez check-in hoje!")
 
-    return st.session_state.get(f"transcricao_{key_prefix}", ""), st.session_state.get(f"resposta_ia_{key_prefix}", "")
+            with st.expander("🛠️ Gestão de Alunos e Turmas"):
+                banco = carregar_banco_usuarios()
+                tipo_atual = st.session_state.get("tipo_usuario")
+                academia_atual = st.session_state.get("perfil_academia", "").strip().lower()
+                st.write(f"📊 **Total de Contas:** {len(banco)}")
+                st.divider()
+                
+                academias_dict = {}
+                for usr, info in banco.items():
+                    d_usr = carregar_dados_usuario(usr)
+                    acad = d_usr.get("perfil_academia", "Academia Não Informada").strip()
+                    if tipo_atual == "Professor / Instrutor" and acad.lower() != academia_atual:
+                        continue
+                    if acad not in academias_dict:
+                        academias_dict[acad] = []
+                    academias_dict[acad].append((usr, info, d_usr))
+                
+                for acad_nome, lista_alunos in academias_dict.items():
+                    st.markdown(f"🏛️ <b>{esc(acad_nome)}</b> ({len(lista_alunos)} alunos)", unsafe_allow_html=True)
+                    for usr, info, d_usr in lista_alunos:
+                        n_usr = d_usr.get("perfil_nome", "Sem Nome")
+                        with st.expander(f"⚙️ {n_usr}"):
+                            with st.form(key=f"form_g_{usr}"):
+                                novo_em = st.text_input("E-mail:", value=usr, key=f"nem_{usr}")
+                                nova_sen = st.text_input("Senha:", value=info.get("senha", ""), type="password", key=f"nsen_{usr}")
+                                novo_no = st.text_input("Nome:", value=n_usr, key=f"nno_{usr}")
+                                fs = ["Branca", "Azul", "Roxa", "Castanha", "Preta"]
+                                f_atual = d_usr.get("perfil_faixa", "Branca")
+                                idx_fx = fs.index(f_atual) if f_atual in fs else 0
+                                nova_fx = st.selectbox("Faixa:", fs, index=idx_fx, key=f"nfx_{usr}")
+                                n_graus = st.slider("Graus:", 0, 4, int(d_usr.get("perfil_graus", 0)), key=f"ngr_{usr}")
+                                
+                                c_b1, c_b2 = st.columns(2)
+                                with c_b1: btn_s = st.form_submit_button("💾 Salvar")
+                                with c_b2: btn_d = st.form_submit_button("🗑️ Excluir")
+                                
+                                if btn_s:
+                                    b_atual = carregar_banco_usuarios()
+                                    if novo_em != usr and novo_em in b_atual:
+                                        st.error("❌ E-mail em uso.")
+                                    else:
+                                        d_ant = b_atual.pop(usr)
+                                        d_ant["senha"] = nova_sen
+                                        b_atual[novo_em] = d_ant
+                                        salvar_banco_usuarios(b_atual)
+                                        du = carregar_dados_usuario(novo_em)
+                                        du["perfil_nome"] = novo_no
+                                        du["perfil_faixa"] = nova_fx
+                                        du["perfil_graus"] = n_graus
+                                        salvar_dados_usuario(novo_em, du)
+                                        st.toast("✅ Atualizado!")
+                                        st.rerun()
+                                if btn_d:
+                                    b_atual = carregar_banco_usuarios()
+                                    if usr in b_atual:
+                                        del b_atual[usr]
+                                        salvar_banco_usuarios(b_atual)
+                                        st.toast("✅ Excluído!")
+                                        st.rerun()
 
-def verificar_e_conceder_badges():
-    badges = []
-    total_lutas = len(st.session_state.get("historico_lutas", []))
-    if total_lutas >= 1: badges.append(("🤼 Guerreiro do Tatame", "Registrou a primeira luta!"))
-    if total_lutas >= 5: badges.append(("🔥 Atleta Dedicado", "5+ lutas registradas!"))
-    if len(st.session_state.get("cursos_interativos", [])) >= 1: badges.append(("📚 Estudioso da Arte", "Registro de estudo de BJJ!"))
-    if st.session_state.get("perfil_status") == "Atleta Competidor 🏆": badges.append(("🏆 Competidor Elite", "Perfil de Competição ativo!"))
-    return badges
+                    dados_plan = [{
+                        "Atleta": d[2].get("perfil_nome"),
+                        "Faixa": d[2].get("perfil_faixa"),
+                        "Graus": d[2].get("perfil_graus"),
+                        "Presenças": len(d[2].get("historico_presencas", []))
+                    } for d in lista_alunos]
+                    df_ac = pd.DataFrame(dados_plan)
+                    csv_ex = df_ac.to_csv(index=False).encode('utf-8')
+                    st.download_button(f"📥 Baixar Planilha ({acad_nome})", data=csv_ex, file_name=f"turma_{acad_nome}.csv", mime="text/csv", use_container_width=True)
 
-def renderizar_secao_gamificacao():
-    st.markdown("<h3 style='color: #fbbf24;'>🏅 Conquistas & Badges</h3>", unsafe_allow_html=True)
-    conquistas = verificar_e_conceder_badges()
-    if not conquistas:
-        st.info("Complete atividades no app para desbloquear badges!")
-    else:
-        for titulo, desc in conquistas:
-            mostrar_html(f"""
-            <div style='background-color: #161616; border: 1px solid #fbbf24; border-radius: 8px; padding: 8px; margin-bottom: 6px;'>
-                <h4 style='color: #fbbf24; margin: 0 0 2px 0; font-size: 12px;'>{esc(titulo)}</h4>
-                <p style='color: #cccccc; margin: 0; font-size: 10px;'>{esc(desc)}</p>
-            </div>
-            """)
-
-def gerar_relatorio_pdf_atleta():
-    nome = st.session_state.get("perfil_nome", "Atleta")
-    faixa = st.session_state.get("perfil_faixa", "Branca")
-    graus = st.session_state.get("perfil_graus", 0)
-    academia = st.session_state.get("perfil_academia", "Academia BJJ")
-    status = st.session_state.get("perfil_status", "Atleta")
-    email = st.session_state.get("usuario_email", "")
-    total_lutas = len(st.session_state.get("historico_lutas", []))
-    
-    return f"""
-=====================================================
-          OSSBOT PRO - RELATÓRIO OFICIAL DE ATLETA
-=====================================================
-Data: {datetime.now().strftime('%d/%m/%Y - %H:%M')}
-
-[DADOS DO ATLETA]
-• Nome: {nome}
-• E-mail: {email}
-• Academia: {academia}
-• Graduação: Faixa {faixa} ({graus}º Grau)
-• Status: {status}
-
-[RESUMO DE ATIVIDADES]
-• Total de Lutas: {total_lutas}
-• Cursos/Técnicas: {len(st.session_state.get("cursos_interativos", []))}
-• Dinâmicas Kids: {len(st.session_state.get("dinamic_kids_custom", []))}
-• Flashcards de Pressão: {len(st.session_state.get("flashcards_pressao", []))}
-• Presenças Registradas: {len(st.session_state.get("historico_presencas", []))}
-=====================================================
-"""
+        st.divider()
+        if st.button("💾 Salvar Alterações Gerais", use_container_width=True):
+            salvar_tudo()
+            st.toast("✅ Dados salvos com sucesso!", icon="💾")
+        if st.button("🚪 Sair da Conta (Logout)", use_container_width=True):
+            fazer_logout()
 
     # Ecrã Principal & Abas
     st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot App Pro</h1>", unsafe_allow_html=True)
@@ -1156,10 +1040,6 @@ except Exception as e:
         </p>
         <p style='color: #fbbf24; font-size: 14px;'>
             📣 Informe ao administrador do sistema para realizar esse ajuste no código!
-        </p>
-        """, unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
         </p>
         """, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
