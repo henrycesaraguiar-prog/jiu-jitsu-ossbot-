@@ -206,79 +206,80 @@ def gerar_audio_tts(texto_para_falar):
     except Exception:
         return None
 
-def processar_audio_hiper_detalhado(audio_bytes, contexto_aba):
+def processar_audio_hiper_detalhado(audio_bytes, contexto_aba, nome_usuario):
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
     transcricao = f"Relato de voz registrado em {timestamp} focado em {contexto_aba}."
     
     if "drill" in contexto_aba.lower():
-        resposta = """🤖 **OssBot IA Master - Plano de Drills & Repetição Dinâmica:**
+        resposta = f"""🤖 **OssBot IA Master - Cardápio Amplo de Drills & Opções Estratégicas para {nome_usuario}:**
 
-1. **Estrutura de Tempo e Séries Sugerida:**
-   - *Duração por Bloco:* 3 séries de 2 minutos contínuos com 30 segundos de descanso ativo entre elas.
-   - *Ritmo de Execução:* Começar a 50% da velocidade nos primeiros 45 segundos para encaixar o movimento perfeitamente, acelerando para 90% de explosão no restante do tempo.
+Fala, {nome_usuario}! Analisei sua ideia de drill e preparei várias opções amplas para você escolher e ficar em dúvida de qual usar hoje no tatame:
 
-2. **Variações de Drills Complementares:**
-   - *Variação 1 (Drill de Reação em Cadeia):* O parceiro oferece leve resistência na primeira tentativa e defesa completa na segunda, exigindo adaptação rápida do atleta.
-   - *Variação 2 (Drill de Velocidade Pura):* Máximo de repetições limpas possíveis em blocos de 60 segundos sem se importar com a força, focando apenas na agilidade e fluidez da transição.
+1. **Opção A - Drill de Velocidade e Agilidade Pura (Ritmo Intenso):**
+   - ⏱️ **Tempo Recomendado:** 3 séries de **30 segundos** com 15 segundos de descanso rápido.
+   - *Como fazer:* Execução máxima de repetições limpas sem se preocupar com força, focando apenas na explosão e troca rápida de base.
 
-3. **Dicas Práticas para o Professor / Atleta:**
-   - Alterne os lados (direita e esquerda) a cada 1 minuto para equilibrar o desenvolvimento motor simétrico no tatame."""
+2. **Opção B - Drill de Resistência e Transição Fluida (Ritmo Constante):**
+   - ⏱️ **Tempo Recomendado:** 2 blocos de **1 minuto e 30 segundos** contínuos.
+   - *Como fazer:* O parceiro oferece 30% de resistência controlada para você treinar a leitura de espaço e ajuste de pegadas sob pressão moderada.
+
+3. **Opção C - Drill de Reação em Cadeia (Foco em Defesa e Contatagen):**
+   - ⏱️ **Tempo Recomendado:** 4 rounds de **1 minuto**.
+   - *Como fazer:* O colega tenta iniciar a raspagem/passagem e você treina exatamente a transição de contragolpe no tempo exato.
+
+💡 **Dica de Ouro do OssBot:** {nome_usuario}, alterne os lados a cada 30 segundos para treinar o corpo por igual!"""
 
     elif "infantil" in contexto_aba.lower() or "kids" in contexto_aba.lower():
-        resposta = """🤖 **OssBot IA Master - Dossiê Pedagógico Completo para Turmas Kids:**
+        resposta = f"""🤖 **OssBot IA Master - Dossiê Pedagógico Completo para Turmas Kids ({nome_usuario}):**
 
-1. **Dinâmica Lúdica 1: O Tubarão do Tatame (Aquecimento e Fuga de Quadril)**
-   - *Como funciona:* Todos os alunos ficam em posição de quatro apoios (tartaruga). O professor age como o "tubarão" e tenta puxar as faixas presas na cintura dos colegas com fuga de quadril explosiva.
-   - *Objetivo Técnico:* Desenvolver mobilidade de quadril e reflexo defensivo de forma divertida.
+1. **Dinâmica Lúdica 1: O Tubarão do Tatame (Fuga de Quadril)**
+   - ⏱️ **Tempo Sugerido:** 3 minutos de aquecimento lúdico.
+   - *Como funciona:* Alunos em quatro apoios fogem do "tubarão" usando fuga de quadril explosiva.
 
-2. **Dinâmica Lúdica 2: A Guerra das Pegadas na Manga e na Gola**
-   - *Como funciona:* Duplas do mesmo tamanho tentam dominar a manga e a gola do colega protegendo a sua própria pegada.
-   - *Objetivo Técnico:* Ensinar a importância crucial das pegadas (grips) e controle de distância.
+2. **Dinâmica Lúdica 2: A Guerra das Pegadas**
+   - ⏱️ **Tempo Sugerido:** 2 blocos de 1 minuto.
+   - *Como funciona:* Disputa saudável de manga e gola mantendo a base firme.
 
-3. **Dinâmica Lúdica 3: Travessia do Rio com Jacarés**
-   - *Como funciona:* Alunos saltam em zigue-zague sobre cordas no chão simulando agilidade para passagens de guarda.
-   - *Objetivo Técnico:* Aperfeiçoar coordenação motora ampla e bases sólidas."""
+💡 **Dica Pedagógica:** Muita energia e premiação com estrelas OssBot ao final!"""
 
     elif "nutrição" in contexto_aba.lower():
-        resposta = """🤖 **OssBot IA Master - Manual Nutricional Completo para Atletas de BJJ:**
+        resposta = f"""🤖 **OssBot IA Master - Manual Nutricional Completo para {nome_usuario}:**
 
-1. **Estratégia Pré-Treino (Foco em Energia Sustentada):**
-   - *Alimentos Recomendados:* Banana prata com pasta de amendoim integral e aveia.
-   - *Timing:* Consumir de 45 a 60 minutos antes de entrar no tatame.
+1. **Pré-Treino (Energia Rápida):**
+   - ⏱️ **Timing:** 45 minutos antes do treino.
+   - *Opções:* Banana com pasta de amendoim ou aveia.
 
-2. **Protocolo de Hidratação Avançada:**
-   - *Eletrólitos:* Ingerir água regularmente e água de coco natural ou isotônico para evitar cãibras em treinos longos de quimono.
-
-3. **Recuperação Pós-Treino:**
-   - *Alimentos:* Proteína de alto valor biológico (frango ou ovos) com carboidratos limpos (batata doce ou arroz)."""
+2. **Pós-Treino (Recuperação):**
+   - Proteína de alto valor biológico com carboidratos limpos (batata doce ou arroz)."""
 
     else:
-        resposta = f"""🤖 **OssBot IA Master - Relatório Técnico Aprofundado para '{contexto_aba}':**
+        resposta = f"""🤖 **OssBot IA Master - Relatório Técnico Aprofundado para '{contexto_aba}' ({nome_usuario}):**
 
-1. **Análise de Postura e Base:**
-   - Manter o centro de gravidade baixo e a coluna ereta para neutralizar desequilíbrios do oponente.
-
-2. **Sequência de Transição:**
-   - Quebra de postura, isolação de quadril e progressão de pressão progressiva com estabilização definitiva.
-
-3. **Diretrizes de Execução:**
-   - Nunca estique os braços ao solo e mantenha os cotovelos colados às costelas."""
+1. **Análise de Postura e Base:** Centro de gravidade baixo e coluna ereta.
+2. **Sequência de Transição:** Quebra de postura, controle de quadril e pressão progressiva.
+3. **Diretrizes:** Nunca estique os braços no chão."""
 
     return transcricao, resposta
 
 def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
     st.markdown("🎙️ **Grave sua voz (O OssBot gera uma resposta rica e detalhada com botão de voz!):**")
     
+    # Chave dinâmica baseada em contador de reset para garantir limpeza absoluta do componente
+    if f"reset_counter_{key_prefix}" not in st.session_state:
+        st.session_state[f"reset_counter_{key_prefix}"] = 0
+    
+    current_key = f"audio_in_{key_prefix}_{st.session_state[f'reset_counter_{key_prefix}']}"
+    
     col_g1, col_g2 = st.columns([5, 1])
     with col_g1:
-        audio_value = st.audio_input("Grave sua voz", key=f"audio_in_{key_prefix}")
+        audio_value = st.audio_input("Grave sua voz", key=current_key)
     with col_g2:
         if st.button("❌ Limpar", key=f"clear_audio_{key_prefix}", use_container_width=True):
             st.session_state[f"transcricao_{key_prefix}"] = ""
             st.session_state[f"resposta_ia_{key_prefix}"] = ""
-            if f"audio_in_{key_prefix}" in st.session_state:
-                del st.session_state[f"audio_in_{key_prefix}"]
-            st.toast("🧹 Áudio limpo com sucesso!", icon="🔄")
+            # Incrementa o contador para forçar o Streamlit a destruir o componente de áudio antigo e criar um novo limpo
+            st.session_state[f"reset_counter_{key_prefix}"] += 1
+            st.toast("🧹 Áudio limpo e resetado com sucesso!", icon="🔄")
             st.rerun()
 
     if audio_value is not None:
@@ -289,7 +290,8 @@ def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
             st.session_state[f"ultimo_audio_hash_{key_prefix}"] = hash(audio_bytes)
             with st.spinner("🤖 OssBot IA redigindo plano de drills e repetições..."):
                 time.sleep(0.5)
-                trans, resp = processar_audio_hiper_detalhado(audio_bytes, contexto_aba)
+                nome_atual = st.session_state.get("perfil_nome", "Atleta")
+                trans, resp = processar_audio_hiper_detalhado(audio_bytes, contexto_aba, nome_atual)
                 st.session_state[f"transcricao_{key_prefix}"] = trans
                 st.session_state[f"resposta_ia_{key_prefix}"] = resp
                 st.success("✅ Plano de drills gerado com sucesso!")
@@ -824,14 +826,14 @@ try:
                 with st.expander(f"👶 Foco: {k['foco']}"):
                     st.markdown(f"**Conteúdo Completo:**\n\n{k['regra']}")
 
-    # 7. Drills Específicos (Corrigido para focar em tempo, séries, ritmo e variações de drill)
+    # 7. Drills Específicos (Completamente Amplo, com Opções Variadas e Tempos Estimados)
     with abas_app[6]:
         st.markdown("### ⚡ Drills de Repetição, Ritmo e Agilidade")
         trans_drill, resp_drill = renderizar_gravador_audio("drills", "drill de repetição, velocidade e agilidade no BJJ")
         
         with st.form("form_drill"):
             posicao_drill = st.text_input("Ideia / Posição do Drill:", value=trans_drill)
-            reps = st.text_area("Plano de Drills, Séries e Ritmo (Gerado pela IA):", value=resp_drill if resp_drill else "")
+            reps = st.text_area("Plano Amplo de Drills e Opções (Gerado pela IA):", value=resp_drill if resp_drill else "")
             if st.form_submit_button("Salvar Plano de Drills", use_container_width=True):
                 if posicao_drill:
                     drills = st.session_state.get("drills_treino", [])
@@ -845,7 +847,7 @@ try:
             st.markdown("#### 📁 Planos de Drills Salvos (Clique para Expandir)")
             for d in reversed(st.session_state.get("drills_treino", [])):
                 with st.expander(f"⚡ Drill: {d['posicao']}"):
-                    st.markdown(f"**Série e Ritmo Completos:**\n\n{d['reps']}")
+                    st.markdown(f"**Opções e Tempos Completos:**\n\n{d['reps']}")
 
     # 8. Flashcards de Pressão & Jogo
     with abas_app[7]:
