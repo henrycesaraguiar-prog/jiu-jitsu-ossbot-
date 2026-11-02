@@ -198,16 +198,7 @@ def zerar_luta():
     st.session_state.pts_a = st.session_state.vant_a = st.session_state.pun_a = 0
     st.session_state.pts_b = st.session_state.vant_b = st.session_state.pun_b = 0
 
-def gerar_audio_tts(texto_para_falar):
-    try:
-        tts = gTTS(text=texto_para_falar, lang='pt', slow=False)
-        fp = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
-        tts.save(fp.name)
-        return fp.name
-    except Exception:
-        return None
-
-# Função de Consenso Avançado IA Dual focada 100% no tema solicitado (Jogos, Tempos e Técnica)
+# Função de Consenso Avançado IA Dual
 def processar_consenso_ia_dual(tema_input, contexto_aba, nome_usuario):
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
     tema_desc = tema_input if tema_input else "Técnica de Jiu-Jitsu"
@@ -237,14 +228,14 @@ Desenvolvimento de memória muscular e velocidade de transição focada diretame
 
 ### 2. Jogo Técnico Principal com Cronômetro (Duração: 8 Minutos)
 * **Nome do Jogo:** *A Fortaleza Protegida*
-* **Aplicação Prática ({esc(tema_desc)}):** Divida a turma em duplas. O aluno por baixo foca em manter a base firme (trabalhando os conceitos de {esc(tema_desc)}), enquanto o colega tenta passar de forma controlada. 
-* **Regra de Tempo:** Rodadas cronometradas de 1 minuto cada. A cada apito ou comando, troca-se a função (quem estava em cima vai para baixo).
+* **Aplicação Prática ({esc(tema_desc)}):** Divida a turma em duplas. O aluno por baixo foca em manter a base firme, enquanto o colega tenta passar de forma controlada. 
+* **Regra de Tempo:** Rodadas cronometradas de 1 minuto cada. A cada apito, troca-se a função.
 
 ### 3. Desafio Final de Agilidade (Duração: 3 Minutos)
 * **Nome do Jogo:** *Estátua de Ferro*
-* **Como Funciona:** Música tocando ou sinal do professor; ao parar, os pequenos devem travar o corpo exatamente na posição base de {esc(tema_desc)}, testando equilíbrio e foco instantâneo.
+* **Como Funciona:** Ao sinal do professor, os pequenos devem travar o corpo exatamente na posição base de **{esc(tema_desc)}**.
 
-💡 **Consenso Final:** Dinâmica estruturada com foco absoluto em **{esc(tema_desc)}**, unindo diversão, controle de tempo e aprendizado técnico para a turma!"""
+💡 **Consenso Final:** Dinâmica estruturada com foco absoluto em **{esc(tema_desc)}**, unindo diversão, controle de tempo e aprendizado técnico!"""
 
     elif "nutrição" in contexto_aba.lower():
         return f"""🤖 **OssBot IA Master - Manual Nutricional (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
@@ -477,11 +468,19 @@ try:
                 novos_graus = st.slider("Graus:", 0, 11, int(st.session_state.get("perfil_graus", 0)))
                 nova_academia = st.text_input("Academia:", value=st.session_state.get("perfil_academia", ""))
                 
+                # Upload de Foto Pessoal na Sidebar
+                foto_arquivo_side = st.file_uploader("Alterar Foto de Perfil:", type=["jpg", "jpeg", "png"], key="side_foto_up")
+                
                 if st.form_submit_button("💾 Salvar Perfil", use_container_width=True):
                     st.session_state["perfil_nome"] = novo_nome if novo_nome else "Atleta Visitante"
                     st.session_state["perfil_faixa"] = nova_faixa
                     st.session_state["perfil_graus"] = novos_graus
                     st.session_state["perfil_academia"] = nova_academia if nova_academia else "Insira a sua Academia"
+                    
+                    if foto_arquivo_side is not None:
+                        bytes_foto = foto_arquivo_side.getvalue()
+                        st.session_state["perfil_foto_b64"] = base64.b64encode(bytes_foto).decode("utf-8")
+                        
                     salvar_tudo()
                     st.toast("✅ Perfil atualizado!", icon="🥋")
                     st.rerun()
@@ -538,6 +537,13 @@ try:
                     for usr, info, d_usr in lista_alunos:
                         n_usr = d_usr.get("perfil_nome", "Sem Nome")
                         with st.expander(f"⚙️ {n_usr}"):
+                            # Mostra a foto atual do aluno se houver
+                            f_b64_aluno = d_usr.get("perfil_foto_b64", "")
+                            if f_b64_aluno:
+                                st.markdown(f'<img src="data:image/jpeg;base64,{f_b64_aluno}" class="foto-bolinha">', unsafe_allow_html=True)
+                            else:
+                                st.markdown('<div class="bolinha-padrao" style="width: 50px; height: 50px; font-size: 20px;">🥋</div>', unsafe_allow_html=True)
+                                
                             with st.form(key=f"form_g_{usr}"):
                                 novo_em = st.text_input("E-mail:", value=usr, key=f"nem_{usr}")
                                 nova_sen = st.text_input("Senha:", value=info.get("senha", ""), type="password", key=f"nsen_{usr}")
@@ -547,6 +553,9 @@ try:
                                 idx_fx = fs.index(f_atual) if f_atual in fs else 0
                                 nova_fx = st.selectbox("Faixa:", fs, index=idx_fx, key=f"nfx_{usr}")
                                 n_graus = st.slider("Graus:", 0, 4, int(d_usr.get("perfil_graus", 0)), key=f"ngr_{usr}")
+                                
+                                # NOVO: Campo para o Master/Professor adicionar ou alterar a foto do aluno
+                                nova_foto_aluno_arquivo = st.file_uploader("Alterar Foto do Aluno:", type=["jpg", "jpeg", "png"], key=f"foto_up_{usr}")
                                 
                                 c_b1, c_b2 = st.columns(2)
                                 with c_b1: btn_s = st.form_submit_button("💾 Salvar")
@@ -565,15 +574,21 @@ try:
                                         du["perfil_nome"] = novo_no
                                         du["perfil_faixa"] = nova_fx
                                         du["perfil_graus"] = n_graus
+                                        
+                                        # Atualiza a foto se o admin enviou uma nova
+                                        if nova_foto_aluno_arquivo is not None:
+                                            b_foto_aluno = nova_foto_aluno_arquivo.getvalue()
+                                            du["perfil_foto_b64"] = base64.b64encode(b_foto_aluno).decode("utf-8")
+                                            
                                         salvar_dados_usuario(novo_em, du)
-                                        st.toast("✅ Atualizado!")
+                                        st.toast("✅ Atualizado com sucesso!")
                                         st.rerun()
                                 if btn_d:
                                     b_atual = carregar_banco_usuarios()
                                     if usr in b_atual:
                                         del b_atual[usr]
                                         salvar_banco_usuarios(b_atual)
-                                        st.toast("✅ Excluído!")
+                                        st.toast("✅ Excluído com sucesso!")
                                         st.rerun()
 
                     dados_plan = [{
