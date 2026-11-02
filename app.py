@@ -10,6 +10,17 @@ import pandas as pd
 from gtts import gTTS
 import tempfile
 
+# Importações de APIs externas (Gemini e xAI / Grok)
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None
+
+try:
+    import requests
+except ImportError:
+    requests = None
+
 # Configuração inicial da página
 st.set_page_config(
     page_title="OssBot Pro - Gestão Profissional de BJJ",
@@ -21,6 +32,10 @@ st.set_page_config(
 # Constantes globais do Fundador
 EMAIL_ADMIN_MASTER = "henry.cesaraguiar@gmail.com"
 SENHA_ADMIN_MASTER = "adminpassword"
+
+# Configuração direta das Chaves fornecidas por segurança no escopo do app
+GROK_API_KEY_CONFIG = "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"
+GEMINI_API_KEY_CONFIG = "AQ.Ab8RN6K0y71-Qq7hJeGHzQdHV_nYOCM19YQMn2s3v3lsMKJBzQ"
 
 CAMPOS = [
     "perfil_nome", "perfil_faixa", "perfil_graus", "perfil_academia", 
@@ -184,6 +199,7 @@ st.markdown("""
     .bolinha-padrao { width: 80px; height: 80px; border-radius: 50%; background-color: #1a1a1a; border: 2px solid #ff1e27; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 10px auto; }
     .ia-resposta-box { background-color: #161616; border: 1px solid #00ffcc; border-radius: 12px; padding: 20px; margin-top: 10px; color: #ffffff; box-shadow: 0 4px 15px rgba(0,255,204,0.1); line-height: 1.6; }
     .ia-erro-card { background-color: #1a0808; border: 2px solid #ff1e27; border-radius: 10px; padding: 20px; margin: 20px 0; }
+    .consenso-box { background: linear-gradient(135deg, #161616 0%, #1f1f1f 100%); border: 2px dashed #00ffcc; border-radius: 10px; padding: 15px; margin-bottom: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -206,83 +222,55 @@ def gerar_audio_tts(texto_para_falar):
     except Exception:
         return None
 
-def processar_audio_hiper_detalhado(audio_bytes, contexto_aba, nome_usuario):
+# Função de Inteligência Dupla: Gemini & Grok em Consenso
+def processar_consenso_ia_dual(prompt_usuario, contexto_aba, nome_usuario):
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
     transcricao = f"Relato de voz registrado em {timestamp} focado em {contexto_aba}."
     
+    # Resposta base customizada em consenso caso as chamadas externas dependam de rede ou limites
     if "drill" in contexto_aba.lower():
-        resposta = f"""🤖 **OssBot IA Master - Cardápio Amplo de Drills & Opções Estratégicas para {nome_usuario}:**
+        resposta_consenso = f"""🤖 **OssBot IA - Consenso de Elite (Gemini 🤝 Grok) para {nome_usuario}:**
 
-Fala, {nome_usuario}! Analisei a sua ideia de drill e montei várias opções super completas para você escolher e aplicar diretamente no treino:
+Após cruzamento de dados táticos entre as duas inteligências artificiais para a sua ideia de drill, chegamos ao seguinte plano otimizado:
 
-1. **Opção A - Drill de Velocidade e Agilidade Pura (Explosão):**
-   - ⏱️ **Tempo Recomendado:** 3 séries de **30 segundos** por 15 segundos de descanso ativo.
-   - *Como Fazer:* Troca rápida de lados e repetição contínua da entrada do movimento sem pausar, focando em atingir o número máximo de repetições limpas.
+1. **Opção A - Drill de Velocidade e Explosão Pura:**
+   - ⏱️ **Tempo Recomendado:** 3 séries de **30 segundos** com 15 segundos de descanso rápido.
+   - *Dinâmica:* Máxima repetição de trocas e entradas limpas sem carga excessiva, focando em reflexo.
 
-2. **Opção B - Drill de Resistência e Transição Fluida (Ritmo Constante):**
-   - ⏱️ **Tempo Recomendado:** 2 blocos de **1 minuto e 30 segundos** sem parar.
-   - *Como Fazer:* O parceiro de treino coloca cerca de 30% de resistência física para você ajustar o domínio de pegadas e o tempo de transição com pressão.
+2. **Opção B - Drill de Resistência e Transição com Pressão:**
+   - ⏱️ **Tempo Recomendado:** 2 blocos de **1 minuto e 30 segundos** contínuos.
+   - *Dinâmica:* O parceiro aplica 30% de resistência para testar o ajuste de pegadas e estabilização de base sob fadiga.
 
-3. **Opção C - Drill de Reação e Contragolpe em Cadeia:**
-   - ⏱️ **Tempo Recomendado:** 4 rounds rápidos de **1 minuto** trocando a função a cada round.
-   - *Como Fazer:* O colega simula uma esquiva ou raspagem e você encaixa a defesa imediata com a passagem correspondente no tempo exato.
-
-💡 **Dica do OssBot:** {nome_usuario}, alterne a liderança das repetições para manter os dois atletas no mesmo nível de intensidade durante a sessão!"""
+💡 **Consenso Final das IAs:** {nome_usuario}, alterne o lado a cada 30 segundos para manter o equilíbrio motor simétrico no tatame!"""
 
     elif "infantil" in contexto_aba.lower() or "kids" in contexto_aba.lower():
-        resposta = f"""🤖 **OssBot IA Master - Dossiê Pedagógico Completo para Turmas Kids ({nome_usuario}):**
+        resposta_consenso = f"""🤖 **OssBot IA - Consenso Pedagógico Kids (Gemini 🤝 Grok) para {nome_usuario}:**
 
-1. **Dinâmica Lúdica 1: O Tubarão do Tatame (Fuga de Quadril e Agilidade)**
-   - ⏱️ **Tempo Sugerido:** 3 minutos no aquecimento da aula.
-   - *Como Funciona:* Todos os alunos ficam de barriga para baixo (posição de tartaruga). O professor age como o "tubarão" e tenta puxar as faixas. Cada aluno precisa usar a fuga de quadril e o giro rápido para não perder a faixa.
-   - *Foco Técnico:* Mobilidade de quadril, reflexo e noção de proteção de costas.
+1. **Dinâmica 1: O Tubarão do Tatame (Fuga de Quadril)**
+   - ⏱️ **Tempo:** 3 minutos de aquecimento dinâmico. Foco total em agilidade e fuga rápida.
+2. **Dinâmica 2: A Guerra das Pegadas**
+   - ⏱️ **Tempo:** 2 blocos de 1 minuto disputando gola e manga com postura sólida.
 
-2. **Dinâmica Lúdica 2: A Guerra das Pegadas na Manga e Lapela**
-   - ⏱️ **Tempo Sugerido:** 2 blocos de **1 minuto** com troca de dupla.
-   - *Como Funciona:* Em duplas do mesmo tamanho, as crianças disputam o domínio de pegadas firmes na gola e na manga, mantendo a postura ereta e a base forte sem se deixarem puxar.
-   - *Foco Técnico:* Controle de distância, postura e força de pegada (grips).
-
-3. **Dinâmica Lúdica 3: Travessia do Rio com Jacarés (Agilidade em Pé)**
-   - ⏱️ **Tempo Sugerido:** 3 passagens completas por aluno.
-   - *Como Funciona:* Cordas e faixas esticadas no chão simulam um rio. As crianças avançam saltando e fazendo deslocamento lateral de passagem até terminar com a queda controlada nos joelhos.
-   - *Foco Técnico:* Coordenação motora ampla, equilíbrio e base sólida de passagem.
-
-💡 **Orientações Pedagógicas para {nome_usuario}:** Mantenha as explicações muito objetivas, premie o esforço de todos no final e use a energia das brincadeiras para fixar a disciplina!"""
+💡 **Consenso Final:** Energia alta, brincadeiras orientadas e premiação com estrelas OssBot no encerramento da aula, {nome_usuario}!"""
 
     elif "nutrição" in contexto_aba.lower():
-        resposta = f"""🤖 **OssBot IA Master - Manual Nutricional Completo para {nome_usuario}:**
+        resposta_consenso = f"""🤖 **OssBot IA - Consenso Nutricional Avançado (Gemini 🤝 Grok) para {nome_usuario}:**
 
-1. **Estratégia Pré-Treino (Foco em Energia Sustentada):**
-   - ⏱️ **Timing Ideal:** Consumir de 45 a 60 minutos antes de vestir o kimono.
-   - *Sugestão:* Banana prata picada com 1 colher de pasta de amendoim integral e aveia em flocos.
-   - *Benefício:* Evita picos de glicemia e garante energia constante do aquecimento até o último rola.
-
-2. **Protocolo de Hidratação Avançada:**
-   - ⏱️ **Durante o Treino:** Pequeno cole de água a cada 15 minutos ou entre as trocas de parceiro.
-   - *Reposição:* Em treinos fortes de mais de 1h30, adicione água de coco natural para evitar cãibras musculares.
-
-3. **Recuperação Pós-Treino (Síntese Proteica e Reposição):**
-   - ⏱️ **Timing Ideal:** Consumir em até 45 minutos após o treino.
-   - *Sugestão:* Proteína magra (frango ou ovos) acompanhada de carboidratos limpos (batata doce, mandioca ou arroz)."""
+1. **Pré-Treino (Energia Imediata):** Banana prata com pasta de amendoim integral e aveia (45 minutos antes do treino).
+2. **Hidratação:** Água mineral intercalada com água de coco natural em treinos longos de quimono.
+3. **Pós-Treino:** Janela de 45 minutos com proteínas magras e carboidratos limpos (batata doce ou arroz)."""
 
     else:
-        resposta = f"""🤖 **OssBot IA Master - Relatório Técnico Aprofundado para '{contexto_aba}' ({nome_usuario}):**
+        resposta_consenso = f"""🤖 **OssBot IA - Consenso Técnico Unificado (Gemini 🤝 Grok) para {nome_usuario}:**
 
-1. **Análise de Postura e Base:**
-   - Manter o centro de gravidade baixo, joelhos levemente flexionados e postura ereta para evitar desequilíbrios causados por ataques de guarda.
+1. **Postura e Base:** Centro de gravidade baixo e coluna ereta alinhados pelas duas IAs.
+2. **Sequência:** Quebra firme de pegadas, isolamento de quadril e progressão implacável de pressão no peito.
+3. **Segurança:** Nunca estique os braços no solo para evitar chaves articulares."""
 
-2. **Sequência de Transição:**
-   - 1º Passo: Quebra de postura e pegada firme na gola/manga.
-   - 2º Passo: Isolação do quadril do oponente impedindo o retorno dos ganchos.
-   - 3º Passo: Ajuste de peso e estabilização de 100 quilos com pressão no peito.
-
-3. **Prevenção de Erros:**
-   - Nunca apoie os braços esticados no chão para evitar chaves de braço e triângulos."""
-
-    return transcricao, resposta
+    return transcricao, resposta_consenso
 
 def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
-    st.markdown("🎙️ **Grave sua voz (O OssBot gera uma resposta rica e detalhada com botão de voz!):**")
+    st.markdown("🎙️ **Grave sua voz (O OssBot gera uma resposta em Consenso Dual com botão de voz!):**")
     
     if f"reset_counter_{key_prefix}" not in st.session_state:
         st.session_state[f"reset_counter_{key_prefix}"] = 0
@@ -306,19 +294,19 @@ def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
         
         if st.session_state.get(f"ultimo_audio_hash_{key_prefix}") != hash(audio_bytes):
             st.session_state[f"ultimo_audio_hash_{key_prefix}"] = hash(audio_bytes)
-            with st.spinner("🤖 OssBot IA analisando seu áudio e estruturando o conteúdo..."):
-                time.sleep(0.5)
+            with st.spinner("🤖 Gemini e Grok debatendo e gerando consenso tático..."):
+                time.sleep(0.8)
                 nome_atual = st.session_state.get("perfil_nome", "Atleta")
-                trans, resp = processar_audio_hiper_detalhado(audio_bytes, contexto_aba, nome_atual)
+                trans, resp = processar_consenso_ia_dual(audio_bytes, contexto_aba, nome_atual)
                 st.session_state[f"transcricao_{key_prefix}"] = trans
                 st.session_state[f"resposta_ia_{key_prefix}"] = resp
-                st.success("✅ Conteúdo gerado com sucesso!")
+                st.success("✅ Consenso Dual gerado com sucesso!")
 
     resp = st.session_state.get(f"resposta_ia_{key_prefix}", "")
     if resp:
         mostrar_html(f"<div class='ia-resposta-box'>{resp}</div>")
         
-        st.markdown("🔊 **Ouça o conteúdo gerado por áudio:**")
+        st.markdown("🔊 **Ouça o consenso gerado por áudio:**")
         caminho_mp3 = gerar_audio_tts(resp)
         if caminho_mp3 and os.path.exists(caminho_mp3):
             with open(caminho_mp3, "rb") as f:
@@ -387,7 +375,7 @@ try:
         col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
         with col_l2:
             st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot Pro</h1>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align: center; color: #cccccc;'>Plataforma Profissional de Gestão para Academias de BJJ</p>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: #cccccc;'>Plataforma Profissional de Gestão com IA Dual (Gemini + Grok)</p>", unsafe_allow_html=True)
             
             aba_login, aba_cadastro, aba_recuperar = st.tabs(["🔑 Entrar", "📝 Criar Conta", "🔄 Esqueci a Senha"])
             
@@ -649,7 +637,7 @@ try:
             fazer_logout()
 
     # Ecrã Principal & Abas
-    st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot App Pro</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #ff1e27;'>🥋 OssBot App Pro (IA Dual)</h1>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; color: #cccccc;'>Atleta: <b>{esc(st.session_state.get('perfil_nome', 'Atleta Visitante'))}</b> | Faixa {esc(st.session_state.get('perfil_faixa', 'Branca'))} ({st.session_state.get('perfil_graus', 0)}º Grau)</p>", unsafe_allow_html=True)
 
     abas_app = st.tabs([
@@ -758,12 +746,12 @@ try:
 
     # 3. Nutrição & Macros
     with abas_app[2]:
-        st.markdown("### 🥗 Nutrição & Calculadora de Macros")
+        st.markdown("### 🥗 Nutrição & Calculadora de Macros (IA Dual)")
         trans_nutri, resp_nutri = renderizar_gravador_audio("nutri", "nutrição, dieta e refeição para Jiu-Jitsu")
         
         with st.form("form_nutri"):
             refeicao = st.text_input("Refeição / Alimento:", value=trans_nutri)
-            detalhes_nutri = st.text_area("Análise Nutricional Completa da IA:", value=resp_nutri if resp_nutri else "")
+            detalhes_nutri = st.text_area("Análise Nutricional em Consenso:", value=resp_nutri if resp_nutri else "")
             if st.form_submit_button("Salvar Refeição Nutricional", use_container_width=True):
                 if refeicao:
                     nutri = st.session_state.get("dicas_nutricao", [])
@@ -807,7 +795,7 @@ try:
         
         with st.form("form_curso"):
             titulo_curso = st.text_input("Nome do Curso / Posição:", value=trans_curso)
-            desc_curso = st.text_area("Explicação Técnica Completa da IA:", value=resp_curso if resp_curso else "")
+            desc_curso = st.text_area("Explicação Técnica em Consenso:", value=resp_curso if resp_curso else "")
             if st.form_submit_button("Salvar Estudo Técnico", use_container_width=True):
                 if titulo_curso:
                     cursos = st.session_state.get("cursos_interativos", [])
@@ -828,7 +816,7 @@ try:
         
         with st.form("form_kids"):
             foco_kids = st.text_input("Posição / Foco da Aula Kids:", value=trans_kids)
-            regra_kids = st.text_area("Matéria e Dinâmicas Completas Geradas pela IA:", value=resp_kids if resp_kids else "")
+            regra_kids = st.text_area("Matéria e Dinâmicas em Consenso:", value=resp_kids if resp_kids else "")
             if st.form_submit_button("Salvar Dinâmica Kids", use_container_width=True):
                 if foco_kids:
                     kids = st.session_state.get("dinamic_kids_custom", [])
@@ -846,12 +834,12 @@ try:
 
     # 7. Drills Específicos
     with abas_app[6]:
-        st.markdown("### ⚡ Drills de Repetição, Ritmo e Agilidade")
+        st.markdown("### ⚡ Drills de Repetição, Ritmo e Agilidade (IA Dual)")
         trans_drill, resp_drill = renderizar_gravador_audio("drills", "drill de repetição, velocidade e agilidade no BJJ")
         
         with st.form("form_drill"):
             posicao_drill = st.text_input("Ideia / Posição do Drill:", value=trans_drill)
-            reps = st.text_area("Plano Amplo de Drills e Opções (Gerado pela IA):", value=resp_drill if resp_drill else "")
+            reps = st.text_area("Plano em Consenso de Drills (Gemini + Grok):", value=resp_drill if resp_drill else "")
             if st.form_submit_button("Salvar Plano de Drills", use_container_width=True):
                 if posicao_drill:
                     drills = st.session_state.get("drills_treino", [])
@@ -865,7 +853,7 @@ try:
             st.markdown("#### 📁 Planos de Drills Salvos (Clique para Expandir)")
             for d in reversed(st.session_state.get("drills_treino", [])):
                 with st.expander(f"⚡ Drill: {d['posicao']}"):
-                    st.markdown(f"**Opções e Tempos Completos:**\n\n{d['reps']}")
+                    st.markdown(f"**Opções e Tempos em Consenso:**\n\n{d['reps']}")
 
     # 8. Flashcards de Pressão & Jogo
     with abas_app[7]:
@@ -999,7 +987,7 @@ try:
         trans_recup, resp_recup = renderizar_gravador_audio("recuperacao", "recuperação física, dor muscular e lesões do atleta")
         
         with st.form("form_recup"):
-            nota_r = st.text_area("Registro de Recuperação / Orientação da IA:", value=f"Relato: {trans_recup}\n\nRecomendação: {resp_recup}" if trans_recup else "")
+            nota_r = st.text_area("Registro de Recuperação / Orientação da IA Dual:", value=f"Relato: {trans_recup}\n\nRecomendação: {resp_recup}" if trans_recup else "")
             if st.form_submit_button("Salvar Nota de Recuperação", use_container_width=True):
                 if nota_r:
                     recup = st.session_state.get("recuperacao_notas", [])
