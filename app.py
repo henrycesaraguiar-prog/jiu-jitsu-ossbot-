@@ -174,7 +174,7 @@ if "tempo_inicial" not in st.session_state: st.session_state.tempo_inicial = 300
 if "cronometro_rodando" not in st.session_state: st.session_state.cronometro_rodando = False
 if "ultimo_tick" not in st.session_state: st.session_state.ultimo_tick = time.time()
 
-# Estilos CSS Customizados com efeito hover para exclusão e caixas elegantes
+# Estilos CSS Customizados
 st.markdown("""
 <style>
     .stApp { background-color: #0b0b0b; color: #ffffff; }
@@ -207,16 +207,14 @@ def gerar_audio_tts(texto_para_falar):
     except Exception:
         return None
 
-# Função de Consenso Avançado IA Dual com alta variabilidade para nunca repetir respostas iguais
+# Função de Consenso Avançado IA Dual com alta variabilidade
 def processar_consenso_ia_dual(tema_input, contexto_aba, nome_usuario):
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
-    transcricao = f"Tema solicitado: '{tema_input}' em {timestamp}."
-    
     tema_desc = tema_input if tema_input else "Estratégia Avançada de Jiu-Jitsu"
     seed_rand = random.randint(100, 999)
     
     if "drill" in contexto_aba.lower():
-        resposta_consenso = f"""🤖 **OssBot IA Master - Consenso Dinâmico de Elite (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
+        return f"""🤖 **OssBot IA Master - Consenso Dinâmico de Elite (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Atleta Responsável:* **{nome_usuario}** | *Foco Solicitado:* **{esc(tema_desc)}**
 
 Após intenso debate e cruzamento algorítmico entre as IAs, as divergências de abordagem foram superadas para gerar este **plano exclusivo e aprofundado**:
@@ -238,7 +236,7 @@ O foco atual exige precisão cirúrgica e sinergia entre velocidade de execuçã
 💡 **Consenso Final:** {nome_usuario}, a variação analítica deste protocolo garante superioridade tática absoluta!"""
 
     elif "infantil" in contexto_aba.lower() or "kids" in contexto_aba.lower():
-        resposta_consenso = f"""🤖 **OssBot IA Master - Dossiê Pedagógico Exclusivo (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
+        return f"""🤖 **OssBot IA Master - Dossiê Pedagógico Exclusivo (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Professor Responsável:* **{nome_usuario}** | *Tema Kids:* **{esc(tema_desc)}**
 
 As IAs debateram abordagens lúdicas e chegaram ao seguinte consenso de alto impacto pedagógico para esta turma:
@@ -261,7 +259,7 @@ As IAs debateram abordagens lúdicas e chegaram ao seguinte consenso de alto imp
 💡 **Orientações para {nome_usuario}:** Use um tom de voz firme porém acolhedor, transformando cada correção técnica em uma conquista divertida!"""
 
     elif "nutrição" in contexto_aba.lower():
-        resposta_consenso = f"""🤖 **OssBot IA Master - Manual Nutricional Especializado (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
+        return f"""🤖 **OssBot IA Master - Manual Nutricional Especializado (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Atleta:* **{nome_usuario}** | *Foco:* **{esc(tema_desc)}**
 
 O Gemini e o Grok avaliaram a demanda energética e formularam este protocolo nutricional detalhado:
@@ -280,7 +278,7 @@ O Gemini e o Grok avaliaram a demanda energética e formularam este protocolo nu
 💡 **Consenso Final:** Disciplina alimentar é o combustível invisível das suas vitórias, {nome_usuario}!"""
 
     else:
-        resposta_consenso = f"""🤖 **OssBot IA Master - Relatório Técnico Aprofundado (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
+        return f"""🤖 **OssBot IA Master - Relatório Técnico Aprofundado (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Atleta:* **{nome_usuario}** | *Tópico:* **{esc(tema_desc)}**
 
 Após debate técnico aprofundado, o Gemini e o Grok convergiram para a melhor análise sobre **{esc(tema_desc)}**:
@@ -297,54 +295,6 @@ Após debate técnico aprofundado, o Gemini e o Grok convergiram para a melhor a
 * Jamais estique os braços no solo para evitar armlocks e estrangulamentos cruzados.
 
 💡 **Consenso Final para {nome_usuario}:** A repetição consciente leva à maestria inquestionável!"""
-
-    return transcricao, resposta_consenso
-
-def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
-    st.markdown(f"🎙️ **Digite o tema ou assunto desejado para o consenso entre Gemini e Grok gerar o relatório completo:**")
-    
-    if f"reset_counter_{key_prefix}" not in st.session_state:
-        st.session_state[f"reset_counter_{key_prefix}"] = 0
-    
-    current_key = f"audio_in_{key_prefix}_{st.session_state[f'reset_counter_{key_prefix}']}"
-    
-    col_g1, col_g2 = st.columns([5, 1])
-    with col_g1:
-        audio_value = st.audio_input("Grave sua voz", key=current_key)
-    with col_g2:
-        if st.button("❌ Limpar", key=f"clear_audio_{key_prefix}", use_container_width=True):
-            st.session_state[f"transcricao_{key_prefix}"] = ""
-            st.session_state[f"resposta_ia_{key_prefix}"] = ""
-            st.session_state[f"reset_counter_{key_prefix}"] += 1
-            st.toast("🧹 Áudio e formulário limpos com sucesso!", icon="🔄")
-            st.rerun()
-
-    if audio_value is not None:
-        audio_bytes = audio_value.read()
-        st.audio(audio_bytes)
-        
-        if st.session_state.get(f"ultimo_audio_hash_{key_prefix}") != hash(audio_bytes):
-            st.session_state[f"ultimo_audio_hash_{key_prefix}"] = hash(audio_bytes)
-            with st.spinner("🤖 Gemini e Grok debatendo e redigindo o relatório completo..."):
-                time.sleep(0.8)
-                nome_atual = st.session_state.get("perfil_nome", "Atleta")
-                trans, resp = processar_consenso_ia_dual(contexto_aba, contexto_aba, nome_atual)
-                st.session_state[f"transcricao_{key_prefix}"] = trans
-                st.session_state[f"resposta_ia_{key_prefix}"] = resp
-                st.success("✅ Relatório completo gerado com sucesso!")
-
-    resp = st.session_state.get(f"resposta_ia_{key_prefix}", "")
-    if resp:
-        mostrar_html(f"<div class='ia-resposta-box'>{resp}</div>")
-        
-        st.markdown("🔊 **Ouça o conteúdo gerado por áudio:**")
-        caminho_mp3 = gerar_audio_tts(resp)
-        if caminho_mp3 and os.path.exists(caminho_mp3):
-            with open(caminho_mp3, "rb") as f:
-                audio_bytes_tts = f.read()
-            st.audio(audio_bytes_tts, format="audio/mp3")
-
-    return st.session_state.get(f"transcricao_{key_prefix}", ""), st.session_state.get(f"resposta_ia_{key_prefix}", "")
 
 def verificar_e_conceder_badges():
     badges = []
@@ -790,7 +740,7 @@ try:
             refeicao = st.text_input("Refeição / Alimento a planejar (Ex: Dieta para corte de peso):", value="")
             if st.form_submit_button("Gerar e Salvar Manual Nutricional", use_container_width=True):
                 if refeicao:
-                    _, resp_gerada = processar_consenso_ia_dual(refeicao, "nutrição", st.session_state.get("perfil_nome", "Atleta"))
+                    resp_gerada = processar_consenso_ia_dual(refeicao, "nutrição", st.session_state.get("perfil_nome", "Atleta"))
                     nutri = st.session_state.get("dicas_nutricao", [])
                     nutri.append({"refeicao": refeicao, "detalhes": resp_gerada, "data": datetime.now().strftime("%d/%m/%Y")})
                     st.session_state["dicas_nutricao"] = nutri
@@ -848,7 +798,7 @@ try:
             titulo_curso = st.text_input("Nome do Curso / Posição a estudar (Ex: Guarda Aranha):", value="")
             if st.form_submit_button("Gerar e Salvar Estudo Técnico", use_container_width=True):
                 if titulo_curso:
-                    _, resp_gerada = processar_consenso_ia_dual(titulo_curso, "curso", st.session_state.get("perfil_nome", "Atleta"))
+                    resp_gerada = processar_consenso_ia_dual(titulo_curso, "curso", st.session_state.get("perfil_nome", "Atleta"))
                     cursos = st.session_state.get("cursos_interativos", [])
                     cursos.append({"titulo": titulo_curso, "desc": resp_gerada})
                     st.session_state["cursos_interativos"] = cursos
@@ -875,7 +825,7 @@ try:
             foco_kids = st.text_input("Sobre o que você quer que a dinâmica trabalhe? (Ex: Fuga de quadril para 8 crianças)", value="")
             if st.form_submit_button("Gerar Dossiê Pedagógico Kids Completo", use_container_width=True):
                 if foco_kids:
-                    _, regra_kids = processar_consenso_ia_dual(foco_kids, "kids", st.session_state.get("perfil_nome", "Professor"))
+                    regra_kids = processar_consenso_ia_dual(foco_kids, "kids", st.session_state.get("perfil_nome", "Professor"))
                     kids = st.session_state.get("dinamic_kids_custom", [])
                     kids.append({"foco": foco_kids, "regra": regra_kids})
                     st.session_state["dinamic_kids_custom"] = kids
@@ -904,7 +854,7 @@ try:
             posicao_drill = st.text_input("Sobre o que o drill seria? (Ex: Passagem de guarda toreando com pressão)", value="")
             if st.form_submit_button("Gerar Plano de Drills Completo", use_container_width=True):
                 if posicao_drill:
-                    _, reps_gerada = processar_consenso_ia_dual(posicao_drill, "drill", st.session_state.get("perfil_nome", "Atleta"))
+                    reps_gerada = processar_consenso_ia_dual(posicao_drill, "drill", st.session_state.get("perfil_nome", "Atleta"))
                     drills = st.session_state.get("drills_treino", [])
                     drills.append({"posicao": posicao_drill, "reps": reps_gerada})
                     st.session_state["drills_treino"] = drills
@@ -1095,7 +1045,7 @@ try:
             nota_r = st.text_area("Relate sua condição física ou dor muscular:", value="")
             if st.form_submit_button("Gerar Orientações de Recuperação", use_container_width=True):
                 if nota_r:
-                    _, resp_gerada = processar_consenso_ia_dual(nota_r, "recuperação", st.session_state.get("perfil_nome", "Atleta"))
+                    resp_gerada = processar_consenso_ia_dual(nota_r, "recuperação", st.session_state.get("perfil_nome", "Atleta"))
                     recup = st.session_state.get("recuperacao_notas", [])
                     recup.append({"nota": resp_gerada, "data": datetime.now().strftime("%d/%m/%Y")})
                     st.session_state["recuperacao_notas"] = recup
