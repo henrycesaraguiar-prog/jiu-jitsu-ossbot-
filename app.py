@@ -198,7 +198,6 @@ def zerar_luta():
     st.session_state.pts_a = st.session_state.vant_a = st.session_state.pun_a = 0
     st.session_state.pts_b = st.session_state.vant_b = st.session_state.pun_b = 0
 
-# Função de Consenso IA Dual para Kids, Drills, Nutrição, etc.
 def processar_consenso_ia_dual(tema_input, contexto_aba, nome_usuario):
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
     tema_desc = tema_input if tema_input else "Técnica de Jiu-Jitsu"
@@ -240,12 +239,17 @@ Desenvolvimento de memória muscular e velocidade de transição focada diretame
 💡 **Consenso Final:** Nutrição alinhada para máxima performance!"""
 
     elif "arbitragem_cbjj" in contexto_aba.lower():
-        return f"""⚖️ **Assistente de Regras CBJJ (Análise da Narração)**
-*Consulta para:* **{esc(tema_desc)}**
-De acordo com o Livro de Regras da CBJJ:
-* **Análise da Ação:** A descrição fornecida indica progressão de posição ou reversão de controle.
-* **Pontuação Sugerida:** Verifique se houve estabilização por 3 segundos para validação de pontos (ex: 2 pontos para queda, raspagem ou joelho na barriga; 3 pontos para passagem de guarda; 4 pontos para montagem ou costas).
-💡 **Dica do Juiz:** Sempre confirme a estabilização limpa antes de pontuar no placar!"""
+        return f"""⚖️ **Assistente de Regras CBJJ (Análise Automática da Ação)**
+*Ação Narrada:* **{esc(tema_desc)}**
+
+De acordo com o Livro Oficial de Regras da CBJJ:
+* **Interpretação do Lance:** A descrição indica uma transição válida pontuável ou finalização.
+* **Pontuação Oficial Sugerida:** 
+  - Queda / Raspagem / Joelho na Barriga: **2 pontos**
+  - Passagem de Guarda: **3 pontos**
+  - Montagem / Costas: **4 pontos**
+  - Vantagem: Concedida em tentativa de finalização ou quase-passagem.
+💡 **Aplicação Prática:** Verifique o placar acima para adicionar os pontos correspondentes com base nesta diretriz oficial!"""
 
     else:
         return f"""🤖 **OssBot IA Master - Relatório Técnico (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
@@ -568,17 +572,16 @@ try:
         "📇 Card", "🔑 Chaves", "⏱️ Cronograma", "🔄 Recuperação"
     ])
 
-    # 1. Luta & Placar Interativo com Nomes, Áudio CBJJ, Cronômetro e Salvar Luta
+    # 1. Luta & Placar Interativo Integrado com Narração e Salvamento Direto
     with abas_app[0]:
         st.markdown("### 🤼 Placar de Luta em Tempo Real (Regras CBJJ)")
         
-        # Configuração de Nomes dos Atletas
         col_n1, col_n2 = st.columns(2)
         with col_n1:
-            nome_atleta_a = st.text_input("Nome Atleta Azul (Atleta 1):", value=st.session_state.get("nome_a_luta", "Atleta Azul"))
+            nome_atleta_a = st.text_input("Nome Atleta 1 (Azul/Preto):", value=st.session_state.get("nome_a_luta", "Atleta 1"))
             st.session_state["nome_a_luta"] = nome_atleta_a
         with col_n2:
-            nome_atleta_b = st.text_input("Nome Atleta Branco (Atleta 2):", value=st.session_state.get("nome_b_luta", "Atleta Branco"))
+            nome_atleta_b = st.text_input("Nome Atleta 2 (Branco):", value=st.session_state.get("nome_b_luta", "Atleta 2"))
             st.session_state["nome_b_luta"] = nome_atleta_b
 
         col_p1, col_p2 = st.columns(2)
@@ -622,14 +625,16 @@ try:
 
         st.divider()
 
-        # Caixa de Assistente de Áudio / Texto para Regras da CBJJ
-        with st.expander("🎙️ Assistente de Regras CBJJ (Digite ou Descreva o Lance)"):
-            st.markdown("<p style='font-size: 13px; color: #cccccc;'>Exemplo: 'Atleta Azul raspou o adversário e estabilizou' ou 'Atleta Branco passou a guarda'.</p>", unsafe_allow_html=True)
-            narracao_lance = st.text_input("Descreva o que aconteceu no combate:", key="input_narracao_lance")
-            if st.button("⚖️ Consultar Regras CBJJ para este Lance", use_container_width=True):
-                if narracao_lance:
-                    resp_cbjj = processar_consenso_ia_dual(narracao_lance, "arbitragem_cbjj", st.session_state.get("perfil_nome", "Árbitro"))
-                    st.markdown(f"<div class='ia-resposta-box'>{resp_cbjj}</div>", unsafe_allow_html=True)
+        # Caixa de Assistente de Narração Automática (Use o microfone do seu teclado!)
+        with st.form("form_narracao_automatica"):
+            st.markdown("### 🎙️ Assistente de Pontuação por Voz / Texto")
+            st.markdown("<p style='font-size: 13px; color: #cccccc;'>Toque no campo abaixo, use o microfone do seu teclado para falar (ex: <i>'Atleta Azul raspou e finalizou'</i>) e clique em consultar:</p>", unsafe_allow_html=True)
+            narracao_acao = st.text_input("O que aconteceu na luta?", value="")
+            btn_consultar_acao = st.form_submit_button("⚖️ Consultar Regra e Definir Pontuação", use_container_width=True)
+            
+            if btn_consultar_acao and narracao_acao:
+                resp_analise = processar_consenso_ia_dual(narracao_acao, "arbitragem_cbjj", st.session_state.get("perfil_nome", "Árbitro"))
+                st.markdown(f"<div class='ia-resposta-box'>{resp_analise}</div>", unsafe_allow_html=True)
 
         st.divider()
         ct1, ct2, ct3, ct4 = st.columns(4)
@@ -673,22 +678,22 @@ try:
 
         st.divider()
         
-        # Botão de Salvar Luta com Formulário Dedicado
-        with st.form("form_salvar_luta_detalhada"):
+        # Botão e Formulário de Salvar Luta Integrado
+        with st.form("form_salvar_luta_oficial"):
             st.markdown("### 💾 Salvar Luta no Histórico")
-            identificador_busca = st.text_input("Nome para pesquisar depois no histórico (Ex: Final do Absoluto - João vs Pedro):", value=f"{nome_atleta_a} vs {nome_atleta_b}")
-            detalhes_extra_luta = st.text_area("Observações importantes da luta (Finalização, categoria, etc.):", value="")
+            identificador_luta = st.text_input("Nome para pesquisar depois no histórico (Ex: Final Absoluto - João vs Pedro):", value=f"{nome_atleta_a} vs {nome_atleta_b}")
+            obs_luta = st.text_area("Observações / O que aconteceu (Ex: Finalizou com estrangulamento):", value="")
             
-            btn_salvar_luta_oficial = st.form_submit_button("📥 Registrar e Salvar Luta Oficialmente", use_container_width=True)
-            if btn_salvar_luta_oficial:
+            btn_salvar_definitivo = st.form_submit_button("📥 Registrar e Salvar Luta no Histórico", use_container_width=True)
+            if btn_salvar_definitivo:
                 tempo_decorrido_seg = st.session_state.tempo_inicial - st.session_state.tempo_segundos
                 min_dec, sec_dec = tempo_decorrido_seg // 60, tempo_decorrido_seg % 60
                 tempo_total_min = st.session_state.tempo_inicial // 60
                 
                 lutas = st.session_state.get("historico_lutas", [])
-                nova_luta_obj = {
+                nova_luta = {
                     "data": datetime.now().strftime("%d/%m/%Y - %H:%M"),
-                    "identificador": identificador_busca,
+                    "identificador": identificador_luta,
                     "atleta_a": nome_atleta_a,
                     "atleta_b": nome_atleta_b,
                     "pts_a": st.session_state.pts_a,
@@ -699,37 +704,37 @@ try:
                     "pun_b": st.session_state.pun_b,
                     "tempo_total": f"{tempo_total_min} min",
                     "tempo_duracao": f"{min_dec:02d}:{sec_dec:02d}",
-                    "observacoes": detalhes_extra_luta
+                    "observacoes": obs_luta
                 }
-                lutas.append(nova_luta_obj)
+                lutas.append(nova_luta)
                 st.session_state["historico_lutas"] = lutas
                 salvar_tudo()
-                st.success(f"✅ Luta '{identificador_busca}' salva com sucesso no histórico!")
+                st.success(f"✅ Luta '{identificador_luta}' salva com sucesso no histórico!")
 
-    # 2. Histórico Reformulado com Pesquisa por Nome
+    # 2. Histórico Pesquisable por Nome
     with abas_app[1]:
-        st.markdown("### 📜 Histórico de Lutas & Combates Salvos")
+        st.markdown("### 📜 Histórico de Combates Salvos")
         lutas_lista = st.session_state.get("historico_lutas", [])
         
         if not lutas_lista:
-            st.info("Nenhuma luta salva ainda. Vá até a aba 'Luta', configure o placar e clique em 'Salvar Luta'!")
+            st.info("Nenhuma luta salva ainda. Realize um combate na aba 'Luta' e clique em salvar!")
         else:
-            termo_pesquisa = st.text_input("🔍 Pesquisar luta por nome ou identificador:", value="")
+            termo_busca = st.text_input("🔍 Pesquisar luta por nome ou identificador:", value="")
             
             lutas_filtradas = []
             for idx, l in enumerate(reversed(lutas_lista)):
                 idx_real = len(lutas_lista) - 1 - idx
                 ident_nome = l.get("identificador", f"{l.get('atleta_a', 'Atleta 1')} vs {l.get('atleta_b', 'Atleta 2')}")
-                if termo_pesquisa.strip().lower() in ident_nome.lower() or termo_pesquisa.strip() == "":
+                if termo_busca.strip().lower() in ident_nome.lower() or termo_busca.strip() == "":
                     lutas_filtradas.append((idx_real, l))
             
-            st.write(f"Exibindo **{len(lutas_filtradas)}** luta(s) encontrada(s):")
+            st.write(f"Exibindo **{len(lutas_filtradas)}** luta(s):")
             st.divider()
             
             for idx_real, l in lutas_filtradas:
                 ident_nome = l.get("identificador", "Combate BJJ")
-                at_a = l.get("atleta_a", "Atleta Azul")
-                at_b = l.get("atleta_b", "Atleta Branco")
+                at_a = l.get("atleta_a", "Atleta 1")
+                at_b = l.get("atleta_b", "Atleta 2")
                 p_a = l.get("pts_a", 0)
                 v_a = l.get("vant_a", 0)
                 pu_a = l.get("pun_a", 0)
@@ -744,15 +749,15 @@ try:
                 with st.expander(f"🥋 {ident_nome} ({data_l})"):
                     col_h1, col_h2 = st.columns(2)
                     with col_h1:
-                        st.markdown(f"**Atleta 1:** {esc(at_a)}")
-                        st.markdown(f"🏆 Pontos: **{p_a}** | Vantagens: **{v_a}** | Punições: **{pu_a}**")
+                        st.markdown(f"**{esc(at_a)}** (Atleta 1)")
+                        st.markdown(f"🏆 Pts: **{p_a}** | Vant: **{v_a}** | Pun: **{pu_a}**")
                     with col_h2:
-                        st.markdown(f"**Atleta 2:** {esc(at_b)}")
-                        st.markdown(f"🏆 Pontos: **{p_b}** | Vantagens: **{v_b}** | Punições: **{pu_b}**")
+                        st.markdown(f"**{esc(at_b)}** (Atleta 2)")
+                        st.markdown(f"🏆 Pts: **{p_b}** | Vant: **{v_b}** | Pun: **{pu_b}**")
                     
                     st.markdown(f"⏱️ **Tempo Configurado:** {t_tot} | **Duração até Fim:** {t_dur}")
                     if obs:
-                        st.markdown(f"📝 **Observações:** {esc(obs)}")
+                        st.markdown(f"📝 **Detalhes:** {esc(obs)}")
                     
                     if st.button(f"🗑️ Excluir Luta #{idx_real+1}", key=f"del_luta_hist_{idx_real}"):
                         lutas_lista.pop(idx_real)
