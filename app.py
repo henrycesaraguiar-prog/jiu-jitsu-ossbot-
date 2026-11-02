@@ -198,7 +198,7 @@ def zerar_luta():
     st.session_state.pts_a = st.session_state.vant_a = st.session_state.pun_a = 0
     st.session_state.pts_b = st.session_state.vant_b = st.session_state.pun_b = 0
 
-# Função de Consenso Avançado IA Dual
+# Função de Consenso IA Dual para Kids, Drills, Nutrição, etc.
 def processar_consenso_ia_dual(tema_input, contexto_aba, nome_usuario):
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
     tema_desc = tema_input if tema_input else "Técnica de Jiu-Jitsu"
@@ -207,61 +207,52 @@ def processar_consenso_ia_dual(tema_input, contexto_aba, nome_usuario):
     if "drill" in contexto_aba.lower():
         return f"""🤖 **OssBot IA Master - Plano de Drills (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Atleta:* **{nome_usuario}** | *Foco:* **{esc(tema_desc)}**
-
 ### 1. Objetivo Técnico
 Desenvolvimento de memória muscular e velocidade de transição focada diretamente em **{esc(tema_desc)}**.
-
 ### 2. Estrutura de Blocos e Tempos
 * **Bloco 1 (Aquecimento Dinâmico - 2 Minutos):** Movimentação limpa e sem resistência para fixar a mecânica de {esc(tema_desc)}.
-* **Bloco 2 (Resistência Parcial - 4 Séries de 1 Minuto / 20s Descanso):** O parceiro oferece 40% de oposição para testar o ajuste de pegadas e estabilidade.
-* **Bloco 3 (Velocidade Máxima - 2 Rounds de 45 Segundos):** Execução em alta intensidade simulando situação real de combate.
-
-💡 **Consenso Final:** Repetição consciente e constância garantem a perfeição do movimento!"""
+* **Bloco 2 (Resistência Parcial - 4 Séries de 1 Minuto / 20s Descanso):** O parceiro oferece 40% de oposição.
+* **Bloco 3 (Velocidade Máxima - 2 Rounds de 45 Segundos):** Execução em alta intensidade.
+💡 **Consenso Final:** Repetição consciente e constância garantem a perfeição!"""
 
     elif "infantil" in contexto_aba.lower() or "kids" in contexto_aba.lower():
         return f"""🤖 **OssBot IA Master - Dinâmica Kids com Jogos e Tempos (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Professor:* **{nome_usuario}** | *Foco Principal:* **{esc(tema_desc)}**
-
 ### 1. Brincadeira de Aquecimento e Mobilidade (Duração: 4 Minutos)
 * **Nome do Jogo:** *O Desafio do Caranguejo Ágil*
-* **Como Funciona:** As crianças se deslocam em posição de caranguejo pelo tatame para escapar do 'tubarão' (professor), aquecendo os quadris e ombros exigidos em **{esc(tema_desc)}**.
-
+* **Como Funciona:** Deslocamento em posição de caranguejo para aquecer quadris e ombros exigidos em **{esc(tema_desc)}**.
 ### 2. Jogo Técnico Principal com Cronômetro (Duração: 8 Minutos)
 * **Nome do Jogo:** *A Fortaleza Protegida*
-* **Aplicação Prática ({esc(tema_desc)}):** Divida a turma em duplas. O aluno por baixo foca em manter a base firme, enquanto o colega tenta passar de forma controlada. 
-* **Regra de Tempo:** Rodadas cronometradas de 1 minuto cada. A cada apito, troca-se a função.
-
+* **Aplicação Prática ({esc(tema_desc)}):** Aluno por baixo foca em manter a base firme nos conceitos de {esc(tema_desc)}, enquanto o colega tenta passar.
+* **Regra de Tempo:** Rodadas de 1 minuto cada, alternando posições.
 ### 3. Desafio Final de Agilidade (Duração: 3 Minutos)
 * **Nome do Jogo:** *Estátua de Ferro*
-* **Como Funciona:** Ao sinal do professor, os pequenos devem travar o corpo exatamente na posição base de **{esc(tema_desc)}**.
-
-💡 **Consenso Final:** Dinâmica estruturada com foco absoluto em **{esc(tema_desc)}**, unindo diversão, controle de tempo e aprendizado técnico!"""
+* **Como Funciona:** Ao sinal do professor, travar o corpo na posição base de **{esc(tema_desc)}**.
+💡 **Consenso Final:** Dinâmica estruturada com foco absoluto em **{esc(tema_desc)}**!"""
 
     elif "nutrição" in contexto_aba.lower():
         return f"""🤖 **OssBot IA Master - Manual Nutricional (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Atleta:* **{nome_usuario}** | *Foco:* **{esc(tema_desc)}**
-
 ### 1. Estratégia Energética Pré-Treino
-* **Timing:** 45 minutos antes da atividade.
-* **Sugestão Prática:** Vitamina de banana com aveia e mel para sustentar a energia durante os treinos intensos focados em {esc(tema_desc)}.
-
+* **Timing:** 45 minutos antes. Vitamina de banana com aveia e mel.
 ### 2. Hidratação e Recuperação
-* Reposição hídrica fracionada e refeição pós-treino rica em proteínas e carboidratos limpos.
+* Reposição hídrica fracionada e pós-treino proteico.
+💡 **Consenso Final:** Nutrição alinhada para máxima performance!"""
 
-💡 **Consenso Final:** Nutrição alinhada para máxima performance, {nome_usuario}!"""
+    elif "arbitragem_cbjj" in contexto_aba.lower():
+        return f"""⚖️ **Assistente de Regras CBJJ (Análise da Narração)**
+*Consulta para:* **{esc(tema_desc)}**
+De acordo com o Livro de Regras da CBJJ:
+* **Análise da Ação:** A descrição fornecida indica progressão de posição ou reversão de controle.
+* **Pontuação Sugerida:** Verifique se houve estabilização por 3 segundos para validação de pontos (ex: 2 pontos para queda, raspagem ou joelho na barriga; 3 pontos para passagem de guarda; 4 pontos para montagem ou costas).
+💡 **Dica do Juiz:** Sempre confirme a estabilização limpa antes de pontuar no placar!"""
 
     else:
         return f"""🤖 **OssBot IA Master - Relatório Técnico (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Atleta:* **{nome_usuario}** | *Tópico:* **{esc(tema_desc)}**
-
 ### 1. Análise Tática de {esc(tema_desc)}
-* Manutenção rigorosa do centro de gravidade baixo e domínio antecipado de pegadas para neutralizar reações adversárias.
-
-### 2. Sequência Prática em Etapas
-* **Passo 1:** Conexão e estabilização base.
-* **Passo 2:** Isolação de quadris e progressão de pressão.
-
-💡 **Consenso Final:** Foco total na execução limpa de {esc(tema_desc)}!"""
+* Manutenção rigorosa do centro de gravidade baixo e domínio antecipado de pegadas.
+💡 **Consenso Final:** Foco total na execução limpa!"""
 
 def verificar_e_conceder_badges():
     badges = []
@@ -285,37 +276,6 @@ def renderizar_secao_gamificacao():
                 <p style='color: #cccccc; margin: 0; font-size: 10px;'>{esc(desc)}</p>
             </div>
             """)
-
-def gerar_relatorio_pdf_atleta():
-    nome = st.session_state.get("perfil_nome", "Atleta")
-    faixa = st.session_state.get("perfil_faixa", "Branca")
-    graus = st.session_state.get("perfil_graus", 0)
-    academia = st.session_state.get("perfil_academia", "Academia BJJ")
-    status = st.session_state.get("perfil_status", "Atleta")
-    email = st.session_state.get("usuario_email", "")
-    total_lutas = len(st.session_state.get("historico_lutas", []))
-    
-    return f"""
-=====================================================
-          OSSBOT PRO - RELATÓRIO OFICIAL DE ATLETA
-=====================================================
-Data: {datetime.now().strftime('%d/%m/%Y - %H:%M')}
-
-[DADOS DO ATLETA]
-• Nome: {nome}
-• E-mail: {email}
-• Academia: {academia}
-• Graduação: Faixa {faixa} ({graus}º Grau)
-• Status: {status}
-
-[RESUMO DE ATIVIDADES]
-• Total de Lutas: {total_lutas}
-• Cursos/Técnicas: {len(st.session_state.get("cursos_interativos", []))}
-• Dinâmicas Kids: {len(st.session_state.get("dinamic_kids_custom", []))}
-• Flashcards de Pressão: {len(st.session_state.get("flashcards_pressao", []))}
-• Presenças Registradas: {len(st.session_state.get("historico_presencas", []))}
-=====================================================
-"""
 
 # Bloco Principal com Tratamento de Erros
 try:
@@ -467,8 +427,6 @@ try:
                 nova_faixa = st.selectbox("Faixa:", faixas_p, index=idx_fx)
                 novos_graus = st.slider("Graus:", 0, 11, int(st.session_state.get("perfil_graus", 0)))
                 nova_academia = st.text_input("Academia:", value=st.session_state.get("perfil_academia", ""))
-                
-                # Upload de Foto Pessoal na Sidebar
                 foto_arquivo_side = st.file_uploader("Alterar Foto de Perfil:", type=["jpg", "jpeg", "png"], key="side_foto_up")
                 
                 if st.form_submit_button("💾 Salvar Perfil", use_container_width=True):
@@ -476,11 +434,9 @@ try:
                     st.session_state["perfil_faixa"] = nova_faixa
                     st.session_state["perfil_graus"] = novos_graus
                     st.session_state["perfil_academia"] = nova_academia if nova_academia else "Insira a sua Academia"
-                    
                     if foto_arquivo_side is not None:
                         bytes_foto = foto_arquivo_side.getvalue()
                         st.session_state["perfil_foto_b64"] = base64.b64encode(bytes_foto).decode("utf-8")
-                        
                     salvar_tudo()
                     st.toast("✅ Perfil atualizado!", icon="🥋")
                     st.rerun()
@@ -537,7 +493,6 @@ try:
                     for usr, info, d_usr in lista_alunos:
                         n_usr = d_usr.get("perfil_nome", "Sem Nome")
                         with st.expander(f"⚙️ {n_usr}"):
-                            # Mostra a foto atual do aluno se houver
                             f_b64_aluno = d_usr.get("perfil_foto_b64", "")
                             if f_b64_aluno:
                                 st.markdown(f'<img src="data:image/jpeg;base64,{f_b64_aluno}" class="foto-bolinha">', unsafe_allow_html=True)
@@ -553,8 +508,6 @@ try:
                                 idx_fx = fs.index(f_atual) if f_atual in fs else 0
                                 nova_fx = st.selectbox("Faixa:", fs, index=idx_fx, key=f"nfx_{usr}")
                                 n_graus = st.slider("Graus:", 0, 4, int(d_usr.get("perfil_graus", 0)), key=f"ngr_{usr}")
-                                
-                                # NOVO: Campo para o Master/Professor adicionar ou alterar a foto do aluno
                                 nova_foto_aluno_arquivo = st.file_uploader("Alterar Foto do Aluno:", type=["jpg", "jpeg", "png"], key=f"foto_up_{usr}")
                                 
                                 c_b1, c_b2 = st.columns(2)
@@ -574,12 +527,9 @@ try:
                                         du["perfil_nome"] = novo_no
                                         du["perfil_faixa"] = nova_fx
                                         du["perfil_graus"] = n_graus
-                                        
-                                        # Atualiza a foto se o admin enviou uma nova
                                         if nova_foto_aluno_arquivo is not None:
                                             b_foto_aluno = nova_foto_aluno_arquivo.getvalue()
                                             du["perfil_foto_b64"] = base64.b64encode(b_foto_aluno).decode("utf-8")
-                                            
                                         salvar_dados_usuario(novo_em, du)
                                         st.toast("✅ Atualizado com sucesso!")
                                         st.rerun()
@@ -618,14 +568,25 @@ try:
         "📇 Card", "🔑 Chaves", "⏱️ Cronograma", "🔄 Recuperação"
     ])
 
-    # 1. Luta & Placar Interativo com Cronômetro em Tempo Real
+    # 1. Luta & Placar Interativo com Nomes, Áudio CBJJ, Cronômetro e Salvar Luta
     with abas_app[0]:
+        st.markdown("### 🤼 Placar de Luta em Tempo Real (Regras CBJJ)")
+        
+        # Configuração de Nomes dos Atletas
+        col_n1, col_n2 = st.columns(2)
+        with col_n1:
+            nome_atleta_a = st.text_input("Nome Atleta Azul (Atleta 1):", value=st.session_state.get("nome_a_luta", "Atleta Azul"))
+            st.session_state["nome_a_luta"] = nome_atleta_a
+        with col_n2:
+            nome_atleta_b = st.text_input("Nome Atleta Branco (Atleta 2):", value=st.session_state.get("nome_b_luta", "Atleta Branco"))
+            st.session_state["nome_b_luta"] = nome_atleta_b
+
         col_p1, col_p2 = st.columns(2)
         with col_p1:
             mostrar_html(f"""
             <div class='placar-box'>
-                <p style='color: #cccccc; margin: 0;'>ATLETA 1 (Azul/Preto):</p>
-                <h3 style='color: #00ffcc; margin: 5px 0;'>Atleta Azul</h3>
+                <p style='color: #cccccc; margin: 0;'>ATLETA 1:</p>
+                <h3 style='color: #00ffcc; margin: 5px 0;'>{esc(nome_atleta_a)}</h3>
                 <div class='placar-numero'>{st.session_state.pts_a}</div>
                 <p style='color: #ffffff; margin: 5px 0;'>Vantagens: {st.session_state.vant_a} | Punições: {st.session_state.pun_a}</p>
             </div>
@@ -643,8 +604,8 @@ try:
         with col_p2:
             mostrar_html(f"""
             <div class='placar-box'>
-                <p style='color: #cccccc; margin: 0;'>ATLETA 2 (Branco):</p>
-                <h3 style='color: #ffffff; margin: 5px 0;'>Atleta Branco</h3>
+                <p style='color: #cccccc; margin: 0;'>ATLETA 2:</p>
+                <h3 style='color: #ffffff; margin: 5px 0;'>{esc(nome_atleta_b)}</h3>
                 <div class='placar-numero'>{st.session_state.pts_b}</div>
                 <p style='color: #ffffff; margin: 5px 0;'>Vantagens: {st.session_state.vant_b} | Punições: {st.session_state.pun_b}</p>
             </div>
@@ -660,9 +621,20 @@ try:
                 if st.button("Punição (B)", key="pu1b", use_container_width=True): somar_placar("pun_b", 1); st.rerun()
 
         st.divider()
-        ct1, ct2, ct3 = st.columns(3)
+
+        # Caixa de Assistente de Áudio / Texto para Regras da CBJJ
+        with st.expander("🎙️ Assistente de Regras CBJJ (Digite ou Descreva o Lance)"):
+            st.markdown("<p style='font-size: 13px; color: #cccccc;'>Exemplo: 'Atleta Azul raspou o adversário e estabilizou' ou 'Atleta Branco passou a guarda'.</p>", unsafe_allow_html=True)
+            narracao_lance = st.text_input("Descreva o que aconteceu no combate:", key="input_narracao_lance")
+            if st.button("⚖️ Consultar Regras CBJJ para este Lance", use_container_width=True):
+                if narracao_lance:
+                    resp_cbjj = processar_consenso_ia_dual(narracao_lance, "arbitragem_cbjj", st.session_state.get("perfil_nome", "Árbitro"))
+                    st.markdown(f"<div class='ia-resposta-box'>{resp_cbjj}</div>", unsafe_allow_html=True)
+
+        st.divider()
+        ct1, ct2, ct3, ct4 = st.columns(4)
         with ct1:
-            tempo_sel = st.selectbox("Tempo do Rola (Minutos):", [1, 2, 3, 5, 6, 10], index=3)
+            tempo_sel = st.selectbox("Tempo do Rola (Min):", [1, 2, 3, 5, 6, 10], index=3)
             st.session_state.tempo_inicial = tempo_sel * 60
 
         with ct2:
@@ -681,15 +653,17 @@ try:
 
         with ct3:
             if not st.session_state.cronometro_rodando:
-                if st.button("▶️ Iniciar Cronômetro", use_container_width=True):
+                if st.button("▶️ Iniciar", use_container_width=True):
                     st.session_state.cronometro_rodando = True
                     st.session_state.ultimo_tick = time.time()
                     st.rerun()
             else:
-                if st.button("⏸️ Pausar Cronômetro", use_container_width=True):
+                if st.button("⏸️ Pausar", use_container_width=True):
                     st.session_state.cronometro_rodando = False
                     st.rerun()
-            if st.button("🔄 Zerar Luta Completa", use_container_width=True):
+
+        with ct4:
+            if st.button("🔄 Zerar", use_container_width=True):
                 zerar_luta()
                 st.rerun()
 
@@ -697,32 +671,95 @@ try:
             time.sleep(1)
             st.rerun()
 
-    # 2. Histórico
-    with abas_app[1]:
-        st.markdown("### 📜 Histórico de Lutas & Treinos")
-        with st.form("form_nova_luta"):
-            adv = st.text_input("Oponente / Companheiro:")
-            res = st.selectbox("Resultado:", ["Vitória por Finalização", "Vitória por Pontos", "Empate", "Derrota"])
-            det = st.text_area("Detalhes / Posição:")
-            if st.form_submit_button("Registrar Luta", use_container_width=True):
-                if adv:
-                    lutas = st.session_state.get("historico_lutas", [])
-                    lutas.append({"data": datetime.now().strftime("%d/%m/%Y"), "adversario": adv, "resultado": res, "detalhes": det})
-                    st.session_state["historico_lutas"] = lutas
-                    salvar_tudo()
-                    st.toast("✅ Luta registrada!", icon="🥋")
-                    st.rerun()
         st.divider()
-        lutas_lista = st.session_state.get("historico_lutas", [])
-        for idx, l in enumerate(reversed(lutas_lista)):
-            idx_real = len(lutas_lista) - 1 - idx
-            st.markdown(f"<div class='card-item'><b>{esc(l['data'])}</b> - {esc(l['resultado'])} | Oponente: <b>{esc(l['adversario'])}</b><br>{esc(l['detalhes'])}</div>", unsafe_allow_html=True)
-            if st.button(f"🗑️ Excluir Luta #{idx_real+1}", key=f"del_luta_{idx_real}"):
-                lutas_lista.pop(idx_real)
-                st.session_state["historico_lutas"] = lutas_lista
+        
+        # Botão de Salvar Luta com Formulário Dedicado
+        with st.form("form_salvar_luta_detalhada"):
+            st.markdown("### 💾 Salvar Luta no Histórico")
+            identificador_busca = st.text_input("Nome para pesquisar depois no histórico (Ex: Final do Absoluto - João vs Pedro):", value=f"{nome_atleta_a} vs {nome_atleta_b}")
+            detalhes_extra_luta = st.text_area("Observações importantes da luta (Finalização, categoria, etc.):", value="")
+            
+            btn_salvar_luta_oficial = st.form_submit_button("📥 Registrar e Salvar Luta Oficialmente", use_container_width=True)
+            if btn_salvar_luta_oficial:
+                tempo_decorrido_seg = st.session_state.tempo_inicial - st.session_state.tempo_segundos
+                min_dec, sec_dec = tempo_decorrido_seg // 60, tempo_decorrido_seg % 60
+                tempo_total_min = st.session_state.tempo_inicial // 60
+                
+                lutas = st.session_state.get("historico_lutas", [])
+                nova_luta_obj = {
+                    "data": datetime.now().strftime("%d/%m/%Y - %H:%M"),
+                    "identificador": identificador_busca,
+                    "atleta_a": nome_atleta_a,
+                    "atleta_b": nome_atleta_b,
+                    "pts_a": st.session_state.pts_a,
+                    "vant_a": st.session_state.vant_a,
+                    "pun_a": st.session_state.pun_a,
+                    "pts_b": st.session_state.pts_b,
+                    "vant_b": st.session_state.vant_b,
+                    "pun_b": st.session_state.pun_b,
+                    "tempo_total": f"{tempo_total_min} min",
+                    "tempo_duracao": f"{min_dec:02d}:{sec_dec:02d}",
+                    "observacoes": detalhes_extra_luta
+                }
+                lutas.append(nova_luta_obj)
+                st.session_state["historico_lutas"] = lutas
                 salvar_tudo()
-                st.toast("🗑️ Luta excluída com sucesso!")
-                st.rerun()
+                st.success(f"✅ Luta '{identificador_busca}' salva com sucesso no histórico!")
+
+    # 2. Histórico Reformulado com Pesquisa por Nome
+    with abas_app[1]:
+        st.markdown("### 📜 Histórico de Lutas & Combates Salvos")
+        lutas_lista = st.session_state.get("historico_lutas", [])
+        
+        if not lutas_lista:
+            st.info("Nenhuma luta salva ainda. Vá até a aba 'Luta', configure o placar e clique em 'Salvar Luta'!")
+        else:
+            termo_pesquisa = st.text_input("🔍 Pesquisar luta por nome ou identificador:", value="")
+            
+            lutas_filtradas = []
+            for idx, l in enumerate(reversed(lutas_lista)):
+                idx_real = len(lutas_lista) - 1 - idx
+                ident_nome = l.get("identificador", f"{l.get('atleta_a', 'Atleta 1')} vs {l.get('atleta_b', 'Atleta 2')}")
+                if termo_pesquisa.strip().lower() in ident_nome.lower() or termo_pesquisa.strip() == "":
+                    lutas_filtradas.append((idx_real, l))
+            
+            st.write(f"Exibindo **{len(lutas_filtradas)}** luta(s) encontrada(s):")
+            st.divider()
+            
+            for idx_real, l in lutas_filtradas:
+                ident_nome = l.get("identificador", "Combate BJJ")
+                at_a = l.get("atleta_a", "Atleta Azul")
+                at_b = l.get("atleta_b", "Atleta Branco")
+                p_a = l.get("pts_a", 0)
+                v_a = l.get("vant_a", 0)
+                pu_a = l.get("pun_a", 0)
+                p_b = l.get("pts_b", 0)
+                v_b = l.get("vant_b", 0)
+                pu_b = l.get("pun_b", 0)
+                t_tot = l.get("tempo_total", "5 min")
+                t_dur = l.get("tempo_duracao", "00:00")
+                obs = l.get("observacoes", "")
+                data_l = l.get("data", "")
+                
+                with st.expander(f"🥋 {ident_nome} ({data_l})"):
+                    col_h1, col_h2 = st.columns(2)
+                    with col_h1:
+                        st.markdown(f"**Atleta 1:** {esc(at_a)}")
+                        st.markdown(f"🏆 Pontos: **{p_a}** | Vantagens: **{v_a}** | Punições: **{pu_a}**")
+                    with col_h2:
+                        st.markdown(f"**Atleta 2:** {esc(at_b)}")
+                        st.markdown(f"🏆 Pontos: **{p_b}** | Vantagens: **{v_b}** | Punições: **{pu_b}**")
+                    
+                    st.markdown(f"⏱️ **Tempo Configurado:** {t_tot} | **Duração até Fim:** {t_dur}")
+                    if obs:
+                        st.markdown(f"📝 **Observações:** {esc(obs)}")
+                    
+                    if st.button(f"🗑️ Excluir Luta #{idx_real+1}", key=f"del_luta_hist_{idx_real}"):
+                        lutas_lista.pop(idx_real)
+                        st.session_state["historico_lutas"] = lutas_lista
+                        salvar_tudo()
+                        st.toast("🗑️ Luta excluída com sucesso!")
+                        st.rerun()
 
     # 3. Nutrição & Macros
     with abas_app[2]:
@@ -966,13 +1003,6 @@ try:
             <p><b>Status:</b> {esc(st.session_state.get('perfil_status', 'Atleta'))}</p>
         </div>
         """, unsafe_allow_html=True)
-        st.download_button(
-            "📥 Baixar Carteirinha em TXT",
-            data=gerar_relatorio_pdf_atleta(),
-            file_name="carteirinha_ossbot.txt",
-            mime="text/plain",
-            use_container_width=True
-        )
 
     # 12. Chaves
     with abas_app[11]:
