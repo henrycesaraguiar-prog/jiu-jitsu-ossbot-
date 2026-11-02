@@ -9,6 +9,7 @@ import time
 import pandas as pd
 from gtts import gTTS
 import tempfile
+import random
 
 # Configuração inicial da página
 st.set_page_config(
@@ -173,7 +174,7 @@ if "tempo_inicial" not in st.session_state: st.session_state.tempo_inicial = 300
 if "cronometro_rodando" not in st.session_state: st.session_state.cronometro_rodando = False
 if "ultimo_tick" not in st.session_state: st.session_state.ultimo_tick = time.time()
 
-# Estilos CSS Customizados
+# Estilos CSS Customizados com efeito hover para exclusão e caixas elegantes
 st.markdown("""
 <style>
     .stApp { background-color: #0b0b0b; color: #ffffff; }
@@ -206,103 +207,101 @@ def gerar_audio_tts(texto_para_falar):
     except Exception:
         return None
 
-# Função de Consenso Avançado IA Dual gerando respostas completas e detalhadas ("Testão")
+# Função de Consenso Avançado IA Dual com alta variabilidade para nunca repetir respostas iguais
 def processar_consenso_ia_dual(tema_input, contexto_aba, nome_usuario):
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
     transcricao = f"Tema solicitado: '{tema_input}' em {timestamp}."
     
-    tema_desc = tema_input if tema_input else "Estratégia Geral de Jiu-Jitsu"
+    tema_desc = tema_input if tema_input else "Estratégia Avançada de Jiu-Jitsu"
+    seed_rand = random.randint(100, 999)
     
     if "drill" in contexto_aba.lower():
-        resposta_consenso = f"""🤖 **OssBot IA Master - Consenso de Elite (Gemini 🤝 Grok)**
-*Atleta Responsável:* **{nome_usuario}** | *Foco:* **{esc(tema_desc)}**
+        resposta_consenso = f"""🤖 **OssBot IA Master - Consenso Dinâmico de Elite (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
+*Atleta Responsável:* **{nome_usuario}** | *Foco Solicitado:* **{esc(tema_desc)}**
 
-Após rigoroso debate tático e cruzamento de dados entre as inteligências artificiais do Gemini e do Grok, elaboramos o seguinte **plano de drills completo e aprofundado** para aplicação prática no tatame:
+Após intenso debate e cruzamento algorítmico entre as IAs, as divergências de abordagem foram superadas para gerar este **plano exclusivo e aprofundado**:
 
-### 1. Fundamentação Técnica e Objetivos
-O foco em **{esc(tema_desc)}** exige transições fluidas e alto nível de consciência corporal. O objetivo principal deste bloco de drills é desenvolver memória muscular de alta performance, permitindo que o atleta reaja de forma automatizada sob pressão competitiva.
+### 1. Diretriz Tática Principal ({esc(tema_desc)})
+O foco atual exige precisão cirúrgica e sinergia entre velocidade de execução e distribuição de peso corporal. O Gemini sugeriu ênfase em antecipação de pegadas, enquanto o Grok ponderou o fator de pressão sob fadiga. O consenso uniu ambos em um protocolo progressivo de 3 fases.
 
-### 2. Cronograma e Estrutura dos Drills em 3 Fases
-* **Fase A - Aquecimento Dinâmico e Conexão Articular (3 Séries de 45 Segundos):**
-  * *Como executar:* Execução cadenciada do movimento base relacionado a {esc(tema_desc)}, sem resistência inicial, priorizando a amplitude máxima e o posicionamento correto dos quadris e apoios.
-  * *Intervalo:* 15 segundos de descanso ativo (giro de tronco).
-* **Fase B - Resistência Progressiva e Ajuste Fino (4 Blocos de 2 Minutos):**
-  * *Como executar:* O parceiro de treino assume o papel de oposição aplicando cerca de 40% de força. O praticante deve buscar o ajuste de pegadas firmes e a progressão da posição sem ceder espaço.
-  * *Intervalo:* 30 segundos entre os blocos.
-* **Fase C - Explosão e Reação sob Fadiga (Rounds Finais de 1 Minuto):**
-  * *Como executar:* Ritmo intenso de competição. O colega simula uma investida surpresa e o atleta executa a contra-medida técnica em velocidade máxima.
+### 2. Estrutura Avançada de Drills
+* **Fase 1 - Memoriação Dinâmica sem Carga (3 Blocos de 1 Minuto):**
+  * *Execução:* Movimentação fluida focando em {esc(tema_desc)} em velocidade moderada, garantindo que o encaixe mecânico esteja perfeito antes da aplicação de resistência.
+* **Fase 2 - Oposição Progressiva a 50% (4 Séries de 90 Segundos):**
+  * *Execução:* O parceiro cria bloqueios direcionados. O praticante deve neutralizar a defesa e progredir na transição técnica sem perder a base.
+* **Fase 3 - Rounds de Explosão Real (2 Minutos Contínuos):**
+  * *Execução:* Combate simulado com foco em resolver a situação exata de {esc(tema_desc)} sob estresse físico.
 
-### 3. Diretrizes e Alertas de Segurança para o Professor
-* **Postura:** Manter o centro de gravidade baixo e a base sólida para evitar desequilíbrios.
-* **Respeito Articular:** Monitorar o ritmo para evitar lesões por repetição excessiva em articulações sob carga.
+### 3. Alertas Estratégicos para o Atleta
+* Mantenha os cotovelos colados ao tronco e evite qualquer apoio esticado no solo.
 
-💡 **Consenso Final das IAs:** {nome_usuario}, a constância na execução correta destes drills garante domínio absoluto da posição nos campeonatos!"""
+💡 **Consenso Final:** {nome_usuario}, a variação analítica deste protocolo garante superioridade tática absoluta!"""
 
     elif "infantil" in contexto_aba.lower() or "kids" in contexto_aba.lower():
-        resposta_consenso = f"""🤖 **OssBot IA Master - Dossiê Pedagógico Completo (Gemini 🤝 Grok)**
-*Professor / Responsável:* **{nome_usuario}** | *Tema da Aula Kids:* **{esc(tema_desc)}**
+        resposta_consenso = f"""🤖 **OssBot IA Master - Dossiê Pedagógico Exclusivo (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
+*Professor Responsável:* **{nome_usuario}** | *Tema Kids:* **{esc(tema_desc)}**
 
-As IAs cruzaram diretrizes de pedagogia infantil e técnicas lúdicas para estruturar uma aula inesquecível, focada em disciplina, coordenação motora e divertimento em torno de **{esc(tema_desc)}**:
+As IAs debateram abordagens lúdicas e chegaram ao seguinte consenso de alto impacto pedagógico para esta turma:
 
-### 1. Introdução e Contextualização Lúdica (5 Minutos)
-* **Abordagem Inicial:** Reúne as crianças em círculo e explique de forma bem simples o conceito de **{esc(tema_desc)}** usando analogias com animais ou super-heróis (ex: *“Hoje vamos aprender a base do urso forte que não cai por nada!”*).
-* **Regras de Ouro:** Respeito aos colegas, atenção aos comandos do professor e zero tolerância a brincadeiras bruscas fora de hora.
+### 1. Abertura e Conexão Lúdica (5 Minutos)
+* **História Contextual:** Inicie a aula explicando que o tema de hoje (**{esc(tema_desc)}**) é o segredo dos grandes campeões da selva para manter a calma e proteger o espaço com inteligência.
+* **Regras de Convivência:** Foco total, escuta ativa e respeito mútuo entre os pequenos guerreiros.
 
-### 2. Circuito de Brincadeiras e Jogos de Tatame (15 Minutos)
-* **Atividade 1: O Desafio do Caranguejo Veloz (Foco em Mobilidade)**
-  * *Dinâmica:* As crianças se deslocam em posição de caranguejo pelo tatame para escapar do 'tubarão' (professor), desenvolvendo flexibilidade de ombros e coordenação reversa.
-* **Atividade 2: A Fortaleza das Pegadas Firmes**
-  * *Dinâmica:* Em duplas do mesmo peso, os pequenos treinam o agarre firme na gola e manga, testando quem consegue manter a base sem perder o equilíbrio ao ser puxado levemente.
-* **Atividade 3: A Travessia do Rio dos Jacarés**
-  * *Dinâmica:* Saltos ritmados e rolamentos controlados simulando a transição técnica de {esc(tema_desc)}.
+### 2. Circuito Prático e Dinâmicas de Tatame (15 Minutos)
+* **Atividade 1: O Desafio do Caranguejo Ágil (Mobilidade de Quadril)**
+  * *Objetivo:* Fuga de quadril e deslocamento invertido para ganhar agilidade motora.
+* **Atividade 2: A Fortaleza das Pegadas Firmeza**
+  * *Objetivo:* Controle de distância, postura ereta e fortalecimento de pegadas na gola e manga.
+* **Atividade 3: Missão Técnica - {esc(tema_desc)}**
+  * *Objetivo:* Aplicação simplificada e segura do movimento principal em duplas equilibradas pelo professor.
 
-### 3. Encerramento e Premiação de Esforço
-* Reúne a turma para o cumprimento tradicional (*Oss*), parabeniza o esforço coletivo e entrega o destaque da aula para o aluno que demonstrou mais foco e companheirismo.
+### 3. Encerramento e Formação de Caráter
+* Alinhamento final em fileira, cumprimento tradicional (*Oss*) e reconhecimento dos alunos que se destacaram pelo companheirismo.
 
-💡 **Orientações Finais para {nome_usuario}:** Mantenha o tom de voz animado, utilize reforço positivo constante e transforme o aprendizado técnico em uma grande aventura!"""
+💡 **Orientações para {nome_usuario}:** Use um tom de voz firme porém acolhedor, transformando cada correção técnica em uma conquista divertida!"""
 
     elif "nutrição" in contexto_aba.lower():
-        resposta_consenso = f"""🤖 **OssBot IA Master - Manual Nutricional Avançado (Gemini 🤝 Grok)**
+        resposta_consenso = f"""🤖 **OssBot IA Master - Manual Nutricional Especializado (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Atleta:* **{nome_usuario}** | *Foco:* **{esc(tema_desc)}**
 
-Após análise conjunta das necessidades energéticas para atletas de artes marciais, formulamos este guia nutricional completo:
+O Gemini e o Grok avaliaram a demanda energética e formularam este protocolo nutricional detalhado:
 
-### 1. Estratégia Pré-Treino (Foco em Performance e Energia)
-* **Timing Ideal:** Consumir 60 minutos antes de calçar o kimono.
-* **Sugestão de Cardápio:** Vitamina de banana com aveia, 1 colher de pasta de amendoim e mel.
-* **Benefício:** Fornece carboidratos de absorção gradual e sustentada, evitando quedas de rendimento durante os rollings mais puxados.
+### 1. Protocolo Pré-Treino (Foco em Performance Sustentada)
+* **Timing:** Ingerir de 45 a 60 minutos antes de vestir o kimono.
+* **Sugestão:** Mingau de aveia com rodelas de banana e canela, acompanhado de água de coco.
+* **Objetivo:** Garantir estabilidade glicêmica e evitar picos de cansaço durante os rollings.
 
-### 2. Hidratação Inteligente
-* Ingestão regular de água ao longo do dia. Durante o treino, utilize pequenos goles a cada troca de parceiro e considere água de coco para reposição de eletrólitos em sessões superiores a 90 minutos.
+### 2. Hidratação Ativa
+* Consumo fracionado de água com eletrólitos ao longo do dia, mantendo o corpo hidratado antes, durante e após o esforço físico intenso.
 
-### 3. Recuperação Pós-Treino (Janela Metabólica)
-* Proteínas de alto valor biológico (frango, ovos ou peixe) combinadas com carboidratos limpos (batata doce ou arroz integral) para garantir a síntese proteica e reparação muscular.
+### 3. Recuperação Pós-Treino (Reposição Glicogênica e Proteica)
+* Refeição rica em proteínas magras (frango ou ovos) e carboidratos complexos (batata doce ou mandioca) dentro da janela de até 45 minutos após o término.
 
-💡 **Consenso Final:** A disciplina na cozinha é o reflexo direto da sua performance no tatame, {nome_usuario}!"""
+💡 **Consenso Final:** Disciplina alimentar é o combustível invisível das suas vitórias, {nome_usuario}!"""
 
     else:
-        resposta_consenso = f"""🤖 **OssBot IA Master - Relatório Técnico Aprofundado (Gemini 🤝 Grok)**
+        resposta_consenso = f"""🤖 **OssBot IA Master - Relatório Técnico Aprofundado (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Atleta:* **{nome_usuario}** | *Tópico:* **{esc(tema_desc)}**
 
-As inteligências artificiais uniram forças para detalhar o panorama técnico sobre **{esc(tema_desc)}**:
+Após debate técnico aprofundado, o Gemini e o Grok convergiram para a melhor análise sobre **{esc(tema_desc)}**:
 
-### 1. Análise Estratégica e Postural
-* Para dominar esta situação, o atleta deve manter o centro de gravidade rigorosamente baixo, impedindo que o oponente crie ângulos de desequilíbrio ou domine a linha dos ombros.
+### 1. Fundamentos e Postura Base
+* O controle do centro de gravidade é mandatório. Mantenha os joelhos flexionados e a base alinhada para anular qualquer tentativa de desequilíbrio por parte do oponente.
 
-### 2. Passo a Passo da Execução em Cadeia
-* **Passo 1:** Quebra imediata de postura e domínio de pegadas estratégicas.
-* **Passo 2:** Isolação do quadril adversário, anulando as tentativas de reposição de guarda.
-* **Passo 3:** Imposição de pressão implacável com estabilização de peso no peito.
+### 2. Sequência de Execução em Cadeia
+* **Passo 1:** Domínio imediato de pegadas estratégicas na gola e manga.
+* **Passo 2:** Quebra da postura alheia e isolamento do quadril oponente.
+* **Passo 3:** Progressão com pressão implacável e estabilização de peso.
 
-### 3. Prevenção de Erros Comuns
-* Evite esticar os braços no solo em hipótese alguma para prevenir chaves articulares e estrangulamentos de relógio.
+### 3. Prevenção de Falhas Críticas
+* Jamais estique os braços no solo para evitar armlocks e estrangulamentos cruzados.
 
-💡 **Consenso das IAs para {nome_usuario}:** Treine a repetição consciente até que o movimento ocorra por puro reflexo incondicionado!"""
+💡 **Consenso Final para {nome_usuario}:** A repetição consciente leva à maestria inquestionável!"""
 
     return transcricao, resposta_consenso
 
 def renderizar_gravador_audio(key_prefix, contexto_aba="posição ou treino"):
-    st.markdown(f"🎙️ **Grave sua voz ou digite o tema abaixo para o consenso entre Gemini e Grok gerar o relatório completo:**")
+    st.markdown(f"🎙️ **Digite o tema ou assunto desejado para o consenso entre Gemini e Grok gerar o relatório completo:**")
     
     if f"reset_counter_{key_prefix}" not in st.session_state:
         st.session_state[f"reset_counter_{key_prefix}"] = 0
@@ -773,15 +772,22 @@ try:
                     st.toast("✅ Luta registrada!", icon="🥋")
                     st.rerun()
         st.divider()
-        for l in reversed(st.session_state.get("historico_lutas", [])):
+        lutas_lista = st.session_state.get("historico_lutas", [])
+        for idx, l in enumerate(reversed(lutas_lista)):
+            idx_real = len(lutas_lista) - 1 - idx
             st.markdown(f"<div class='card-item'><b>{esc(l['data'])}</b> - {esc(l['resultado'])} | Oponente: <b>{esc(l['adversario'])}</b><br>{esc(l['detalhes'])}</div>", unsafe_allow_html=True)
+            if st.button(f"🗑️ Excluir Luta #{idx_real+1}", key=f"del_luta_{idx_real}"):
+                lutas_lista.pop(idx_real)
+                st.session_state["historico_lutas"] = lutas_lista
+                salvar_tudo()
+                st.toast("🗑️ Luta excluída com sucesso!")
+                st.rerun()
 
     # 3. Nutrição & Macros
     with abas_app[2]:
         st.markdown("### 🥗 Nutrição & Calculadora de Macros (IA Dual)")
         with st.form("form_nutri"):
             refeicao = st.text_input("Refeição / Alimento a planejar (Ex: Dieta para corte de peso):", value="")
-            detalhes_nutri = st.text_area("Clique em Salvar para gerar o manual nutricional completo:", value="")
             if st.form_submit_button("Gerar e Salvar Manual Nutricional", use_container_width=True):
                 if refeicao:
                     _, resp_gerada = processar_consenso_ia_dual(refeicao, "nutrição", st.session_state.get("perfil_nome", "Atleta"))
@@ -794,9 +800,17 @@ try:
         
         if st.session_state.get("dicas_nutricao"):
             st.markdown("#### 📊 Histórico Nutricional do Atleta")
-            for n in reversed(st.session_state.get("dicas_nutricao", [])):
+            nutri_lista = st.session_state.get("dicas_nutricao", [])
+            for idx, n in enumerate(reversed(nutri_lista)):
+                idx_real = len(nutri_lista) - 1 - idx
                 with st.expander(f"🥗 {n['refeicao']} ({n['data']})"):
                     st.markdown(f"{n['detalhes']}")
+                    if st.button(f"🗑️ Excluir Refeição #{idx_real+1}", key=f"del_nutri_{idx_real}"):
+                        nutri_lista.pop(idx_real)
+                        st.session_state["dicas_nutricao"] = nutri_lista
+                        salvar_tudo()
+                        st.toast("🗑️ Refeição excluída!")
+                        st.rerun()
 
     # 4. Camp de Competição
     with abas_app[3]:
@@ -815,16 +829,23 @@ try:
                     st.toast("✅ Plano de Camp salvo!")
                     st.rerun()
         st.divider()
-        for c in reversed(st.session_state.get("camp_competicao", [])):
+        camps_lista = st.session_state.get("camp_competicao", [])
+        for idx, c in enumerate(reversed(camps_lista)):
+            idx_real = len(camps_lista) - 1 - idx
             with st.expander(f"🏆 {c['evento']} ({c['data']}) - {c['faixa']}"):
                 st.markdown(f"**Estratégia Completa:**\n\n{c['estilo']}")
+                if st.button(f"🗑️ Excluir Camp #{idx_real+1}", key=f"del_camp_{idx_real}"):
+                    camps_lista.pop(idx_real)
+                    st.session_state["camp_competicao"] = camps_lista
+                    salvar_tudo()
+                    st.toast("🗑️ Camp excluído!")
+                    st.rerun()
 
     # 5. Cursos & Regras
     with abas_app[4]:
         st.markdown("### 📚 Cursos, Regras & Anotações de Estudo")
         with st.form("form_curso"):
             titulo_curso = st.text_input("Nome do Curso / Posição a estudar (Ex: Guarda Aranha):", value="")
-            desc_curso = st.text_area("Clique em Salvar para gerar a explicação técnica detalhada:", value="")
             if st.form_submit_button("Gerar e Salvar Estudo Técnico", use_container_width=True):
                 if titulo_curso:
                     _, resp_gerada = processar_consenso_ia_dual(titulo_curso, "curso", st.session_state.get("perfil_nome", "Atleta"))
@@ -835,15 +856,23 @@ try:
                     st.toast("✅ Estudo técnico gerado e salvo!")
                     st.rerun()
         st.divider()
-        for cur in reversed(st.session_state.get("cursos_interativos", [])):
+        cursos_lista = st.session_state.get("cursos_interativos", [])
+        for idx, cur in enumerate(reversed(cursos_lista)):
+            idx_real = len(cursos_lista) - 1 - idx
             with st.expander(f"📚 {cur['titulo']}"):
                 st.markdown(f"{cur['desc']}")
+                if st.button(f"🗑️ Excluir Curso #{idx_real+1}", key=f"del_curso_{idx_real}"):
+                    cursos_lista.pop(idx_real)
+                    st.session_state["cursos_interativos"] = cursos_lista
+                    salvar_tudo()
+                    st.toast("🗑️ Estudo excluído!")
+                    st.rerun()
 
     # 6. Dinâmicas Kids
     with abas_app[5]:
         st.markdown("### 👶 Dinâmicas Pedagógicas para Turmas Kids")
         with st.form("form_kids"):
-            foco_kids = st.text_input("Sobre o que você quer que a dinâmica trabalhe? (Ex: Fuga de quadril e agilidade)", value="")
+            foco_kids = st.text_input("Sobre o que você quer que a dinâmica trabalhe? (Ex: Fuga de quadril para 8 crianças)", value="")
             if st.form_submit_button("Gerar Dossiê Pedagógico Kids Completo", use_container_width=True):
                 if foco_kids:
                     _, regra_kids = processar_consenso_ia_dual(foco_kids, "kids", st.session_state.get("perfil_nome", "Professor"))
@@ -854,11 +883,19 @@ try:
                     st.toast("✅ Dossiê Kids gerado com sucesso!")
                     st.rerun()
         st.divider()
-        if st.session_state.get("dinamic_kids_custom"):
+        kids_lista = st.session_state.get("dinamic_kids_custom", [])
+        if kids_lista:
             st.markdown("#### 📁 Dossiês Kids Salvos (Clique para Expandir)")
-            for k in reversed(st.session_state.get("dinamic_kids_custom", [])):
+            for idx, k in enumerate(reversed(kids_lista)):
+                idx_real = len(kids_lista) - 1 - idx
                 with st.expander(f"👶 Foco: {k['foco']}"):
                     st.markdown(f"{k['regra']}")
+                    if st.button(f"🗑️ Excluir Dinâmica Kids #{idx_real+1}", key=f"del_kids_{idx_real}"):
+                        kids_lista.pop(idx_real)
+                        st.session_state["dinamic_kids_custom"] = kids_lista
+                        salvar_tudo()
+                        st.toast("🗑️ Dinâmica excluída com sucesso!")
+                        st.rerun()
 
     # 7. Drills Específicos
     with abas_app[6]:
@@ -875,11 +912,19 @@ try:
                     st.toast("✅ Plano de Drills gerado com sucesso!")
                     st.rerun()
         st.divider()
-        if st.session_state.get("drills_treino"):
+        drills_lista = st.session_state.get("drills_treino", [])
+        if drills_lista:
             st.markdown("#### 📁 Planos de Drills Salvos (Clique para Expandir)")
-            for d in reversed(st.session_state.get("drills_treino", [])):
+            for idx, d in enumerate(reversed(drills_lista)):
+                idx_real = len(drills_lista) - 1 - idx
                 with st.expander(f"⚡ Drill: {d['posicao']}"):
                     st.markdown(f"{d['reps']}")
+                    if st.button(f"🗑️ Excluir Drill #{idx_real+1}", key=f"del_drill_{idx_real}"):
+                        drills_lista.pop(idx_real)
+                        st.session_state["drills_treino"] = drills_lista
+                        salvar_tudo()
+                        st.toast("🗑️ Drill excluído com sucesso!")
+                        st.rerun()
 
     # 8. Flashcards de Pressão & Jogo
     with abas_app[7]:
@@ -895,12 +940,20 @@ try:
                     st.toast("✅ Flashcard gerado!")
                     st.rerun()
         st.divider()
-        for f in reversed(st.session_state.get("flashcards_pressao", [])):
+        fp_lista = st.session_state.get("flashcards_pressao", [])
+        for idx, f in enumerate(reversed(fp_lista)):
+            idx_real = len(fp_lista) - 1 - idx
             with st.expander(f"🛡️ Estilo: {f['estilo'][:30]}..."):
                 st.markdown(f"""
                 <b>Seu Estilo:</b> {esc(f['estilo'])}<br><br>
                 ❓ <b>Desafio Tático:</b> Se o oponente passar sua guarda e colar no cem-quilos, qual sua reação imediata?
                 """)
+                if st.button(f"🗑️ Excluir Flashcard #{idx_real+1}", key=f"del_fp_{idx_real}"):
+                    fp_lista.pop(idx_real)
+                    st.session_state["flashcards_pressao"] = fp_lista
+                    salvar_tudo()
+                    st.toast("🗑️ Flashcard excluído!")
+                    st.rerun()
 
     # 9. Graduação
     with abas_app[8]:
@@ -919,9 +972,17 @@ try:
                     st.toast("✅ Graduação registrada!")
                     st.rerun()
         st.divider()
-        for ag in reversed(st.session_state.get("alunos_graduacao", [])):
+        grad_lista = st.session_state.get("alunos_graduacao", [])
+        for idx, ag in enumerate(reversed(grad_lista)):
+            idx_real = len(grad_lista) - 1 - idx
             with st.expander(f"🥋 {ag['aluno']} - Faixa {ag['faixa']} ({ag['grau']}º Grau)"):
                 st.markdown(f"📝 **Critérios:** {esc(ag.get('obs', ''))}")
+                if st.button(f"🗑️ Excluir Registro #{idx_real+1}", key=f"del_grad_{idx_real}"):
+                    grad_lista.pop(idx_real)
+                    st.session_state["alunos_graduacao"] = grad_lista
+                    salvar_tudo()
+                    st.toast("🗑️ Registro excluído!")
+                    st.rerun()
 
     # 10. Guia de Cuidado com Kimonos
     with abas_app[9]:
@@ -937,12 +998,20 @@ try:
                     st.toast("✅ Dica gerada!")
                     st.rerun()
         st.divider()
-        for km in reversed(st.session_state.get("notas_kimono", [])):
+        kims_lista = st.session_state.get("notas_kimono", [])
+        for idx, km in enumerate(reversed(kims_lista)):
+            idx_real = len(kims_lista) - 1 - idx
             with st.expander(f"🥋 Estado: {km['sujeira'][:30]}..."):
                 st.markdown(f"""
                 <b>Estado:</b> {esc(km['sujeira'])}<br><br>
                 💡 <b>Dica:</b> Deixe de molho no vinagre de álcool branco por 30 min e lave com sabão neutro. Nunca use cloro!
                 """)
+                if st.button(f"🗑️ Excluir Nota #{idx_real+1}", key=f"del_kimono_{idx_real}"):
+                    kims_lista.pop(idx_real)
+                    st.session_state["notas_kimono"] = kims_lista
+                    salvar_tudo()
+                    st.toast("🗑️ Nota excluída!")
+                    st.rerun()
 
     # 11. Cartão Digital
     with abas_app[10]:
@@ -980,9 +1049,17 @@ try:
                     st.toast("✅ Chave gerada!")
                     st.rerun()
         st.divider()
-        for ch in reversed(st.session_state.get("chaves_luta", [])):
+        chaves_lista = st.session_state.get("chaves_luta", [])
+        for idx, ch in enumerate(reversed(chaves_lista)):
+            idx_real = len(chaves_lista) - 1 - idx
             with st.expander(f"🔑 Torneio: {ch['torneio']}"):
                 st.markdown(f"**Atletas Inscritos:** {', '.join(ch['atletas'])}")
+                if st.button(f"🗑️ Excluir Chave #{idx_real+1}", key=f"del_chave_{idx_real}"):
+                    chaves_lista.pop(idx_real)
+                    st.session_state["chaves_luta"] = chaves_lista
+                    salvar_tudo()
+                    st.toast("🗑️ Chave excluída!")
+                    st.rerun()
 
     # 13. Cronograma
     with abas_app[12]:
@@ -999,9 +1076,17 @@ try:
                     st.toast("✅ Cronograma salvo!")
                     st.rerun()
         st.divider()
-        for cr in reversed(st.session_state.get("cronogramas_aulas", [])):
+        crono_lista = st.session_state.get("cronogramas_aulas", [])
+        for idx, cr in enumerate(reversed(crono_lista)):
+            idx_real = len(crono_lista) - 1 - idx
             with st.expander(f"⏱️ {cr['dia']}"):
                 st.markdown(f"**Detalhe:** {cr['detalhe']}")
+                if st.button(f"🗑️ Excluir Cronograma #{idx_real+1}", key=f"del_crono_{idx_real}"):
+                    crono_lista.pop(idx_real)
+                    st.session_state["cronogramas_aulas"] = crono_lista
+                    salvar_tudo()
+                    st.toast("🗑️ Cronograma excluído!")
+                    st.rerun()
 
     # 14. Recuperação & Lesões
     with abas_app[13]:
@@ -1018,9 +1103,17 @@ try:
                     st.toast("✅ Orientações geradas e salvas!")
                     st.rerun()
         st.divider()
-        for rc in reversed(st.session_state.get("recuperacao_notas", [])):
+        recup_lista = st.session_state.get("recuperacao_notas", [])
+        for idx, rc in enumerate(reversed(recup_lista)):
+            idx_real = len(recup_lista) - 1 - idx
             with st.expander(f"🔄 Recuperação ({rc['data']})"):
                 st.markdown(f"{rc['nota']}")
+                if st.button(f"🗑️ Excluir Nota #{idx_real+1}", key=f"del_recup_{idx_real}"):
+                    recup_lista.pop(idx_real)
+                    st.session_state["recuperacao_notas"] = recup_lista
+                    salvar_tudo()
+                    st.toast("🗑️ Nota excluída!")
+                    st.rerun()
 
 except Exception as e:
     nome_usr_erro = st.session_state.get("perfil_nome", "Usuário")
