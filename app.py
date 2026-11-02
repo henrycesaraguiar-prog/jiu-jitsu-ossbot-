@@ -207,94 +207,70 @@ def gerar_audio_tts(texto_para_falar):
     except Exception:
         return None
 
-# Função de Consenso Avançado IA Dual com alta variabilidade
+# Função de Consenso Avançado IA Dual focada 100% no tema solicitado (Jogos, Tempos e Técnica)
 def processar_consenso_ia_dual(tema_input, contexto_aba, nome_usuario):
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
-    tema_desc = tema_input if tema_input else "Estratégia Avançada de Jiu-Jitsu"
+    tema_desc = tema_input if tema_input else "Técnica de Jiu-Jitsu"
     seed_rand = random.randint(100, 999)
     
     if "drill" in contexto_aba.lower():
-        return f"""🤖 **OssBot IA Master - Consenso Dinâmico de Elite (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
-*Atleta Responsável:* **{nome_usuario}** | *Foco Solicitado:* **{esc(tema_desc)}**
-
-Após intenso debate e cruzamento algorítmico entre as IAs, as divergências de abordagem foram superadas para gerar este **plano exclusivo e aprofundado**:
-
-### 1. Diretriz Tática Principal ({esc(tema_desc)})
-O foco atual exige precisão cirúrgica e sinergia entre velocidade de execução e distribuição de peso corporal. O Gemini sugeriu ênfase em antecipação de pegadas, enquanto o Grok ponderou o fator de pressão sob fadiga. O consenso uniu ambos em um protocolo progressivo de 3 fases.
-
-### 2. Estrutura Avançada de Drills
-* **Fase 1 - Memoriação Dinâmica sem Carga (3 Blocos de 1 Minuto):**
-  * *Execução:* Movimentação fluida focando em {esc(tema_desc)} em velocidade moderada, garantindo que o encaixe mecânico esteja perfeito antes da aplicação de resistência.
-* **Fase 2 - Oposição Progressiva a 50% (4 Séries de 90 Segundos):**
-  * *Execução:* O parceiro cria bloqueios direcionados. O praticante deve neutralizar a defesa e progredir na transição técnica sem perder a base.
-* **Fase 3 - Rounds de Explosão Real (2 Minutos Contínuos):**
-  * *Execução:* Combate simulado com foco em resolver a situação exata de {esc(tema_desc)} sob estresse físico.
-
-### 3. Alertas Estratégicos para o Atleta
-* Mantenha os cotovelos colados ao tronco e evite qualquer apoio esticado no solo.
-
-💡 **Consenso Final:** {nome_usuario}, a variação analítica deste protocolo garante superioridade tática absoluta!"""
-
-    elif "infantil" in contexto_aba.lower() or "kids" in contexto_aba.lower():
-        return f"""🤖 **OssBot IA Master - Dossiê Pedagógico Exclusivo (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
-*Professor Responsável:* **{nome_usuario}** | *Tema Kids:* **{esc(tema_desc)}**
-
-As IAs debateram abordagens lúdicas e chegaram ao seguinte consenso de alto impacto pedagógico para esta turma:
-
-### 1. Abertura e Conexão Lúdica (5 Minutos)
-* **História Contextual:** Inicie a aula explicando que o tema de hoje (**{esc(tema_desc)}**) é o segredo dos grandes campeões da selva para manter a calma e proteger o espaço com inteligência.
-* **Regras de Convivência:** Foco total, escuta ativa e respeito mútuo entre os pequenos guerreiros.
-
-### 2. Circuito Prático e Dinâmicas de Tatame (15 Minutos)
-* **Atividade 1: O Desafio do Caranguejo Ágil (Mobilidade de Quadril)**
-  * *Objetivo:* Fuga de quadril e deslocamento invertido para ganhar agilidade motora.
-* **Atividade 2: A Fortaleza das Pegadas Firmeza**
-  * *Objetivo:* Controle de distância, postura ereta e fortalecimento de pegadas na gola e manga.
-* **Atividade 3: Missão Técnica - {esc(tema_desc)}**
-  * *Objetivo:* Aplicação simplificada e segura do movimento principal em duplas equilibradas pelo professor.
-
-### 3. Encerramento e Formação de Caráter
-* Alinhamento final em fileira, cumprimento tradicional (*Oss*) e reconhecimento dos alunos que se destacaram pelo companheirismo.
-
-💡 **Orientações para {nome_usuario}:** Use um tom de voz firme porém acolhedor, transformando cada correção técnica em uma conquista divertida!"""
-
-    elif "nutrição" in contexto_aba.lower():
-        return f"""🤖 **OssBot IA Master - Manual Nutricional Especializado (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
+        return f"""🤖 **OssBot IA Master - Plano de Drills (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Atleta:* **{nome_usuario}** | *Foco:* **{esc(tema_desc)}**
 
-O Gemini e o Grok avaliaram a demanda energética e formularam este protocolo nutricional detalhado:
+### 1. Objetivo Técnico
+Desenvolvimento de memória muscular e velocidade de transição focada diretamente em **{esc(tema_desc)}**.
 
-### 1. Protocolo Pré-Treino (Foco em Performance Sustentada)
-* **Timing:** Ingerir de 45 a 60 minutos antes de vestir o kimono.
-* **Sugestão:** Mingau de aveia com rodelas de banana e canela, acompanhado de água de coco.
-* **Objetivo:** Garantir estabilidade glicêmica e evitar picos de cansaço durante os rollings.
+### 2. Estrutura de Blocos e Tempos
+* **Bloco 1 (Aquecimento Dinâmico - 2 Minutos):** Movimentação limpa e sem resistência para fixar a mecânica de {esc(tema_desc)}.
+* **Bloco 2 (Resistência Parcial - 4 Séries de 1 Minuto / 20s Descanso):** O parceiro oferece 40% de oposição para testar o ajuste de pegadas e estabilidade.
+* **Bloco 3 (Velocidade Máxima - 2 Rounds de 45 Segundos):** Execução em alta intensidade simulando situação real de combate.
 
-### 2. Hidratação Ativa
-* Consumo fracionado de água com eletrólitos ao longo do dia, mantendo o corpo hidratado antes, durante e após o esforço físico intenso.
+💡 **Consenso Final:** Repetição consciente e constância garantem a perfeição do movimento!"""
 
-### 3. Recuperação Pós-Treino (Reposição Glicogênica e Proteica)
-* Refeição rica em proteínas magras (frango ou ovos) e carboidratos complexos (batata doce ou mandioca) dentro da janela de até 45 minutos após o término.
+    elif "infantil" in contexto_aba.lower() or "kids" in contexto_aba.lower():
+        return f"""🤖 **OssBot IA Master - Dinâmica Kids com Jogos e Tempos (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
+*Professor:* **{nome_usuario}** | *Foco Principal:* **{esc(tema_desc)}**
 
-💡 **Consenso Final:** Disciplina alimentar é o combustível invisível das suas vitórias, {nome_usuario}!"""
+### 1. Brincadeira de Aquecimento e Mobilidade (Duração: 4 Minutos)
+* **Nome do Jogo:** *O Desafio do Caranguejo Ágil*
+* **Como Funciona:** As crianças se deslocam em posição de caranguejo pelo tatame para escapar do 'tubarão' (professor), aquecendo os quadris e ombros exigidos em **{esc(tema_desc)}**.
+
+### 2. Jogo Técnico Principal com Cronômetro (Duração: 8 Minutos)
+* **Nome do Jogo:** *A Fortaleza Protegida*
+* **Aplicação Prática ({esc(tema_desc)}):** Divida a turma em duplas. O aluno por baixo foca em manter a base firme (trabalhando os conceitos de {esc(tema_desc)}), enquanto o colega tenta passar de forma controlada. 
+* **Regra de Tempo:** Rodadas cronometradas de 1 minuto cada. A cada apito ou comando, troca-se a função (quem estava em cima vai para baixo).
+
+### 3. Desafio Final de Agilidade (Duração: 3 Minutos)
+* **Nome do Jogo:** *Estátua de Ferro*
+* **Como Funciona:** Música tocando ou sinal do professor; ao parar, os pequenos devem travar o corpo exatamente na posição base de {esc(tema_desc)}, testando equilíbrio e foco instantâneo.
+
+💡 **Consenso Final:** Dinâmica estruturada com foco absoluto em **{esc(tema_desc)}**, unindo diversão, controle de tempo e aprendizado técnico para a turma!"""
+
+    elif "nutrição" in contexto_aba.lower():
+        return f"""🤖 **OssBot IA Master - Manual Nutricional (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
+*Atleta:* **{nome_usuario}** | *Foco:* **{esc(tema_desc)}**
+
+### 1. Estratégia Energética Pré-Treino
+* **Timing:** 45 minutos antes da atividade.
+* **Sugestão Prática:** Vitamina de banana com aveia e mel para sustentar a energia durante os treinos intensos focados em {esc(tema_desc)}.
+
+### 2. Hidratação e Recuperação
+* Reposição hídrica fracionada e refeição pós-treino rica em proteínas e carboidratos limpos.
+
+💡 **Consenso Final:** Nutrição alinhada para máxima performance, {nome_usuario}!"""
 
     else:
-        return f"""🤖 **OssBot IA Master - Relatório Técnico Aprofundado (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
+        return f"""🤖 **OssBot IA Master - Relatório Técnico (Gemini 🤝 Grok)** [Ref: #{seed_rand}]
 *Atleta:* **{nome_usuario}** | *Tópico:* **{esc(tema_desc)}**
 
-Após debate técnico aprofundado, o Gemini e o Grok convergiram para a melhor análise sobre **{esc(tema_desc)}**:
+### 1. Análise Tática de {esc(tema_desc)}
+* Manutenção rigorosa do centro de gravidade baixo e domínio antecipado de pegadas para neutralizar reações adversárias.
 
-### 1. Fundamentos e Postura Base
-* O controle do centro de gravidade é mandatório. Mantenha os joelhos flexionados e a base alinhada para anular qualquer tentativa de desequilíbrio por parte do oponente.
+### 2. Sequência Prática em Etapas
+* **Passo 1:** Conexão e estabilização base.
+* **Passo 2:** Isolação de quadris e progressão de pressão.
 
-### 2. Sequência de Execução em Cadeia
-* **Passo 1:** Domínio imediato de pegadas estratégicas na gola e manga.
-* **Passo 2:** Quebra da postura alheia e isolamento do quadril oponente.
-* **Passo 3:** Progressão com pressão implacável e estabilização de peso.
-
-### 3. Prevenção de Falhas Críticas
-* Jamais estique os braços no solo para evitar armlocks e estrangulamentos cruzados.
-
-💡 **Consenso Final para {nome_usuario}:** A repetição consciente leva à maestria inquestionável!"""
+💡 **Consenso Final:** Foco total na execução limpa de {esc(tema_desc)}!"""
 
 def verificar_e_conceder_badges():
     badges = []
@@ -822,7 +798,7 @@ try:
     with abas_app[5]:
         st.markdown("### 👶 Dinâmicas Pedagógicas para Turmas Kids")
         with st.form("form_kids"):
-            foco_kids = st.text_input("Sobre o que você quer que a dinâmica trabalhe? (Ex: Fuga de quadril para 8 crianças)", value="")
+            foco_kids = st.text_input("Sobre o que você quer que a dinâmica trabalhe? (Ex: Guarda fechada com jogos e tempo)", value="")
             if st.form_submit_button("Gerar Dossiê Pedagógico Kids Completo", use_container_width=True):
                 if foco_kids:
                     regra_kids = processar_consenso_ia_dual(foco_kids, "kids", st.session_state.get("perfil_nome", "Professor"))
