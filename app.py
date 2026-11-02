@@ -31,7 +31,7 @@ st.set_page_config(
 
 # Constantes globais do Fundador
 EMAIL_ADMIN_MASTER = "henry.cesaraguiar@gmail.com"
-SENHA_ADMIN_MASTER = "adminpassword"
+SENHA_ADMIN_MASTER = "Dca@980950"
 
 # Configuração direta das Chaves fornecidas por segurança no escopo do app
 GROK_API_KEY_CONFIG = "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"
