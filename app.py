@@ -308,22 +308,22 @@ try:
                         else:
                             st.error("❌ E-mail ou senha incorretos.")
                             
-                # BOTÃO RETRÁTIL (EXPANDER) PARA ACESSO MASTER E ADICIONAR NOVO ADMIN
-                with st.expander("👑 Entrar no Modo Master / Adicionar Administrador"):
-                    with st.form("form_admin_login"):
-                        senha_master_input = st.text_input("Senha Master:", type="password")
-                        btn_admin_entrar = st.form_submit_button("🔒 Entrar como Master", use_container_width=True)
-                        if btn_admin_entrar:
-                            if senha_master_input == SENHA_ADMIN_MASTER:
-                                carregar_usuario(EMAIL_ADMIN_MASTER)
-                                st.session_state.autenticado = True
-                                st.toast("✅ Acesso Master autorizado!", icon="👑")
-                                st.rerun()
-                            else:
-                                st.error("❌ Senha master incorreta.")
-                    
-                    st.divider()
-                    st.markdown("<p style='color: #ff1e27; font-weight: bold;'>➕ Adicionar Novo Administrador</p>", unsafe_allow_html=True)
+                # LOGIN MASTER PRINCIPAL
+                with st.form("form_admin_login"):
+                    st.markdown("<p style='color: #ff1e27; font-weight: bold;'>👑 Acesso Master (Fundador)</p>", unsafe_allow_html=True)
+                    senha_master_input = st.text_input("Senha Master:", type="password")
+                    btn_admin_entrar = st.form_submit_button("🔒 Entrar como Master", use_container_width=True)
+                    if btn_admin_entrar:
+                        if senha_master_input == SENHA_ADMIN_MASTER:
+                            carregar_usuario(EMAIL_ADMIN_MASTER)
+                            st.session_state.autenticado = True
+                            st.toast("✅ Acesso Master autorizado!", icon="👑")
+                            st.rerun()
+                        else:
+                            st.error("❌ Senha master incorreta.")
+                
+                # BOTÃO RETRÁTIL EXCLUSIVO PARA ADICIONAR NOVO ADMINISTRADOR
+                with st.expander("➕ Adicionar Novo Administrador ou Master"):
                     with st.form("form_criar_novo_admin_master"):
                         senha_fundador_check = st.text_input("Senha Mestre do Fundador:", type="password", key="s_fund_novo")
                         novo_admin_email = st.text_input("E-mail do Novo Admin:", key="n_adm_email")
@@ -529,7 +529,7 @@ try:
                                         b_atual[novo_em] = d_ant
                                         salvar_banco_usuarios(b_atual)
                                         
-                                        # CORREÇÃO DE PERSISTÊNCIA DA FOTO DO ALUNO
+                                        # GARANTINDO PERSISTÊNCIA COMPLETA DOS DADOS E FOTO DO ALUNO
                                         du = carregar_dados_usuario(novo_em)
                                         du["perfil_nome"] = novo_no
                                         du["perfil_faixa"] = nova_fx
