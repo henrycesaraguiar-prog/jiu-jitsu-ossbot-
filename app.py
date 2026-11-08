@@ -308,7 +308,8 @@ try:
                         else:
                             st.error("❌ E-mail ou senha incorretos.")
                             
-                with st.expander("👑 Acesso Restrito Master (Admin)"):
+                # BOTÃO RETRÁTIL (EXPANDER) PARA ACESSO MASTER E ADICIONAR NOVO ADMIN
+                with st.expander("👑 Entrar no Modo Master / Adicionar Administrador"):
                     with st.form("form_admin_login"):
                         senha_master_input = st.text_input("Senha Master:", type="password")
                         btn_admin_entrar = st.form_submit_button("🔒 Entrar como Master", use_container_width=True)
@@ -527,6 +528,8 @@ try:
                                         d_ant["senha"] = nova_sen
                                         b_atual[novo_em] = d_ant
                                         salvar_banco_usuarios(b_atual)
+                                        
+                                        # CORREÇÃO DE PERSISTÊNCIA DA FOTO DO ALUNO
                                         du = carregar_dados_usuario(novo_em)
                                         du["perfil_nome"] = novo_no
                                         du["perfil_faixa"] = nova_fx
@@ -534,8 +537,9 @@ try:
                                         if nova_foto_aluno_arquivo is not None:
                                             b_foto_aluno = nova_foto_aluno_arquivo.getvalue()
                                             du["perfil_foto_b64"] = base64.b64encode(b_foto_aluno).decode("utf-8")
+                                        
                                         salvar_dados_usuario(novo_em, du)
-                                        st.toast("✅ Atualizado com sucesso!")
+                                        st.toast("✅ Atualizado e foto salva com sucesso!")
                                         st.rerun()
                                 if btn_d:
                                     b_atual = carregar_banco_usuarios()
@@ -625,7 +629,6 @@ try:
 
         st.divider()
 
-        # Caixa de Assistente de Narração Automática (Use o microfone do seu teclado!)
         with st.form("form_narracao_automatica"):
             st.markdown("### 🎙️ Assistente de Pontuação por Voz / Texto")
             st.markdown("<p style='font-size: 13px; color: #cccccc;'>Toque no campo abaixo, use o microfone do seu teclado para falar (ex: <i>'Atleta Azul raspou e finalizou'</i>) e clique em consultar:</p>", unsafe_allow_html=True)
@@ -678,7 +681,6 @@ try:
 
         st.divider()
         
-        # Botão e Formulário de Salvar Luta Integrado
         with st.form("form_salvar_luta_oficial"):
             st.markdown("### 💾 Salvar Luta no Histórico")
             identificador_luta = st.text_input("Nome para pesquisar depois no histórico (Ex: Final Absoluto - João vs Pedro):", value=f"{nome_atleta_a} vs {nome_atleta_b}")
