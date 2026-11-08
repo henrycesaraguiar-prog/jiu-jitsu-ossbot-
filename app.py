@@ -7,8 +7,6 @@ import base64
 import traceback
 import time
 import pandas as pd
-from gtts import gTTS
-import tempfile
 import random
 
 # Configuração inicial da página
@@ -29,7 +27,7 @@ CAMPOS = [
     "cursos_interativos", "dinamic_kids_custom", "flashcards_pressao", 
     "alunos_graduacao", "notas_kimono", "cronogramas_aulas", "dicas_nutricao",
     "camp_competicao", "drills_treino", "chaves_luta", "recuperacao_notas",
-    "historico_presencas", "tipo_usuario"
+    "historico_presencas", "tipo_usuario", "cronograma_master_b64", "turmas_master_config"
 ]
 
 def esc(texto):
@@ -91,6 +89,8 @@ def carregar_dados_usuario(email):
         "perfil_status": status_padrao,
         "perfil_foto_b64": "",
         "tipo_usuario": "Master (Fundador)" if is_master_global else "Atleta",
+        "cronograma_master_b64": "",
+        "turmas_master_config": "Segunda: Fundamentos (19:00)\nTerça: Avançado (20:00)\nQuarta: Kids (17:30)\nQuinta: Competição (20:00)\nSexta: Sparring (19:00)\nSábado: Open Mat (10:00)",
         "historico_lutas": [],
         "cursos_interativos": [],
         "dinamic_kids_custom": [],
@@ -281,7 +281,7 @@ def renderizar_secao_gamificacao():
             </div>
             """)
 
-# Bloco Principal com Tratamento de Erros
+# Bloco Principal de Autenticação e Login com o Botão Retrátil (Expander) Master
 try:
     if not st.session_state.autenticado:
         col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
@@ -322,7 +322,7 @@ try:
                         else:
                             st.error("❌ Senha master incorreta.")
                 
-                # BOTÃO RETRÁTIL EXCLUSIVO PARA ADICIONAR NOVO ADMINISTRADOR
+                # BOTÃO RETRÁTIL (EXPANDER) EXCLUSIVO PARA ADICIONAR NOVO ADMINISTRADOR
                 with st.expander("➕ Adicionar Novo Administrador ou Master"):
                     with st.form("form_criar_novo_admin_master"):
                         senha_fundador_check = st.text_input("Senha Mestre do Fundador:", type="password", key="s_fund_novo")
@@ -450,31 +450,55 @@ try:
         renderizar_secao_gamificacao()
         st.divider()
         
-        if st.session_state.get("is_admin", False) or st.session_state.get("tipo_usuario") in ["Professor / Instrutor", "Master (Fundador)"]:
-            st.markdown("## 👑 Painel de Gestão & Coach")
-            
-            with st.expander("📱 Check-in de Presença (QR Code)"):
-                st.markdown("<p style='font-size: 12px; color: #cccccc;'>Aponte a câmara para o QR Code do dia:</p>", unsafe_allow_html=True)
+        # ÁREA DO ALUNO: CHECK-IN RÁPIDO DO DIA (SEM PIN)
+        if not (st.session_state.get("is_admin", False) or st.session_state.get("tipo_usuario") in ["Professor / Instrutor", "Master (Fundador)"]):
+            st.markdown("## 📱 Área do Aluno")
+            with st.expander("📍 Fazer Check-in (Aulas de Hoje)"):
+                dias_semana_pt = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
+                dia_hoje_nome = dias_semana_pt[datetime.today().weekday()]
                 data_hoje_str = datetime.now().strftime("%d/%m/%Y")
-                data_api_str = datetime.now().strftime("%Y-%m-%d")
-                qr_url_dia = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=OssBot-Checkin-{data_api_str}"
-                st.markdown(f"""
-                <div style='text-align: center; background: #161616; padding: 10px; border-radius: 8px; border: 1px solid #ff1e27; margin-bottom: 8px;'>
-                    <img src='{qr_url_dia}' style='width: 130px; height: 130px; border-radius: 4px;'/>
-                    <p style='color: #00ffcc; font-size: 11px; margin-top: 6px;'>📅 {data_hoje_str}</p>
-                </div>
-                """, unsafe_allow_html=True)
                 
-                if st.button("📍 Fazer Check-in Hoje", use_container_width=True):
-                    presencas = st.session_state.get("historico_presencas", [])
-                    if data_hoje_str not in presencas:
-                        presencas.append(data_hoje_str)
-                        st.session_state["historico_presencas"] = presencas
-                        salvar_tudo()
-                        st.success(f"✅ Check-in registrado!")
-                        st.rerun()
-                    else:
-                        st.info("ℹ️ Já fez check-in hoje!")
+                st.markdown(f"<p style='color: #00ffcc; font-size: 13px;'>📅 Hoje é <b>{dia_hoje_nome}, {data_hoje_str}</b></p>", unsafe_allow_html=True)
+                
+                turmas_disponiveis_hoje = [
+                    f"Juvenil / Fundamentos - {dia_hoje_nome} 18:00",
+                    f"Adulto Avançado - {dia_hoje_nome} 19:30"
+                ]
+                
+                with st.form("form_checkin_aluno_dia"):
+                    turma_escolhida = st.selectbox("Turmas disponíveis hoje:", turmas_disponiveis_hoje)
+                    btn_fazer_checkin = st.form_submit_button("✅ Confirmar Presença", use_container_width=True)
+                    
+                    if btn_fazer_checkin:
+                        presencas = st.session_state.get("historico_presencas", [])
+                        reg_presenca = f"{data_hoje_str} - {turma_escolhida}"
+                        if reg_presenca not in presencas:
+                            presencas.append(reg_presenca)
+                            st.session_state["historico_presencas"] = presencas
+                            salvar_tudo()
+                            st.success(f"✅ Presença confirmada em {turma_escolhida}!")
+                            st.rerun()
+                        else:
+                            st.info("ℹ️ Você já fez check-in nesta aula hoje!")
+
+        # ÁREA DO MASTER / PROFESSOR: GESTÃO COMPLETA DE ALUNOS E CRONOGRAMA
+        if st.session_state.get("is_admin", False) or st.session_state.get("tipo_usuario") in ["Professor / Instrutor", "Master (Fundador)"]:
+            st.markdown("## 👑 Gestão Master (Academia)")
+            
+            with st.expander("🖼️ Enviar Cronograma / Imagem de Aulas"):
+                st.markdown("<p style='font-size: 12px; color: #cccccc;'>Envie a foto do cronograma da academia:</p>", unsafe_allow_html=True)
+                foto_crono_arquivo = st.file_uploader("Selecionar imagem do cronograma:", type=["jpg", "jpeg", "png"], key="master_crono_up")
+                
+                if foto_crono_arquivo is not None:
+                    bytes_crono = foto_crono_arquivo.getvalue()
+                    st.session_state["cronograma_master_b64"] = base64.b64encode(bytes_crono).decode("utf-8")
+                    salvar_tudo()
+                    st.success("✅ Imagem do cronograma salva com sucesso!")
+                
+                crono_b64_atual = st.session_state.get("cronograma_master_b64", "")
+                if crono_b64_atual:
+                    st.markdown("<p style='font-size: 12px; color: #00ffcc; margin-top: 5px;'>Visualização Atual:</p>", unsafe_allow_html=True)
+                    st.markdown(f'<img src="data:image/jpeg;base64,{crono_b64_atual}" style="width: 100%; border-radius: 8px; border: 1px solid #ff1e27;">', unsafe_allow_html=True)
 
             with st.expander("🛠️ Gestão de Alunos e Turmas"):
                 banco = carregar_banco_usuarios()
@@ -529,7 +553,6 @@ try:
                                         b_atual[novo_em] = d_ant
                                         salvar_banco_usuarios(b_atual)
                                         
-                                        # GARANTINDO PERSISTÊNCIA COMPLETA DOS DADOS E FOTO DO ALUNO
                                         du = carregar_dados_usuario(novo_em)
                                         du["perfil_nome"] = novo_no
                                         du["perfil_faixa"] = nova_fx
@@ -631,7 +654,7 @@ try:
 
         with st.form("form_narracao_automatica"):
             st.markdown("### 🎙️ Assistente de Pontuação por Voz / Texto")
-            st.markdown("<p style='font-size: 13px; color: #cccccc;'>Toque no campo abaixo, use o microfone do seu teclado para falar (ex: <i>'Atleta Azul raspou e finalizou'</i>) e clique em consultar:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-size: 13px; color: #cccccc;'>Toque no campo abaixo, use o microfone do seu teclado para falar e clique em consultar:</p>", unsafe_allow_html=True)
             narracao_acao = st.text_input("O que aconteceu na luta?", value="")
             btn_consultar_acao = st.form_submit_button("⚖️ Consultar Regra e Definir Pontuação", use_container_width=True)
             
@@ -683,8 +706,8 @@ try:
         
         with st.form("form_salvar_luta_oficial"):
             st.markdown("### 💾 Salvar Luta no Histórico")
-            identificador_luta = st.text_input("Nome para pesquisar depois no histórico (Ex: Final Absoluto - João vs Pedro):", value=f"{nome_atleta_a} vs {nome_atleta_b}")
-            obs_luta = st.text_area("Observações / O que aconteceu (Ex: Finalizou com estrangulamento):", value="")
+            identificador_luta = st.text_input("Nome para pesquisar depois no histórico:", value=f"{nome_atleta_a} vs {nome_atleta_b}")
+            obs_luta = st.text_area("Observações / O que aconteceu:", value="")
             
             btn_salvar_definitivo = st.form_submit_button("📥 Registrar e Salvar Luta no Histórico", use_container_width=True)
             if btn_salvar_definitivo:
@@ -719,10 +742,9 @@ try:
         lutas_lista = st.session_state.get("historico_lutas", [])
         
         if not lutas_lista:
-            st.info("Nenhuma luta salva ainda. Realize um combate na aba 'Luta' e clique em salvar!")
+            st.info("Nenhuma luta salva ainda.")
         else:
             termo_busca = st.text_input("🔍 Pesquisar luta por nome ou identificador:", value="")
-            
             lutas_filtradas = []
             for idx, l in enumerate(reversed(lutas_lista)):
                 idx_real = len(lutas_lista) - 1 - idx
@@ -730,49 +752,28 @@ try:
                 if termo_busca.strip().lower() in ident_nome.lower() or termo_busca.strip() == "":
                     lutas_filtradas.append((idx_real, l))
             
-            st.write(f"Exibindo **{len(lutas_filtradas)}** luta(s):")
-            st.divider()
-            
             for idx_real, l in lutas_filtradas:
                 ident_nome = l.get("identificador", "Combate BJJ")
-                at_a = l.get("atleta_a", "Atleta 1")
-                at_b = l.get("atleta_b", "Atleta 2")
-                p_a = l.get("pts_a", 0)
-                v_a = l.get("vant_a", 0)
-                pu_a = l.get("pun_a", 0)
-                p_b = l.get("pts_b", 0)
-                v_b = l.get("vant_b", 0)
-                pu_b = l.get("pun_b", 0)
-                t_tot = l.get("tempo_total", "5 min")
-                t_dur = l.get("tempo_duracao", "00:00")
-                obs = l.get("observacoes", "")
-                data_l = l.get("data", "")
-                
-                with st.expander(f"🥋 {ident_nome} ({data_l})"):
+                with st.expander(f"🥋 {ident_nome} ({l.get('data', '')})"):
                     col_h1, col_h2 = st.columns(2)
                     with col_h1:
-                        st.markdown(f"**{esc(at_a)}** (Atleta 1)")
-                        st.markdown(f"🏆 Pts: **{p_a}** | Vant: **{v_a}** | Pun: **{pu_a}**")
+                        st.markdown(f"**{esc(l.get('atleta_a', 'Atleta 1'))}**")
+                        st.markdown(f"🏆 Pts: **{l.get('pts_a', 0)}** | Vant: **{l.get('vant_a', 0)}**")
                     with col_h2:
-                        st.markdown(f"**{esc(at_b)}** (Atleta 2)")
-                        st.markdown(f"🏆 Pts: **{p_b}** | Vant: **{v_b}** | Pun: **{pu_b}**")
-                    
-                    st.markdown(f"⏱️ **Tempo Configurado:** {t_tot} | **Duração até Fim:** {t_dur}")
-                    if obs:
-                        st.markdown(f"📝 **Detalhes:** {esc(obs)}")
-                    
+                        st.markdown(f"**{esc(l.get('atleta_b', 'Atleta 2'))}**")
+                        st.markdown(f"🏆 Pts: **{l.get('pts_b', 0)}** | Vant: **{l.get('vant_b', 0)}**")
                     if st.button(f"🗑️ Excluir Luta #{idx_real+1}", key=f"del_luta_hist_{idx_real}"):
                         lutas_lista.pop(idx_real)
                         st.session_state["historico_lutas"] = lutas_lista
                         salvar_tudo()
-                        st.toast("🗑️ Luta excluída com sucesso!")
+                        st.toast("🗑️ Luta excluída!")
                         st.rerun()
 
     # 3. Nutrição & Macros
     with abas_app[2]:
         st.markdown("### 🥗 Nutrição & Calculadora de Macros (IA Dual)")
         with st.form("form_nutri"):
-            refeicao = st.text_input("Refeição / Alimento a planejar (Ex: Dieta para corte de peso):", value="")
+            refeicao = st.text_input("Refeição / Alimento a planejar:", value="")
             if st.form_submit_button("Gerar e Salvar Manual Nutricional", use_container_width=True):
                 if refeicao:
                     resp_gerada = processar_consenso_ia_dual(refeicao, "nutrição", st.session_state.get("perfil_nome", "Atleta"))
@@ -782,20 +783,6 @@ try:
                     salvar_tudo()
                     st.toast("✅ Manual nutricional gerado e salvo!")
                     st.rerun()
-        
-        if st.session_state.get("dicas_nutricao"):
-            st.markdown("#### 📊 Histórico Nutricional do Atleta")
-            nutri_lista = st.session_state.get("dicas_nutricao", [])
-            for idx, n in enumerate(reversed(nutri_lista)):
-                idx_real = len(nutri_lista) - 1 - idx
-                with st.expander(f"🥗 {n['refeicao']} ({n['data']})"):
-                    st.markdown(f"{n['detalhes']}")
-                    if st.button(f"🗑️ Excluir Refeição #{idx_real+1}", key=f"del_nutri_{idx_real}"):
-                        nutri_lista.pop(idx_real)
-                        st.session_state["dicas_nutricao"] = nutri_lista
-                        salvar_tudo()
-                        st.toast("🗑️ Refeição excluída!")
-                        st.rerun()
 
     # 4. Camp de Competição
     with abas_app[3]:
@@ -804,7 +791,7 @@ try:
             evento = st.text_input("Nome do Campeonato / Torneio:")
             data_camp = st.date_input("Data do Torneio:", value=date.today())
             faixa_camp = st.text_input("Faixa/Categoria:", value=st.session_state.get("perfil_faixa", "Branca"))
-            estilo_jogo = st.text_area("Fale um pouco do seu jogo e o que devemos treinar para este campeonato:")
+            estilo_jogo = st.text_area("Fale um pouco do seu jogo para este campeonato:")
             if st.form_submit_button("Salvar Estratégia de Camp", use_container_width=True):
                 if evento:
                     camps = st.session_state.get("camp_competicao", [])
@@ -813,24 +800,12 @@ try:
                     salvar_tudo()
                     st.toast("✅ Plano de Camp salvo!")
                     st.rerun()
-        st.divider()
-        camps_lista = st.session_state.get("camp_competicao", [])
-        for idx, c in enumerate(reversed(camps_lista)):
-            idx_real = len(camps_lista) - 1 - idx
-            with st.expander(f"🏆 {c['evento']} ({c['data']}) - {c['faixa']}"):
-                st.markdown(f"**Estratégia Completa:**\n\n{c['estilo']}")
-                if st.button(f"🗑️ Excluir Camp #{idx_real+1}", key=f"del_camp_{idx_real}"):
-                    camps_lista.pop(idx_real)
-                    st.session_state["camp_competicao"] = camps_lista
-                    salvar_tudo()
-                    st.toast("🗑️ Camp excluído!")
-                    st.rerun()
 
     # 5. Cursos & Regras
     with abas_app[4]:
         st.markdown("### 📚 Cursos, Regras & Anotações de Estudo")
         with st.form("form_curso"):
-            titulo_curso = st.text_input("Nome do Curso / Posição a estudar (Ex: Guarda Aranha):", value="")
+            titulo_curso = st.text_input("Nome do Curso / Posição a estudar:", value="")
             if st.form_submit_button("Gerar e Salvar Estudo Técnico", use_container_width=True):
                 if titulo_curso:
                     resp_gerada = processar_consenso_ia_dual(titulo_curso, "curso", st.session_state.get("perfil_nome", "Atleta"))
@@ -840,76 +815,36 @@ try:
                     salvar_tudo()
                     st.toast("✅ Estudo técnico gerado e salvo!")
                     st.rerun()
-        st.divider()
-        cursos_lista = st.session_state.get("cursos_interativos", [])
-        for idx, cur in enumerate(reversed(cursos_lista)):
-            idx_real = len(cursos_lista) - 1 - idx
-            with st.expander(f"📚 {cur['titulo']}"):
-                st.markdown(f"{cur['desc']}")
-                if st.button(f"🗑️ Excluir Curso #{idx_real+1}", key=f"del_curso_{idx_real}"):
-                    cursos_lista.pop(idx_real)
-                    st.session_state["cursos_interativos"] = cursos_lista
-                    salvar_tudo()
-                    st.toast("🗑️ Estudo excluído!")
-                    st.rerun()
 
     # 6. Dinâmicas Kids
     with abas_app[5]:
         st.markdown("### 👶 Dinâmicas Pedagógicas para Turmas Kids")
         with st.form("form_kids"):
-            foco_kids = st.text_input("Sobre o que você quer que a dinâmica trabalhe? (Ex: Guarda fechada com jogos e tempo)", value="")
-            if st.form_submit_button("Gerar Dossiê Pedagógico Kids Completo", use_container_width=True):
+            foco_kids = st.text_input("Sobre o que você quer que a dinâmica trabalhe?", value="")
+            if st.form_submit_button("Gerar Dossiê Pedagógico Kids", use_container_width=True):
                 if foco_kids:
                     regra_kids = processar_consenso_ia_dual(foco_kids, "kids", st.session_state.get("perfil_nome", "Professor"))
                     kids = st.session_state.get("dinamic_kids_custom", [])
                     kids.append({"foco": foco_kids, "regra": regra_kids})
                     st.session_state["dinamic_kids_custom"] = kids
                     salvar_tudo()
-                    st.toast("✅ Dossiê Kids gerado com sucesso!")
+                    st.toast("✅ Dossiê Kids gerado!")
                     st.rerun()
-        st.divider()
-        kids_lista = st.session_state.get("dinamic_kids_custom", [])
-        if kids_lista:
-            st.markdown("#### 📁 Dossiês Kids Salvos (Clique para Expandir)")
-            for idx, k in enumerate(reversed(kids_lista)):
-                idx_real = len(kids_lista) - 1 - idx
-                with st.expander(f"👶 Foco: {k['foco']}"):
-                    st.markdown(f"{k['regra']}")
-                    if st.button(f"🗑️ Excluir Dinâmica Kids #{idx_real+1}", key=f"del_kids_{idx_real}"):
-                        kids_lista.pop(idx_real)
-                        st.session_state["dinamic_kids_custom"] = kids_lista
-                        salvar_tudo()
-                        st.toast("🗑️ Dinâmica excluída com sucesso!")
-                        st.rerun()
 
     # 7. Drills Específicos
     with abas_app[6]:
-        st.markdown("### ⚡ Drills de Repetição, Ritmo e Agilidade (IA Dual)")
+        st.markdown("### ⚡ Drills de Repetição, Ritmo e Agilidade")
         with st.form("form_drill"):
-            posicao_drill = st.text_input("Sobre o que o drill seria? (Ex: Passagem de guarda toreando com pressão)", value="")
-            if st.form_submit_button("Gerar Plano de Drills Completo", use_container_width=True):
+            posicao_drill = st.text_input("Sobre o que o drill seria?", value="")
+            if st.form_submit_button("Gerar Plano de Drills", use_container_width=True):
                 if posicao_drill:
                     reps_gerada = processar_consenso_ia_dual(posicao_drill, "drill", st.session_state.get("perfil_nome", "Atleta"))
                     drills = st.session_state.get("drills_treino", [])
                     drills.append({"posicao": posicao_drill, "reps": reps_gerada})
                     st.session_state["drills_treino"] = drills
                     salvar_tudo()
-                    st.toast("✅ Plano de Drills gerado com sucesso!")
+                    st.toast("✅ Plano de Drills gerado!")
                     st.rerun()
-        st.divider()
-        drills_lista = st.session_state.get("drills_treino", [])
-        if drills_lista:
-            st.markdown("#### 📁 Planos de Drills Salvos (Clique para Expandir)")
-            for idx, d in enumerate(reversed(drills_lista)):
-                idx_real = len(drills_lista) - 1 - idx
-                with st.expander(f"⚡ Drill: {d['posicao']}"):
-                    st.markdown(f"{d['reps']}")
-                    if st.button(f"🗑️ Excluir Drill #{idx_real+1}", key=f"del_drill_{idx_real}"):
-                        drills_lista.pop(idx_real)
-                        st.session_state["drills_treino"] = drills_lista
-                        salvar_tudo()
-                        st.toast("🗑️ Drill excluído com sucesso!")
-                        st.rerun()
 
     # 8. Flashcards de Pressão & Jogo
     with abas_app[7]:
@@ -923,21 +858,6 @@ try:
                     st.session_state["flashcards_pressao"] = fp
                     salvar_tudo()
                     st.toast("✅ Flashcard gerado!")
-                    st.rerun()
-        st.divider()
-        fp_lista = st.session_state.get("flashcards_pressao", [])
-        for idx, f in enumerate(reversed(fp_lista)):
-            idx_real = len(fp_lista) - 1 - idx
-            with st.expander(f"🛡️ Estilo: {f['estilo'][:30]}..."):
-                st.markdown(f"""
-                <b>Seu Estilo:</b> {esc(f['estilo'])}<br><br>
-                ❓ <b>Desafio Tático:</b> Se o oponente passar sua guarda e colar no cem-quilos, qual sua reação imediata?
-                """)
-                if st.button(f"🗑️ Excluir Flashcard #{idx_real+1}", key=f"del_fp_{idx_real}"):
-                    fp_lista.pop(idx_real)
-                    st.session_state["flashcards_pressao"] = fp_lista
-                    salvar_tudo()
-                    st.toast("🗑️ Flashcard excluído!")
                     st.rerun()
 
     # 9. Graduação
@@ -956,18 +876,6 @@ try:
                     salvar_tudo()
                     st.toast("✅ Graduação registrada!")
                     st.rerun()
-        st.divider()
-        grad_lista = st.session_state.get("alunos_graduacao", [])
-        for idx, ag in enumerate(reversed(grad_lista)):
-            idx_real = len(grad_lista) - 1 - idx
-            with st.expander(f"🥋 {ag['aluno']} - Faixa {ag['faixa']} ({ag['grau']}º Grau)"):
-                st.markdown(f"📝 **Critérios:** {esc(ag.get('obs', ''))}")
-                if st.button(f"🗑️ Excluir Registro #{idx_real+1}", key=f"del_grad_{idx_real}"):
-                    grad_lista.pop(idx_real)
-                    st.session_state["alunos_graduacao"] = grad_lista
-                    salvar_tudo()
-                    st.toast("🗑️ Registro excluído!")
-                    st.rerun()
 
     # 10. Guia de Cuidado com Kimonos
     with abas_app[9]:
@@ -981,21 +889,6 @@ try:
                     st.session_state["notas_kimono"] = kims
                     salvar_tudo()
                     st.toast("✅ Dica gerada!")
-                    st.rerun()
-        st.divider()
-        kims_lista = st.session_state.get("notas_kimono", [])
-        for idx, km in enumerate(reversed(kims_lista)):
-            idx_real = len(kims_lista) - 1 - idx
-            with st.expander(f"🥋 Estado: {km['sujeira'][:30]}..."):
-                st.markdown(f"""
-                <b>Estado:</b> {esc(km['sujeira'])}<br><br>
-                💡 <b>Dica:</b> Deixe de molho no vinagre de álcool branco por 30 min e lave com sabão neutro. Nunca use cloro!
-                """)
-                if st.button(f"🗑️ Excluir Nota #{idx_real+1}", key=f"del_kimono_{idx_real}"):
-                    kims_lista.pop(idx_real)
-                    st.session_state["notas_kimono"] = kims_lista
-                    salvar_tudo()
-                    st.toast("🗑️ Nota excluída!")
                     st.rerun()
 
     # 11. Cartão Digital
@@ -1026,45 +919,15 @@ try:
                     salvar_tudo()
                     st.toast("✅ Chave gerada!")
                     st.rerun()
-        st.divider()
-        chaves_lista = st.session_state.get("chaves_luta", [])
-        for idx, ch in enumerate(reversed(chaves_lista)):
-            idx_real = len(chaves_lista) - 1 - idx
-            with st.expander(f"🔑 Torneio: {ch['torneio']}"):
-                st.markdown(f"**Atletas Inscritos:** {', '.join(ch['atletas'])}")
-                if st.button(f"🗑️ Excluir Chave #{idx_real+1}", key=f"del_chave_{idx_real}"):
-                    chaves_lista.pop(idx_real)
-                    st.session_state["chaves_luta"] = chaves_lista
-                    salvar_tudo()
-                    st.toast("🗑️ Chave excluída!")
-                    st.rerun()
 
-    # 13. Cronograma
+    # 13. Cronograma (Visualização Geral)
     with abas_app[12]:
-        st.markdown("### ⏱️ Cronograma Semanal de Treinos")
-        with st.form("form_crono"):
-            dia_c = st.selectbox("Dia da Semana:", ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"])
-            horario_c = st.text_input("Horário e Foco (Ex: 19:00 - Guarda Aranha):")
-            if st.form_submit_button("Adicionar ao Cronograma", use_container_width=True):
-                if horario_c:
-                    crono = st.session_state.get("cronogramas_aulas", [])
-                    crono.append({"dia": dia_c, "detalhe": horario_c})
-                    st.session_state["cronogramas_aulas"] = crono
-                    salvar_tudo()
-                    st.toast("✅ Cronograma salvo!")
-                    st.rerun()
-        st.divider()
-        crono_lista = st.session_state.get("cronogramas_aulas", [])
-        for idx, cr in enumerate(reversed(crono_lista)):
-            idx_real = len(crono_lista) - 1 - idx
-            with st.expander(f"⏱️ {cr['dia']}"):
-                st.markdown(f"**Detalhe:** {cr['detalhe']}")
-                if st.button(f"🗑️ Excluir Cronograma #{idx_real+1}", key=f"del_crono_{idx_real}"):
-                    crono_lista.pop(idx_real)
-                    st.session_state["cronogramas_aulas"] = crono_lista
-                    salvar_tudo()
-                    st.toast("🗑️ Cronograma excluído!")
-                    st.rerun()
+        st.markdown("### ⏱️ Cronograma de Aulas da Academia")
+        crono_b64 = st.session_state.get("cronograma_master_b64", "")
+        if crono_b64:
+            st.markdown(f'<img src="data:image/jpeg;base64,{crono_b64}" style="width: 100%; border-radius: 8px; border: 2px solid #ff1e27;">', unsafe_allow_html=True)
+        else:
+            st.info("ℹ️ O Master ainda não enviou a imagem do cronograma na barra lateral.")
 
     # 14. Recuperação & Lesões
     with abas_app[13]:
@@ -1078,19 +941,7 @@ try:
                     recup.append({"nota": resp_gerada, "data": datetime.now().strftime("%d/%m/%Y")})
                     st.session_state["recuperacao_notas"] = recup
                     salvar_tudo()
-                    st.toast("✅ Orientações geradas e salvas!")
-                    st.rerun()
-        st.divider()
-        recup_lista = st.session_state.get("recuperacao_notas", [])
-        for idx, rc in enumerate(reversed(recup_lista)):
-            idx_real = len(recup_lista) - 1 - idx
-            with st.expander(f"🔄 Recuperação ({rc['data']})"):
-                st.markdown(f"{rc['nota']}")
-                if st.button(f"🗑️ Excluir Nota #{idx_real+1}", key=f"del_recup_{idx_real}"):
-                    recup_lista.pop(idx_real)
-                    st.session_state["recuperacao_notas"] = recup_lista
-                    salvar_tudo()
-                    st.toast("🗑️ Nota excluída!")
+                    st.toast("✅ Orientações geradas!")
                     st.rerun()
 
 except Exception as e:
@@ -1117,9 +968,6 @@ except Exception as e:
         st.markdown(f"""
         <p style='color: #ffffff; font-size: 15px;'>
             <b>Olha só, {esc(nome_usr_erro)}!</b> Ocorreu uma pequena instabilidade nesta função.
-        </p>
-        <p style='color: #fbbf24; font-size: 14px;'>
-            📣 Informe ao administrador do sistema para realizar esse ajuste no código!
         </p>
         """, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
